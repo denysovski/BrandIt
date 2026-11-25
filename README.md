@@ -38,7 +38,7 @@ Open [`studio/`](https://denysovski.github.io/BrandIt/studio/). Sign in, pick a 
 
 | Screen | What you do there |
 | --- | --- |
-| Library | browse 91 templates by style: Minimal, Gradient, Professional, Bold photo, Editorial, Tech & app, Sport. Preview all of them with your own photo, in any format and palette |
+| Library | browse 111 templates by style: Minimal, Gradient, Professional, Bold photo, Editorial, Tech & app, Sport. Preview all of them with your own photo, in any format and palette |
 | Editor | edit every text, then drag any text in the preview (or nudge it with the arrows). Choose a palette or your own colours for the background, text, accent and both gradient stops. Set the headline, text and label fonts, or import your own TTF, OTF or WOFF. Upload a photo and move or zoom it by dragging or with sliders. Set the overlay strength, import a logo and set its size. Pick one of the five formats or type a custom size. Export as PNG, PNG 2× or SVG |
 | Sets | export a campaign of four templates in one go: Launch week, Gradient story, Run club, App release, Shop drop, Growth report, Team and events |
 | Brands | save as many brands as you need, each with a name, short mark or logo, handle, colours and fonts. Switching the brand in the top bar re-skins the whole library |

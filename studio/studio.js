@@ -259,6 +259,8 @@ const SETS = {
   'App release': ['x-app-promo', 'x-claim', 'x-profile-card', 'x-wordmark-phone'],
   'Shop drop': ['x-shop-drop', 'x-red-wall', 'x-sale-band', 'y-notch'],
   'Growth report': ['x-big-stat', 'x-kpi', 'x-growth', 'x-price'],
+  'Strategy deck': ['z-orange-statement', 'z-peach-stat', 'z-bars', 'z-split-underline'],
+  'Editorial grey': ['z-year', 'z-vertical-address', 'z-oval', 'z-date-card'],
   'Team and events': ['y-team-intro', 'y-dot-grid', 'y-numbered-quote', 'x-badge'],
 };
 function drawSets() {

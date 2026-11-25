@@ -3,14 +3,14 @@
 
 let uid = 0;
 const n = () => `d${uid++}`;
-const svg = (w, h, body, cls = 'art') => `<svg class="${cls}" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true">${body}</svg>`;
+const svg = (w, h, body, name = 'picture') => `<svg class="art" data-n="${name}" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true">${body}</svg>`;
 
 // Film-grain grey ground. tone: a CSS colour.
 export function grain({ w = 1080, h = 1350, tone = '#8e9094', amount = 0.22, seed = 1 } = {}) {
   const id = n();
   return svg(w, h, `<filter id="${id}" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" seed="${seed}"/><feColorMatrix values="0 0 0 0 .5  0 0 0 0 .5  0 0 0 0 .5  0 0 0 ${amount * 4} -${amount * 1.6}"/></filter>
     <radialGradient id="${id}v" cx=".5" cy=".45" r=".75"><stop offset=".55" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".22"/></radialGradient>
-    <rect width="${w}" height="${h}" fill="${tone}"/><rect width="${w}" height="${h}" filter="url(#${id})"/><rect width="${w}" height="${h}" fill="url(#${id}v)"/>`);
+    <rect width="${w}" height="${h}" fill="${tone}"/><rect width="${w}" height="${h}" filter="url(#${id})"/><rect width="${w}" height="${h}" fill="url(#${id}v)"/>`, 'grain');
 }
 
 // Macro ice: crystal ridges lit from the top left, in cold greys.
@@ -24,7 +24,7 @@ export function ice({ w = 600, h = 600, seed = 3, scale = 1, dark = false } = {}
       <feSpecularLighting in="a" surfaceScale="${dark ? 9 : 7}" specularConstant="1.1" specularExponent="22" lighting-color="#f3f8fc" result="s"><feDistantLight azimuth="235" elevation="38"/></feSpecularLighting>
       <feDiffuseLighting in="a" surfaceScale="5" diffuseConstant="${dark ? 0.7 : 1}" lighting-color="${dark ? '#7f8a94' : '#c9d2da'}" result="d"><feDistantLight azimuth="235" elevation="55"/></feDiffuseLighting>
       <feComposite in="s" in2="d" operator="arithmetic" k2="1" k3="1"/></filter>
-    <rect width="${w}" height="${h}" fill="${dark ? '#2a3036' : '#aeb7bf'}"/><rect width="${w}" height="${h}" filter="url(#${id})"/>`);
+    <rect width="${w}" height="${h}" fill="${dark ? '#2a3036' : '#aeb7bf'}"/><rect width="${w}" height="${h}" filter="url(#${id})"/>`, 'ice');
 }
 
 // Frost and snow ground with soft drifts, for a product to stand on.
@@ -34,7 +34,7 @@ export function frost({ w = 1080, h = 600, seed = 4 } = {}) {
       <feDiffuseLighting in="t" surfaceScale="6" lighting-color="#fbfdff"><feDistantLight azimuth="250" elevation="50"/></feDiffuseLighting></filter>
     <filter id="${id}g"><feTurbulence type="fractalNoise" baseFrequency="1.1" seed="${seed + 1}"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1.2 -.85"/></filter>
     <linearGradient id="${id}f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="1"/><stop offset=".25" stop-color="#fff" stop-opacity="0"/></linearGradient>
-    <rect width="${w}" height="${h}" filter="url(#${id})"/><rect width="${w}" height="${h}" filter="url(#${id}g)"/><rect width="${w}" height="${h}" fill="url(#${id}f)" opacity=".0"/>`);
+    <rect width="${w}" height="${h}" filter="url(#${id})"/><rect width="${w}" height="${h}" filter="url(#${id}g)"/><rect width="${w}" height="${h}" fill="url(#${id}f)" opacity=".0"/>`, 'frost');
 }
 
 const brushed = (id, x1, x2, stops) => `<linearGradient id="${id}" x1="${x1}" x2="${x2}" y1="0" y2="0">${stops.map(([o, c]) => `<stop offset="${o}" stop-color="${c}"/>`).join('')}</linearGradient>`;
@@ -44,7 +44,7 @@ const STEEL = [[0, '#3c4248'], [0.12, '#8d969e'], [0.26, '#d9dfe4'], [0.34, '#f4
 export function bottle({ size = 520, word = 'KALT', shadow = true } = {}) {
   const id = n();
   const w = 240, h = 620;
-  return `<svg class="art" viewBox="0 0 ${w} ${h}" width="${size * w / h}" height="${size}" aria-hidden="true" style="overflow:visible">
+  return `<svg class="art" data-n="bottle" viewBox="0 0 ${w} ${h}" width="${size * w / h}" height="${size}" aria-hidden="true" style="overflow:visible">
     <defs>${brushed(id + 'b', 0, 1, STEEL)}${brushed(id + 'c', 0, 1, [[0, '#1d2125'], [0.3, '#5c646b'], [0.42, '#aab2b9'], [0.55, '#3b4147'], [1, '#15181b']])}
     <filter id="${id}n" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".004 .9" numOctaves="2" seed="7"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 -.35"/><feComposite in2="SourceGraphic" operator="in"/></filter>
     <filter id="${id}s" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="14"/></filter>
@@ -74,7 +74,7 @@ export function jar({ size = 360, word = 'KALT', shadow = true } = {}) {
     faces.push(`<path d="M${a[0]} ${a[1]} L${b[0]} ${b[1]} L${b[0]} ${b[1] + hgt} L${a[0]} ${a[1] + hgt}Z" fill="${shade}"/><path d="M${a[0]} ${a[1]} L${b[0]} ${b[1]} L${b[0]} ${b[1] + hgt} L${a[0]} ${a[1] + hgt}Z" fill="#fff" filter="url(#${id}n)" opacity=".4"/>`);
   }
   const lid = pts.map((p) => p.join(' ')).join(' L');
-  return `<svg class="art" viewBox="0 0 ${W} ${H}" width="${size}" height="${size * H / W}" aria-hidden="true" style="overflow:visible"><defs>
+  return `<svg class="art" data-n="jar" viewBox="0 0 ${W} ${H}" width="${size}" height="${size * H / W}" aria-hidden="true" style="overflow:visible"><defs>
     ${brushed(id + 'b', 0, 1, STEEL)}
     <filter id="${id}n" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".9 .004" numOctaves="2" seed="5"/><feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 -.35"/><feComposite in2="SourceGraphic" operator="in"/></filter>
     <filter id="${id}s" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="14"/></filter></defs>
@@ -96,7 +96,7 @@ export function drops({ w = 600, h = 760, seed = 9, count = 70 } = {}) {
   return svg(w, h, `<defs><radialGradient id="${id}b" cx=".4" cy=".35" r=".9"><stop offset="0" stop-color="#d9dcdf"/><stop offset=".6" stop-color="#8e9399"/><stop offset="1" stop-color="#3b3f44"/></radialGradient>
     <radialGradient id="${id}d" cx=".62" cy=".7" r=".7"><stop offset="0" stop-color="#f4f6f8"/><stop offset=".55" stop-color="#9ca2a8" stop-opacity=".55"/><stop offset="1" stop-color="#2d3237" stop-opacity=".7"/></radialGradient>
     <filter id="${id}g" x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".85" seed="${seed}"/><feColorMatrix values="0 0 0 0 .5  0 0 0 0 .5  0 0 0 0 .5  0 0 0 .8 -.32"/></filter></defs>
-    <rect width="${w}" height="${h}" fill="url(#${id}b)"/>${dots}<rect width="${w}" height="${h}" filter="url(#${id}g)"/>`);
+    <rect width="${w}" height="${h}" fill="url(#${id}b)"/>${dots}<rect width="${w}" height="${h}" filter="url(#${id}g)"/>`, 'drops');
 }
 
 // Liquid chrome: banded silver and ice-blue gradient, warped by low-frequency noise.
@@ -113,7 +113,7 @@ export function chromeBox({ size = 520, word = 'PELLA', seed = 2, open = false, 
   const F = 'M60 170 L300 230 L300 470 L60 410Z', S = 'M300 230 L470 160 L470 400 L300 470Z', T = 'M60 170 L230 100 L470 160 L300 230Z';
   const clip = (d, k) => `<clipPath id="${id}${k}"><path d="${d}"/></clipPath>`;
   const face = (k, d, ang, op = 1) => `<g clip-path="url(#${id}${k})"><g filter="url(#${id}w)"><rect x="0" y="0" width="${W}" height="${H}" fill="url(#${id}c)" transform="rotate(${ang} 260 260)" opacity="${op}"/></g></g>`;
-  return `<svg class="art" viewBox="0 0 ${W} ${H}" width="${size}" height="${size}" aria-hidden="true" style="overflow:visible"><defs>${chromeDefs(id, seed)}${clip(F, 'f')}${clip(S, 's')}${clip(T, 't')}
+  return `<svg class="art" data-n="chrome-box" viewBox="0 0 ${W} ${H}" width="${size}" height="${size}" aria-hidden="true" style="overflow:visible"><defs>${chromeDefs(id, seed)}${clip(F, 'f')}${clip(S, 's')}${clip(T, 't')}
     <filter id="${id}s" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="18"/></filter></defs>
     ${shadow ? `<path d="M70 420 L300 480 L480 405 L250 350Z" fill="#26303a" opacity=".35" filter="url(#${id}s)"/>` : ''}
     ${face('f', F, 8)}${face('s', S, 64)}${open ? `<path d="${T}" fill="#0c0f12"/><path d="M90 172 L230 115 L440 166 L300 222Z" fill="#cfe3f2" opacity=".9"/>` : face('t', T, -30)}
@@ -128,21 +128,21 @@ export function chromeWord({ word = 'PELLA', w = 960, h = 300, size = 260, seed 
   const id = n();
   return svg(w, h, `<defs>${chromeDefs(id, seed, 36, 90)}<mask id="${id}m"><text x="50%" y="${h * 0.78}" text-anchor="middle" font-family="Display, sans-serif" font-weight="900" font-size="${size}" letter-spacing="-6" style="font-stretch:112%" fill="#fff">${word}</text></mask>
     <filter id="${id}e" x="-5%" y="-10%" width="110%" height="120%"><feGaussianBlur in="SourceAlpha" stdDeviation="6"/><feOffset dy="14"/><feComponentTransfer><feFuncA type="linear" slope=".35"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
-    <g filter="url(#${id}e)"><g mask="url(#${id}m)"><g filter="url(#${id}w)"><rect x="-40" y="-40" width="${w + 80}" height="${h + 80}" fill="url(#${id}c)"/></g></g></g>`);
+    <g filter="url(#${id}e)"><g mask="url(#${id}m)"><g filter="url(#${id}w)"><rect x="-40" y="-40" width="${w + 80}" height="${h + 80}" fill="url(#${id}c)"/></g></g></g>`, 'chrome-word');
 }
 
 // A liquid chrome blob, for stickers and backgrounds.
 export function chromeBlob({ w = 400, h = 400, seed = 8 } = {}) {
   const id = n();
   return svg(w, h, `<defs>${chromeDefs(id, seed, 90, 30)}<clipPath id="${id}k"><ellipse cx="${w / 2}" cy="${h / 2}" rx="${w * 0.46}" ry="${h * 0.46}"/></clipPath></defs>
-    <g clip-path="url(#${id}k)"><g filter="url(#${id}w)"><rect x="-40" y="-40" width="${w + 80}" height="${h + 80}" fill="url(#${id}c)"/></g></g>`);
+    <g clip-path="url(#${id}k)"><g filter="url(#${id}w)"><rect x="-40" y="-40" width="${w + 80}" height="${h + 80}" fill="url(#${id}c)"/></g></g>`, 'chrome-blob');
 }
 
 // A press-on nail in liquid chrome: a long rounded tip, seen from above.
 export function nail({ w = 120, h = 260, seed = 3, tilt = 0 } = {}) {
   const id = n();
   const d = `M${w * 0.1} ${h} L${w * 0.06} ${h * 0.4} Q${w * 0.06} 0 ${w / 2} 0 Q${w * 0.94} 0 ${w * 0.94} ${h * 0.4} L${w * 0.9} ${h} Z`;
-  return `<svg class="art" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true" style="overflow:visible;rotate:${tilt}deg"><defs>${chromeDefs(id, seed, 40, 80)}<clipPath id="${id}k"><path d="${d}"/></clipPath></defs>
+  return `<svg class="art" data-n="nail" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true" style="overflow:visible;rotate:${tilt}deg"><defs>${chromeDefs(id, seed, 40, 80)}<clipPath id="${id}k"><path d="${d}"/></clipPath></defs>
     <g clip-path="url(#${id}k)"><g filter="url(#${id}w)"><rect x="-30" y="-30" width="${w + 60}" height="${h + 60}" fill="url(#${id}c)"/></g></g>
     <path d="${d}" fill="none" stroke="#fff" stroke-opacity=".6"/></svg>`;
 }

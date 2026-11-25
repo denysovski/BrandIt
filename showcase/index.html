@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VESSEL: a BrandIt showcase in 14 frames</title>
+<meta name="description" content="A 14-frame Instagram case study for VESSEL, a fictional solid scent pressed into stone. Built in HTML, CSS and SVG with BrandIt.">
+<style>
+@font-face { font-family: Display; src: url(../fonts/archivo-latin-standard-normal.woff2) format("woff2"); font-weight: 100 900; font-stretch: 62% 125%; }
+@font-face { font-family: Display; src: url(../fonts/archivo-latin-ext-standard-normal.woff2) format("woff2"); font-weight: 100 900; font-stretch: 62% 125%; unicode-range: U+0100-024F; }
+@font-face { font-family: Mono; src: url(../fonts/ibm-plex-mono-latin-400-normal.woff2) format("woff2"); font-weight: 400; }
+@font-face { font-family: Mono; src: url(../fonts/ibm-plex-mono-latin-500-normal.woff2) format("woff2"); font-weight: 500; }
+@font-face { font-family: Body; src: url(../fonts/host-grotesk-latin-400-normal.woff2) format("woff2"); font-weight: 400; }
+@font-face { font-family: Body; src: url(../fonts/host-grotesk-latin-500-normal.woff2) format("woff2"); font-weight: 500; }
+:root { --fog: #e6ebef; --fog-2: #d3dbe2; --ink: #0d1014; --night: #0a0b0d; --steel: #44505c; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { background: #050506; }
+body { font-family: Body, sans-serif; color: var(--ink); -webkit-font-smoothing: antialiased; }
+ul { list-style: none; }
+
+/* viewing page */
+.top { display: flex; justify-content: space-between; align-items: baseline; padding: 22px 28px; color: #d6d9dc; font: 500 13px/1.3 Body, sans-serif; }
+.top a { color: inherit; }
+.wall { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 22px; padding: 6px 28px 60px; }
+.slot { aspect-ratio: 1080 / 1350; position: relative; overflow: hidden; border-radius: 4px; container-type: inline-size; }
+.slot .fr { position: absolute; left: 0; top: 0; transform-origin: 0 0; transform: scale(calc(100cqw / 1080px)); }
+.cap { margin-top: 8px; color: #8b9096; font: 400 12px/1.3 Mono, monospace; letter-spacing: .04em; }
+.export .top, .export .cap { display: none; } .export .wall { display: block; padding: 0; } .export .slot { width: 1080px; height: 1350px; border-radius: 0; } .export .slot .fr { transform: none; }
+
+/* frames */
+.fr { position: relative; width: 1080px; height: 1350px; overflow: hidden; background: var(--fog); }
+.fr.dark { background: var(--night); color: #e8ecef; }
+.m { position: absolute; font: 500 15px/1.32 Mono, monospace; letter-spacing: .06em; text-transform: uppercase; }
+.m.s { font-size: 13px; } .m.dim { opacity: .62; }
+.word { font-family: Display, sans-serif; font-stretch: 125%; font-weight: 600; letter-spacing: -.02em; line-height: .86; }
+.puck, .heat, .land { display: block; }
+.ab { position: absolute; }
+.rule { position: absolute; height: 1px; background: currentColor; opacity: .3; }
+.chip { display: inline-flex; align-items: center; gap: 8px; }
+.chip i { width: 22px; height: 22px; border-radius: 50%; display: inline-block; }
+
+/* 01 cover */
+.f01 .heat { position: absolute; left: 520px; top: 230px; width: 360px; height: 360px; opacity: .92; mix-blend-mode: multiply; }
+.f01 .puck { position: absolute; left: 230px; top: 330px; }
+.f01 .word { position: absolute; left: 56px; bottom: 96px; font-size: 196px; }
+/* 02 statement */
+.f02 .st { position: absolute; left: 330px; top: 300px; right: 70px; font-family: Display, sans-serif; font-stretch: 110%; font-weight: 400; font-size: 74px; line-height: 1; letter-spacing: -.028em; text-indent: 1.6em; }
+.f02 .heat { position: absolute; left: 60px; top: 300px; width: 220px; height: 260px; }
+/* 03 product on stage */
+.f03 { background: radial-gradient(120% 80% at 50% 26%, #6d7884 0%, #2a3038 48%, #0c0e11 100%); color: #e8ecef; }
+.f03 .floor { position: absolute; left: 0; right: 0; bottom: 0; height: 520px; background: linear-gradient(180deg, rgba(255,255,255,0), rgba(220,228,236,.16)); }
+.f03 .puck { position: absolute; left: 330px; top: 250px; }
+.carton { position: absolute; }
+.carton svg { width: 100%; height: auto; display: block; }
+.carton-puck { position: absolute; left: 22.2%; top: 24.6%; }
+.carton-a { position: absolute; left: 9%; top: 15%; font: 600 15px/1 Display, sans-serif; font-stretch: 125%; letter-spacing: .02em; color: #1b2026; }
+.carton-b { position: absolute; left: 9%; bottom: 12%; font: 500 11px/1.4 Mono, monospace; letter-spacing: .08em; color: #4b545d; }
+.carton-dots { position: absolute; right: 12%; top: 34%; display: grid; gap: 12px; }
+.carton-dots li { width: 22px; height: 22px; border-radius: 50%; background: #c7cdd3; box-shadow: inset 0 0 0 1px #aab2ba; }
+.carton-dots li.on { background: #1b2026; }
+.f03 .carton { left: 280px; top: 640px; }
+/* 04 ritual heat */
+.f04 .heat { position: absolute; left: 120px; top: 190px; width: 840px; height: 900px; }
+.f04 .puck { position: absolute; left: 395px; top: 520px; }
+.f04 .big { position: absolute; left: 60px; top: 60px; font: 600 120px/.9 Display, sans-serif; font-stretch: 125%; letter-spacing: -.02em; }
+/* 05 tilted wordmark */
+.f05 .word { position: absolute; left: -60px; top: 560px; font-size: 300px; rotate: -90deg; transform-origin: 50% 50%; width: 1350px; text-align: center; translate: -480px 0; color: var(--ink); }
+.f05 .puck { position: absolute; left: 430px; top: 300px; }
+.f05 .heat { position: absolute; left: 560px; top: 820px; width: 380px; height: 200px; }
+/* 06 packaging grid */
+.f06 .grid { position: absolute; left: 110px; right: 110px; top: 300px; display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+.f06 .cell { position: relative; aspect-ratio: 1; background: radial-gradient(90% 80% at 50% 30%, #6f7c8a, #1a1e24 70%); display: grid; place-items: center; }
+.f06 .cell.b { background: radial-gradient(90% 80% at 50% 30%, #f3f5f7, #aab4be 75%); }
+.f06 .cell .m { left: 0; top: -24px; color: var(--ink); }
+.f06 .cell .carton { position: relative; }
+/* 07 origins on black */
+.f07 .rows { position: absolute; left: 80px; right: 80px; top: 360px; display: grid; gap: 18px; }
+.f07 .row { display: grid; grid-template-columns: 1fr 1.25fr; height: 190px; background: #141619; }
+.f07 .row .info { padding: 22px 24px; display: flex; flex-direction: column; justify-content: space-between; }
+.f07 .row .land { width: 100%; height: 100%; }
+.f07 .notes { display: flex; gap: 10px; }
+.f07 .notes i { width: 46px; height: 46px; border-radius: 50%; }
+/* 08 light beam still life */
+.f08 { background: #090a0c; }
+.f08 .beam { position: absolute; inset: 0; background: linear-gradient(118deg, transparent 22%, rgba(214,224,233,.85) 38%, rgba(214,224,233,.92) 56%, transparent 74%); filter: blur(26px); }
+.f08 .p1 { position: absolute; left: 250px; top: 560px; } .f08 .p2 { position: absolute; left: 470px; top: 470px; } .f08 .p3 { position: absolute; left: 560px; top: 700px; }
+/* 09 erosion */
+.f09 .half { position: absolute; left: 0; right: 0; height: 675px; }
+.f09 .h2 { top: 675px; background: var(--night); color: #e8ecef; }
+.f09 .line { position: absolute; left: 60px; right: 60px; top: 220px; display: flex; justify-content: space-between; align-items: center; }
+.f09 .line > div { display: grid; justify-items: center; gap: 22px; }
+/* 10 moodboard */
+.f10 .tile { position: absolute; overflow: hidden; background: #1a1d21; }
+.f10 .tile .land, .f10 .tile .heat { width: 100%; height: 100%; }
+.f10 .tile.fog { background: var(--fog); color: var(--ink); display: grid; place-items: center; }
+/* 11 type and colour */
+.f11 .sw { position: absolute; left: 60px; right: 60px; bottom: 60px; display: grid; grid-template-columns: repeat(5, 1fr); height: 300px; }
+.f11 .sw div { padding: 16px; display: flex; flex-direction: column; justify-content: flex-end; }
+.f11 .type { position: absolute; left: 60px; right: 60px; top: 230px; display: grid; gap: 46px; }
+/* 12 mark construction */
+.f12 .cons { position: absolute; left: 140px; top: 220px; width: 800px; height: 800px; }
+.f12 .cons svg { position: absolute; inset: 0; }
+.f12 .cons .puck { position: absolute; left: 0; top: 0; }
+/* 13 credits */
+.f13 .card { position: absolute; left: 110px; right: 110px; top: 110px; bottom: 150px; background: #121417; }
+.f13 .puck { position: absolute; left: 330px; top: 120px; }
+.f13 dl { position: absolute; left: 200px; right: 200px; top: 610px; display: grid; grid-template-columns: 1fr 1.3fr; gap: 18px 30px; font: 500 15px/1.35 Mono, monospace; letter-spacing: .06em; text-transform: uppercase; }
+.f13 dt { text-align: right; opacity: .6; }
+/* 14 monitor */
+.f14 { background: linear-gradient(180deg, #eef1f3, #d6dbe0); }
+.f14 .mon { position: absolute; left: 120px; top: 230px; width: 840px; transform: perspective(2200px) rotateY(-14deg) rotateX(2deg); transform-origin: 100% 50%; }
+.f14 .scr { position: relative; aspect-ratio: 16 / 10; background: #0c0d0f; border: 14px solid #0c0d0f; border-radius: 10px; overflow: hidden; box-shadow: 40px 60px 80px -40px rgba(0,0,0,.5); }
+.f14 .site { position: absolute; inset: 0; background: var(--fog); }
+.f14 .stand { width: 180px; height: 360px; margin: -4px auto 0; background: linear-gradient(90deg, #8d959d, #c8ced3 40%, #9aa2aa); clip-path: polygon(30% 0, 70% 0, 82% 100%, 18% 100%); }
+.f14 .base { width: 340px; height: 22px; margin: -2px auto 0; border-radius: 50%; background: #9aa2aa; }
+</style>
+</head>
+<body>
+<header class="top"><span>VESSEL · a BrandIt showcase · 14 frames, 1080 × 1350</span><a href="../README.md#showcase">How to use it</a></header>
+<main class="wall" id="wall"></main>
+<script type="module">
+import { puck, heat, land, carton } from './render.js';
+const F = [];
+const corners = (a, b, c, d, dark) => `<p class="m s ${dark ? '' : ''}" style="left:60px;top:56px">${a}</p><p class="m s" style="right:60px;top:56px;text-align:right">${b}</p><p class="m s dim" style="left:60px;bottom:52px">${c}</p><p class="m s dim" style="right:60px;bottom:52px;text-align:right">${d}</p>`;
+
+// 01 cover
+F.push(['Cover', 'f01', `${heat({ w: 360, h: 360, shape: 'thumb', seed: 7 })}${puck({ tone: 'slate', size: 560 })}
+  ${corners('Study of a<br>solid scent', 'Glacier · Pine · Ash<br>8 g · 60 days', 'Art direction,<br>identity, packaging', 'VESSEL®')}
+  <p class="m s" style="left:830px;top:660px;max-width:220px">First contact<br>with warmth.<br>The stone<br>begins to give.</p>
+  <p class="word">VESSEL</p>`]);
+// 02 statement
+F.push(['Statement', 'f02', `${heat({ w: 220, h: 260, shape: 'thumb', seed: 2 })}${corners('Concept', '02', 'VESSEL®', 'Solid scent')}
+  <p class="st">Scent kept in stone. It opens in the warmth of a hand and wears away a little with every touch.</p>
+  <p class="m" style="left:330px;top:1010px;max-width:330px">No bottle.<br>No spray.<br>No alcohol.</p>
+  <p class="m dim" style="left:700px;top:1010px;max-width:320px">Pressed mineral,<br>beeswax and oils.<br>Refill: one puck,<br>one carton.</p>`]);
+// 03 product on stage
+F.push(['Product', 'f03', `<div class="floor"></div>${puck({ tone: 'slate', view: 'side', size: 420 })}${carton({ tone: 'glacier', w: 520 })}
+  ${corners('VESSEL®', 'Glacier', 'Carton, uncoated<br>board, one window', 'Puck 46 mm<br>8 g')}`]);
+// 04 ritual
+F.push(['Ritual', 'f04', `${heat({ w: 840, h: 900, shape: 'thumb', seed: 11 })}${puck({ tone: 'slate', size: 290, shadow: true })}
+  <p class="big">37 °C<br>opens it</p>
+  <p class="m" style="left:60px;bottom:180px;max-width:330px">Hold it<br>for ten seconds.<br>Touch wrist,<br>neck, collar.</p>
+  ${corners('', 'Ritual', 'Thermal study', 'VESSEL®').replace('<p class="m s " style="left:60px;top:56px"></p>', '')}`]);
+// 05 tilted wordmark
+F.push(['Wordmark', 'f05', `<p class="word">VESSEL</p>${puck({ tone: 'glacier', size: 480 })}${heat({ w: 380, h: 200, shape: 'smear', seed: 5 })}
+  ${corners('Solid form', 'Wordmark', 'Archivo 125 % width', 'VESSEL®')}
+  <p class="m s" style="left:640px;top:240px;max-width:320px">Solid form<br>body → skin<br>skin → air</p>`]);
+// 06 packaging grid
+F.push(['Packaging', 'f06', `${corners('Packaging', 'System of four', 'One carton, one window,<br>one dot for the origin', 'VESSEL®')}
+  <div class="grid">
+    <div class="cell"><p class="m s">GL — 01</p>${carton({ tone: 'glacier', w: 300 })}</div>
+    <div class="cell b"><p class="m s">PI — 02</p>${puck({ tone: 'slate', size: 300 })}</div>
+    <div class="cell b"><p class="m s">AS — 03</p>${puck({ tone: 'ash', view: 'side', size: 320 })}</div>
+    <div class="cell"><p class="m s">SET</p>${carton({ tone: 'bone', w: 300 })}</div>
+  </div>`]);
+// 07 origins
+F.push(['Origins', 'f07 dark', `${corners('Three origins', 'Notes', 'Each origin has its own stone', 'VESSEL®')}
+  <p class="word" style="position:absolute;left:80px;top:180px;font-size:84px;color:#e8ecef">ORIGINS</p>
+  <div class="rows">
+    ${[['Glacier — 01', 'Cold mineral, vetiver, snow', ['#dfe7ee', '#9fb1c2', '#6d8296', '#2b3846'], 'glacier'], ['Pine — 02', 'Resin, needles, smoke', ['#d8ddd6', '#6f7f74', '#3d4a42', '#1b221e'], 'pine'], ['Ash — 03', 'Warm stone, pepper, ember', ['#e5ddd3', '#a69a8c', '#6b625a', '#2f2b28'], 'ash']].map(([n, d, c, k]) => `<div class="row"><div class="info"><div><p class="m" style="position:static">${n}</p><p class="m s dim" style="position:static;margin-top:6px">${d}</p></div><div class="notes">${c.map((x) => `<i style="background:${x}"></i>`).join('')}</div></div>${land(k, { w: 560, h: 190 })}</div>`).join('')}
+  </div>`]);
+// 08 still life
+F.push(['Still life', 'f08 dark', `<div class="beam"></div><div class="p1">${puck({ tone: 'bone', view: 'side', size: 340 })}</div><div class="p2">${puck({ tone: 'slate', view: 'side', size: 300 })}</div><div class="p3">${puck({ tone: 'glacier', view: 'side', size: 330 })}</div>
+  ${corners('Bone · Slate · Glacier', 'Still life', 'One light, three stones', 'VESSEL®')}`]);
+// 09 erosion
+F.push(['Erosion', 'f09', `<div class="half">${corners('Day by day', 'Wear', '', '')}<p class="m" style="left:60px;top:120px;max-width:420px">From the first touch<br>to the last trace</p>
+    <div class="line">${[0, 0.25, 0.5, 0.75, 1].map((w, i) => `<div>${puck({ tone: 'slate', size: 176, wear: w, shadow: false })}<p class="m s" style="position:static">Day ${String([1, 15, 30, 45, 60][i]).padStart(2, '0')}</p></div>`).join('')}</div></div>
+  <div class="half h2"><p class="m s" style="left:60px;top:40px">Bone</p><div class="line" style="top:160px">${[0, 0.25, 0.5, 0.75, 1].map((w) => `<div>${puck({ tone: 'bone', size: 176, wear: w, shadow: false })}</div>`).join('')}</div>
+  <p class="m s dim" style="left:60px;bottom:52px">Nothing is wasted:<br>the last trace is skin</p><p class="m s dim" style="right:60px;bottom:52px;text-align:right">VESSEL®</p></div>`]);
+// 10 moodboard
+F.push(['Moodboard', 'f10 dark', `${corners('References', 'Mood', 'Fog, stone, warmth', 'VESSEL®')}
+  <div class="tile" style="left:110px;top:170px;width:300px;height:380px">${land('glacier', { w: 300, h: 380 })}</div>
+  <div class="tile fog" style="left:470px;top:250px;width:260px;height:260px">${puck({ tone: 'slate', size: 220 })}</div>
+  <div class="tile" style="left:780px;top:140px;width:230px;height:300px">${heat({ w: 230, h: 300, shape: 'thumb', seed: 21 })}</div>
+  <div class="tile fog" style="left:360px;top:600px;width:420px;height:220px"><p class="word" style="font-size:64px">VESSEL</p></div>
+  <div class="tile" style="left:60px;top:640px;width:250px;height:330px">${land('ash', { w: 250, h: 330 })}</div>
+  <div class="tile" style="left:820px;top:520px;width:200px;height:420px">${land('pine', { w: 200, h: 420 })}</div>
+  <div class="tile fog" style="left:400px;top:880px;width:320px;height:300px">${puck({ tone: 'bone', view: 'side', size: 280 })}</div>
+  <div class="tile" style="left:770px;top:1000px;width:210px;height:170px;background:#e6ebef"><p class="m s" style="left:14px;top:14px;color:#0d1014">GL · PI · AS<br>8 g<br>60 days</p></div>`]);
+// 11 type and colour
+F.push(['Type and colour', 'f11', `${corners('Identity', 'Type and colour', '', '')}
+  <div class="type"><div><p class="m s dim" style="position:static">Display — Archivo, 125 % width, 600</p><p class="word" style="font-size:150px;margin-top:14px">Aa VESSEL</p></div>
+  <div><p class="m s dim" style="position:static">Text — Host Grotesk 400</p><p style="font-size:44px;line-height:1.1;letter-spacing:-.015em;margin-top:12px;max-width:820px">Scent kept in stone. It opens in the warmth of a hand.</p></div>
+  <div><p class="m s dim" style="position:static">Labels — IBM Plex Mono 500</p><p class="m" style="position:static;margin-top:12px">First contact with warmth · Day 01 → Day 60</p></div></div>
+  <div class="sw">${[['#e6ebef', 'Fog', '#0d1014'], ['#9fb1c2', 'Glacier', '#0d1014'], ['#44505c', 'Steel', '#fff'], ['#0d1014', 'Night', '#fff'], ['linear-gradient(180deg,#2e6fff,#2fe0e8,#f5f05a,#ff4f6d,#ff2fb4)', 'Heat', '#0d1014']].map(([c, n, t]) => `<div style="background:${c};color:${t}"><p class="m s" style="position:static">${n}<br>${c.startsWith('#') ? c : 'trace only'}</p></div>`).join('')}</div>`]);
+// 12 mark construction
+F.push(['Mark', 'f12', `${corners('The seal', 'Construction', 'Ring text 8.5 % of radius', 'VESSEL®')}
+  <div class="cons">${puck({ tone: 'glacier', size: 800, shadow: false })}
+  <svg viewBox="0 0 800 800"><g fill="none" stroke="#0d1014" stroke-opacity=".55" stroke-width="1.2"><circle cx="400" cy="400" r="340"/><circle cx="400" cy="400" r="265"/><circle cx="400" cy="400" r="120" stroke-dasharray="6 6"/>
+  <path d="M0 400 H800 M400 0 V800 M117 117 L683 683 M683 117 L117 683" stroke-dasharray="4 8"/></g>
+  <g font-family="Mono" font-size="14" fill="#0d1014"><text x="752" y="392">R</text><text x="672" y="392">0.78 R</text><text x="410" y="30">X</text></g></svg></div>`]);
+// 13 credits
+F.push(['Credits', 'f13 dark', `<div class="card"></div>${puck({ tone: 'slate', size: 420 })}
+  <dl><dt>Project</dt><dd>VESSEL® solid scent</dd><dt>Year</dt><dd>2026</dd><dt>Scope</dt><dd>Art direction, identity,<br>packaging, website</dd><dt>Origins</dt><dd>Glacier · Pine · Ash</dd><dt>Made with</dt><dd>BrandIt</dd></dl>
+  <p class="m s dim" style="left:0;right:0;bottom:200px;text-align:center">Fictional brand · concept study</p>
+  <p class="m s dim" style="left:60px;bottom:52px">VESSEL®</p><p class="m s dim" style="right:60px;bottom:52px">studio.set</p>`]);
+// 14 website
+F.push(['Website', 'f14', `${corners('Website', 'vessel.studio', 'One page, three origins,<br>a refill subscription', 'VESSEL®')}
+  <div class="mon"><div class="scr"><div class="site">
+    <p class="m s" style="left:22px;top:18px;font-size:10px">VESSEL®</p><p class="m s" style="right:22px;top:18px;font-size:10px">Shop · Origins · Ritual</p>
+    <div style="position:absolute;left:330px;top:70px">${puck({ tone: 'slate', size: 230 })}</div>
+    <div style="position:absolute;left:460px;top:60px;width:170px;height:170px;mix-blend-mode:multiply">${heat({ w: 170, h: 170, seed: 9 })}</div>
+    <p class="word" style="position:absolute;left:22px;bottom:18px;font-size:112px">VESSEL</p></div></div>
+    <div class="stand"></div><div class="base"></div></div>`]);
+
+const exportMode = new URLSearchParams(location.search).has('export');
+if (exportMode) document.documentElement.classList.add('export');
+document.getElementById('wall').innerHTML = F.map(([name, cls, html], i) => `<figure><div class="slot"><section class="fr ${cls}" id="frame-${String(i + 1).padStart(2, '0')}" aria-label="${name}">${html}</section></div><figcaption class="cap">${String(i + 1).padStart(2, '0')} / ${name}</figcaption></figure>`).join('');
+document.fonts.ready.then(() => document.documentElement.dataset.ready = '1');
+</script>
+</body>
+</html>

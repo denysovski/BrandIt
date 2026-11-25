@@ -47,6 +47,20 @@ the dock at the bottom:
 
 Everything stays in your browser: text and brand settings in local storage, photos only in memory.
 
+## Showcase
+
+A case study told as an Instagram carousel: 14 portrait frames (1080 × 1350) for **VESSEL**, a fictional solid
+scent pressed into stone. Cover, statement, product on stage, the warmth ritual as a thermal trace, a vertical
+wordmark, packaging, three origins, still life, wear from day 1 to day 60, moodboard, type and colour, the seal's
+construction, credits and the website on a monitor.
+
+<img src="docs/showcase.jpg" alt="Fourteen VESSEL frames on black: a dark stone seal with a V monogram and a thermal trace, a statement, the puck above a white carton with a round window, a rainbow heat map, a vertical wordmark, a packaging grid, three origins with landscapes, three stones in a beam of light, five stages of wear, a moodboard, type and colour swatches, the seal's construction lines, credits and a website on a monitor" width="100%">
+
+Everything is drawn in HTML, CSS and SVG: the stone, the carton, the heat trace and the landscapes. No photography
+and no paid image generation were used. Open [`showcase/`](showcase/index.html) to see the frames live; the
+exported PNGs are in [`showcase/frames/`](showcase/frames/). To make your own, copy `showcase/index.html`, change
+the copy and the tones in `render.js`, and drop real photographs into any frame.
+
 ## Formats
 
 | Format | Size |
@@ -108,6 +122,6 @@ Setup and the field order of each template are in [framer/README.md](framer/READ
 
 ## Licence
 
-Code under the [MIT licence](LICENSE). Host Grotesk and Anton are under the SIL Open Font License 1.1. The look
+Code under the [MIT licence](LICENSE). Host Grotesk, Anton, Archivo and IBM Plex Mono are under the SIL Open Font License 1.1. The look
 is inspired by studio identities studied for [ProUI](https://github.com/denysovski/ProUI); no artwork, logos or
 copy from any studio or client is included.

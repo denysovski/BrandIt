@@ -34,21 +34,31 @@ A third family, **Commerce**, covers products, sales, launches, tips and announc
 
 ## Studio
 
-Open [`studio/`](studio/index.html) (or the GitHub Pages site of this repository). Four screens, switched from
-the dock at the bottom:
+Open [`studio/`](https://denysovski.github.io/BrandIt/studio/). Sign in, pick a template, add your photo and logo, and export it. Four screens are switched from the dock at the bottom.
 
 | Screen | What you do there |
 | --- | --- |
-| Library | browse all 24 templates by family, in any format and theme |
-| Editor | write the text, switch format and theme, upload a photo, see every format and theme at once, export PNG, PNG 2× or SVG |
-| Sets | pick a campaign (Studio launch, Hiring week, Court season, Shop drop, Year in review) and export it in one go |
-| Brand | set your name, short mark, handle, website, city and a custom theme with a contrast check |
+| Library | browse 91 templates by style: Minimal, Gradient, Professional, Bold photo, Editorial, Tech & app, Sport. Preview all of them with your own photo, in any format and palette |
+| Editor | edit every text, then drag any text in the preview (or nudge it with the arrows). Choose a palette or your own colours for the background, text, accent and both gradient stops. Set the headline, text and label fonts, or import your own TTF, OTF or WOFF. Upload a photo and move or zoom it by dragging or with sliders. Set the overlay strength, import a logo and set its size. Pick one of the five formats or type a custom size. Export as PNG, PNG 2× or SVG |
+| Sets | export a campaign of four templates in one go: Launch week, Gradient story, Run club, App release, Shop drop, Growth report, Team and events |
+| Brands | save as many brands as you need, each with a name, short mark or logo, handle, colours and fonts. Switching the brand in the top bar re-skins the whole library |
 
-<img src="docs/studio-editor.jpg" alt="The BrandIt editor: fields on the left, the ad in the middle with export buttons, every format and every theme on the right" width="100%">
+<img src="docs/studio-editor.jpg" alt="The BrandIt editor: sections for colours, type, photo and logo, and text on the left, the ad in the middle with export buttons, every format and every palette on the right" width="100%">
 
-<img src="docs/studio-library.jpg" alt="The BrandIt library: a statement on top, filter chips and 24 ad templates in a grid" width="100%">
+<img src="docs/studio-library.jpg" alt="The BrandIt library: style filters and a grid of ad templates" width="100%">
 
-Everything stays in your browser: text and brand settings in local storage, photos only in memory.
+**How the templates stay responsive.** Every size inside an ad is set in container units: one unit is 1 % of the
+shorter side of the ad. Any width and height works, including a custom size, and a few rules rearrange the
+layout for wide and tall formats.
+
+**Real effects.** Blur, motion streaks, halftone and duotone are applied to your own photo with CSS filters and
+blend modes. They are not baked into the template, so they work on any photo and in the exported PNG.
+
+**Your data.** Sign-in is a local demo. Accounts, brands, logos, imported fonts, texts and settings are saved in
+this browser's localStorage. Nothing is sent anywhere. Photos stay in memory only.
+
+**Sound.** The studio plays short synthesised clicks when you navigate and pick things. Turn them off in the
+account menu (top right).
 
 ## Showcase
 

@@ -4,39 +4,90 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>BrandIt Studio</title>
-<meta name="description" content="Make social posts and ads from the BrandIt library: pick a template, write, switch formats and themes, export PNG or SVG.">
+<meta name="description" content="Make social posts and ads from the BrandIt library: pick a template, add your photo and logo, change colours and fonts, export PNG or SVG.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%23111' stroke-width='2.4'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23e8401c'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="studio.css">
 </head>
 <body>
-<div class="page" data-recede>
+<!-- Sign in (simulated: accounts live in this browser only) -->
+<section class="auth" id="auth" hidden aria-labelledby="auth-h">
+  <div class="auth-card">
+    <p class="logo">BrandIt <span>Studio</span></p>
+    <h1 id="auth-h" class="h2" data-auth-title>Sign in</h1>
+    <form data-auth-form novalidate>
+      <label data-name-row hidden>Name<input name="name" autocomplete="name" maxlength="40"></label>
+      <label>Email<input name="email" type="email" autocomplete="email" required></label>
+      <label>Password<input name="password" type="password" autocomplete="current-password" required minlength="4"></label>
+      <p class="err" role="alert" data-auth-err></p>
+      <button class="btn wide" type="submit" data-auth-submit>Sign in</button>
+    </form>
+    <button type="button" class="link" data-auth-switch>No account yet? Create one</button>
+    <p class="hint">Demo sign-in: your account, brands and ads are stored only in this browser (localStorage). Nothing is sent anywhere.</p>
+  </div>
+</section>
+
+<div class="page" id="app" hidden>
   <header class="top">
     <a class="logo" href="#library">BrandIt <span>Studio</span></a>
-    <p class="meta"><span data-brand-name></span> · <time data-clock></time></p>
+    <div class="top-right">
+      <div class="dd" data-dd="brand" data-label="Brand"></div>
+      <div class="dd" data-dd="user"></div>
+    </div>
   </header>
 
-  <!-- Screen 1: library -->
+  <!-- Library -->
   <section class="screen" id="library" aria-labelledby="lib-h">
-    <div class="intro"><p class="label">Library</p><h1 id="lib-h" class="statement">Reusable ads in one identity. Pick one, write your line, export every format.</h1></div>
+    <div class="intro"><p class="label">Library</p><h1 id="lib-h" class="statement">Clean ads for every feed. Pick a look, add your photo and logo, export every format.</h1></div>
     <div class="bar">
-      <div class="chips" role="group" aria-label="Family" data-families></div>
-      <label class="select">Format <select data-lib-format></select></label>
-      <label class="select">Theme <select data-lib-theme></select></label>
+      <div class="chips" role="group" aria-label="Style" data-cats></div>
+      <div class="bar-right"><label class="btn btn--line file-btn lib-photo">Preview with my photo<input type="file" accept="image/*" data-lib-image hidden></label><div class="dd" data-dd="lib-format" data-label="Format"></div><div class="dd" data-dd="lib-pal" data-label="Colours"></div></div>
     </div>
     <ul class="grid" data-lib-grid></ul>
   </section>
 
-  <!-- Screen 2: editor -->
+  <!-- Editor -->
   <section class="screen" id="editor" aria-labelledby="ed-h" hidden>
     <div class="editor">
       <form class="panel" data-form onsubmit="return false">
-        <h1 id="ed-h" class="h2" data-ed-name>Editor</h1>
-        <label class="select">Template <select data-ed-template></select></label>
-        <fieldset><legend>Format</legend><div class="chips" data-ed-formats></div></fieldset>
-        <fieldset><legend>Theme</legend><div class="swatches" data-ed-themes></div></fieldset>
-        <div data-fields class="fields"></div>
-        <label class="file">Photo <input type="file" accept="image/*" data-ed-image><span>Upload a real photo (stays in your browser)</span></label>
-        <button type="button" class="link" data-ed-reset>Back to the example text</button>
+        <div class="panel-head"><h1 id="ed-h" class="h2" data-ed-name>Editor</h1><p class="muted" data-ed-cat></p></div>
+        <div class="dd full" data-dd="template" data-label="Template"></div>
+        <div class="chips" data-ed-formats></div>
+
+        <details class="sec" open><summary>Colours</summary>
+          <div class="swatches" data-ed-pals></div>
+          <div class="colours" data-ed-colours></div>
+          <button type="button" class="link" data-reset="colours">Reset colours</button>
+        </details>
+
+        <details class="sec"><summary>Type</summary>
+          <div class="dd full" data-dd="fd" data-label="Headline font"></div>
+          <div class="dd full" data-dd="ft" data-label="Text font"></div>
+          <div class="dd full" data-dd="fm" data-label="Label font"></div>
+          <label class="btn btn--line file-btn">Import font (TTF, OTF, WOFF)<input type="file" accept=".ttf,.otf,.woff,.woff2,font/*" data-font-file hidden></label>
+          <p class="hint" data-font-note></p>
+        </details>
+
+        <details class="sec" open><summary>Photo and logo</summary>
+          <div class="row2">
+            <label class="btn btn--line file-btn">Upload photo<input type="file" accept="image/*" data-ed-image hidden></label>
+            <label class="btn btn--line file-btn">Import logo<input type="file" accept="image/*,.svg" data-ed-logo hidden></label>
+          </div>
+          <label class="range">Left – right<input type="range" min="0" max="100" step="1" data-st="ix"></label>
+          <label class="range">Up – down<input type="range" min="0" max="100" step="1" data-st="iy"></label>
+          <label class="range">Zoom<input type="range" min="1" max="2.5" step=".01" data-st="iz"></label>
+          <label class="range">Overlay<input type="range" min="0" max="1" step=".01" data-st="ov"></label>
+          <label class="range">Logo size<input type="range" min=".4" max="3" step=".05" data-st="ls"></label>
+          <p class="hint">Drag the photo in the preview to move it. The logo is saved to the active brand and appears in every template with a mark.</p>
+          <button type="button" class="link" data-reset="photo">Reset photo position</button>
+        </details>
+
+        <details class="sec" open><summary>Text</summary>
+          <p class="hint">Click any text in the preview to select it, then drag it or use the arrows.</p>
+          <div class="nudge" data-nudge><button type="button" data-move="0,-1" aria-label="Move up">↑</button><button type="button" data-move="-1,0" aria-label="Move left">←</button><button type="button" data-move="1,0" aria-label="Move right">→</button><button type="button" data-move="0,1" aria-label="Move down">↓</button><span data-picked>No text selected</span></div>
+          <div data-fields class="fields"></div>
+          <button type="button" class="link" data-reset="text">Back to the example text</button>
+          <button type="button" class="link" data-reset="nudge">Reset text positions</button>
+        </details>
       </form>
       <div class="stage">
         <div class="canvas" data-canvas></div>
@@ -49,47 +100,53 @@
         </div>
       </div>
       <aside class="variants" aria-label="Variants">
-        <p class="label">Same content, every format</p><div class="vgrid" data-v-formats></div>
-        <p class="label">Every theme</p><div class="vgrid themes" data-v-themes></div>
+        <p class="label">Every format</p><div class="vgrid" data-v-formats></div>
+        <p class="label">Every palette</p><div class="vgrid themes" data-v-pals></div>
       </aside>
     </div>
   </section>
 
-  <!-- Screen 3: campaign sets -->
+  <!-- Sets -->
   <section class="screen" id="sets" aria-labelledby="set-h" hidden>
     <div class="intro"><p class="label">Sets</p><h1 id="set-h" class="statement">A campaign is a few posts that look like one family. Pick a set, check it, export it in one go.</h1></div>
-    <div class="bar"><div class="chips" role="group" aria-label="Set" data-sets></div><label class="select">Format <select data-set-format></select></label><button type="button" class="btn" data-set-export>Export the set as PNG</button></div>
+    <div class="bar"><div class="chips" role="group" aria-label="Set" data-sets></div><div class="bar-right"><div class="dd" data-dd="set-format" data-label="Format"></div><button type="button" class="btn" data-set-export>Export the set</button></div></div>
     <ul class="grid set" data-set-grid></ul>
   </section>
 
-  <!-- Screen 4: brand kit -->
-  <section class="screen" id="brand" aria-labelledby="br-h" hidden>
-    <div class="intro"><p class="label">Brand kit</p><h1 id="br-h" class="statement">Your name, mark and colours. Every template reads them; they stay in this browser.</h1></div>
-    <form class="kit" data-kit onsubmit="return false">
-      <label>Name in the wordmark<input name="name" maxlength="18"></label>
-      <label>Short mark (two letters)<input name="short" maxlength="3"></label>
-      <label>Handle<input name="handle" maxlength="40"></label>
-      <label>Website<input name="url" maxlength="60"></label>
-      <label>City<input name="place" maxlength="40"></label>
-      <fieldset class="colours"><legend>Custom theme</legend>
-        <label>Background<input type="color" name="bg" value="#f4f3f1"></label>
-        <label>Text<input type="color" name="ink" value="#0b0b0b"></label>
-        <label>Accent<input type="color" name="accent" value="#e8401c"></label>
-        <label>Display<select name="display"><option value="grotesk">Grotesk</option><option value="condensed">Condensed</option></select></label>
-      </fieldset>
+  <!-- Brands -->
+  <section class="screen" id="brands" aria-labelledby="br-h" hidden>
+    <div class="intro"><p class="label">Brands</p><h1 id="br-h" class="statement">Save every brand you work on. Switch one and the whole library takes its name, logo, colours and fonts.</h1></div>
+    <div class="brands">
+      <ul class="brand-list" data-brand-list></ul>
+      <form class="kit" data-kit onsubmit="return false">
+        <label>Name<input name="name" maxlength="24"></label>
+        <label>Short mark (1–3 letters)<input name="short" maxlength="3"></label>
+        <label class="check"><input type="checkbox" name="useLogo" data-use-logo> Use logo instead of the short mark and name</label>
+        <div class="logo-row"><span class="logo-prev" data-logo-prev></span><label class="btn btn--line file-btn">Import logo<input type="file" accept="image/*,.svg" data-kit-logo hidden></label><button type="button" class="link" data-logo-remove>Remove logo</button></div>
+        <label>Handle<input name="handle" maxlength="40"></label>
+        <label>Website<input name="url" maxlength="60"></label>
+        <label>City<input name="place" maxlength="40"></label>
+        <fieldset class="colours"><legend>Brand colours</legend>
+          <label>Background<input type="color" name="c-bg"></label><label>Text<input type="color" name="c-ink"></label><label>Accent<input type="color" name="c-accent"></label><label>Gradient 1<input type="color" name="c-g1"></label><label>Gradient 2<input type="color" name="c-g2"></label>
+        </fieldset>
+        <div class="dd full" data-dd="bfd" data-label="Brand headline font"></div>
+        <div class="dd full" data-dd="bft" data-label="Brand text font"></div>
+        <p class="hint">Contrast: <span data-contrast></span></p>
+        <button type="button" class="link danger" data-brand-delete>Delete this brand</button>
+      </form>
       <div class="kit-preview" data-kit-preview></div>
-      <p class="hint">Contrast check: <span data-contrast></span></p>
-    </form>
+    </div>
   </section>
 </div>
 
-<nav class="dock" aria-label="Screens" data-dock>
+<nav class="dock" aria-label="Screens" data-dock hidden>
   <a href="#library" data-screen="library">Library</a>
   <a href="#editor" data-screen="editor">Editor</a>
   <a href="#sets" data-screen="sets">Sets</a>
-  <a href="#brand" data-screen="brand">Brand</a>
+  <a href="#brands" data-screen="brands">Brands</a>
 </nav>
 <style id="bi-css"></style>
+<style id="bi-user-fonts"></style>
 <script type="module" src="studio.js"></script>
 </body>
 </html>

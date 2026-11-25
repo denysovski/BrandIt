@@ -12,6 +12,9 @@
 export it as a square post, a portrait post, a story, a landscape banner and a link card. The same templates run
 in the browser studio, in Framer and on any web page.
 
+**Live:** [Studio](https://denysovski.github.io/BrandIt/studio/) · [VESSEL](https://denysovski.github.io/BrandIt/showcase/) ·
+[KALT](https://denysovski.github.io/BrandIt/showcase/kalt.html) · [PELLA](https://denysovski.github.io/BrandIt/showcase/pella.html)
+
 <img src="docs/ads.jpg" alt="Twelve BrandIt ads: a red stat poster, a court partner ad with a blue brush stroke and mint condensed capitals, a wordmark over a group photo, a contest ad with a blue star, an indented statement, a giant number, a book-a-call split, a match-day ad, a year mark crossed by an X, a sale, a hiring post and a match result on blue" width="100%">
 
 ## The identity

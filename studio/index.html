@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BrandIt Studio</title>
+<meta name="description" content="Make social posts and ads from the BrandIt library: pick a template, write, switch formats and themes, export PNG or SVG.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%23111' stroke-width='2.4'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23e8401c'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="studio.css">
+</head>
+<body>
+<div class="page" data-recede>
+  <header class="top">
+    <a class="logo" href="#library">BrandIt <span>Studio</span></a>
+    <p class="meta"><span data-brand-name></span> · <time data-clock></time></p>
+  </header>
+
+  <!-- Screen 1: library -->
+  <section class="screen" id="library" aria-labelledby="lib-h">
+    <div class="intro"><p class="label">Library</p><h1 id="lib-h" class="statement">Reusable ads in one identity. Pick one, write your line, export every format.</h1></div>
+    <div class="bar">
+      <div class="chips" role="group" aria-label="Family" data-families></div>
+      <label class="select">Format <select data-lib-format></select></label>
+      <label class="select">Theme <select data-lib-theme></select></label>
+    </div>
+    <ul class="grid" data-lib-grid></ul>
+  </section>
+
+  <!-- Screen 2: editor -->
+  <section class="screen" id="editor" aria-labelledby="ed-h" hidden>
+    <div class="editor">
+      <form class="panel" data-form onsubmit="return false">
+        <h1 id="ed-h" class="h2" data-ed-name>Editor</h1>
+        <label class="select">Template <select data-ed-template></select></label>
+        <fieldset><legend>Format</legend><div class="chips" data-ed-formats></div></fieldset>
+        <fieldset><legend>Theme</legend><div class="swatches" data-ed-themes></div></fieldset>
+        <div data-fields class="fields"></div>
+        <label class="file">Photo <input type="file" accept="image/*" data-ed-image><span>Upload a real photo (stays in your browser)</span></label>
+        <button type="button" class="link" data-ed-reset>Back to the example text</button>
+      </form>
+      <div class="stage">
+        <div class="canvas" data-canvas></div>
+        <div class="actions">
+          <button type="button" class="btn" data-export="png">Export PNG</button>
+          <button type="button" class="btn btn--line" data-export="png2">PNG 2×</button>
+          <button type="button" class="btn btn--line" data-export="svg">SVG</button>
+          <button type="button" class="btn btn--line" data-export="json">Copy settings</button>
+          <p class="status" role="status" data-status></p>
+        </div>
+      </div>
+      <aside class="variants" aria-label="Variants">
+        <p class="label">Same content, every format</p><div class="vgrid" data-v-formats></div>
+        <p class="label">Every theme</p><div class="vgrid themes" data-v-themes></div>
+      </aside>
+    </div>
+  </section>
+
+  <!-- Screen 3: campaign sets -->
+  <section class="screen" id="sets" aria-labelledby="set-h" hidden>
+    <div class="intro"><p class="label">Sets</p><h1 id="set-h" class="statement">A campaign is a few posts that look like one family. Pick a set, check it, export it in one go.</h1></div>
+    <div class="bar"><div class="chips" role="group" aria-label="Set" data-sets></div><label class="select">Format <select data-set-format></select></label><button type="button" class="btn" data-set-export>Export the set as PNG</button></div>
+    <ul class="grid set" data-set-grid></ul>
+  </section>
+
+  <!-- Screen 4: brand kit -->
+  <section class="screen" id="brand" aria-labelledby="br-h" hidden>
+    <div class="intro"><p class="label">Brand kit</p><h1 id="br-h" class="statement">Your name, mark and colours. Every template reads them; they stay in this browser.</h1></div>
+    <form class="kit" data-kit onsubmit="return false">
+      <label>Name in the wordmark<input name="name" maxlength="18"></label>
+      <label>Short mark (two letters)<input name="short" maxlength="3"></label>
+      <label>Handle<input name="handle" maxlength="40"></label>
+      <label>Website<input name="url" maxlength="60"></label>
+      <label>City<input name="place" maxlength="40"></label>
+      <fieldset class="colours"><legend>Custom theme</legend>
+        <label>Background<input type="color" name="bg" value="#f4f3f1"></label>
+        <label>Text<input type="color" name="ink" value="#0b0b0b"></label>
+        <label>Accent<input type="color" name="accent" value="#e8401c"></label>
+        <label>Display<select name="display"><option value="grotesk">Grotesk</option><option value="condensed">Condensed</option></select></label>
+      </fieldset>
+      <div class="kit-preview" data-kit-preview></div>
+      <p class="hint">Contrast check: <span data-contrast></span></p>
+    </form>
+  </section>
+</div>
+
+<nav class="dock" aria-label="Screens" data-dock>
+  <a href="#library" data-screen="library">Library</a>
+  <a href="#editor" data-screen="editor">Editor</a>
+  <a href="#sets" data-screen="sets">Sets</a>
+  <a href="#brand" data-screen="brand">Brand</a>
+</nav>
+<style id="bi-css"></style>
+<script type="module" src="studio.js"></script>
+</body>
+</html>

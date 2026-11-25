@@ -9,19 +9,25 @@ permissions:
   id-token: write
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: node --check lib/brandit.js && node --check studio/studio.js
+      # The site without the Figma source layers (showcase/assets), which are only needed on GitHub itself.
+      - run: rsync -a --exclude .git --exclude .github --exclude showcase/assets ./ _site/
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
   deploy:
+    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-      - run: node --check lib/brandit.js && node --check studio/studio.js
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v4
-        with:
-          path: .
       - id: deployment
         uses: actions/deploy-pages@v4

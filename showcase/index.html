@@ -41,7 +41,7 @@ ul { list-style: none; }
 
 /* 01 cover */
 .f01 .heat { position: absolute; left: 520px; top: 230px; width: 360px; height: 360px; opacity: .92; mix-blend-mode: multiply; }
-.f01 .puck { position: absolute; left: 230px; top: 330px; }
+.f01 > .puck { position: absolute; left: 230px; top: 330px; }
 .f01 .word { position: absolute; left: 56px; bottom: 96px; font-size: 196px; }
 /* 02 statement */
 .f02 .st { position: absolute; left: 330px; top: 300px; right: 70px; font-family: Display, sans-serif; font-stretch: 110%; font-weight: 400; font-size: 74px; line-height: 1; letter-spacing: -.028em; text-indent: 1.6em; }
@@ -49,7 +49,7 @@ ul { list-style: none; }
 /* 03 product on stage */
 .f03 { background: radial-gradient(120% 80% at 50% 26%, #6d7884 0%, #2a3038 48%, #0c0e11 100%); color: #e8ecef; }
 .f03 .floor { position: absolute; left: 0; right: 0; bottom: 0; height: 520px; background: linear-gradient(180deg, rgba(255,255,255,0), rgba(220,228,236,.16)); }
-.f03 .puck { position: absolute; left: 330px; top: 250px; }
+.f03 > .puck { position: absolute; left: 330px; top: 250px; }
 .carton { position: absolute; }
 .carton svg { width: 100%; height: auto; display: block; }
 .carton-puck { position: absolute; left: 22.2%; top: 24.6%; }
@@ -61,11 +61,11 @@ ul { list-style: none; }
 .f03 .carton { left: 280px; top: 640px; }
 /* 04 ritual heat */
 .f04 .heat { position: absolute; left: 120px; top: 190px; width: 840px; height: 900px; }
-.f04 .puck { position: absolute; left: 395px; top: 520px; }
+.f04 > .puck { position: absolute; left: 395px; top: 520px; }
 .f04 .big { position: absolute; left: 60px; top: 60px; font: 600 120px/.9 Display, sans-serif; font-stretch: 125%; letter-spacing: -.02em; }
 /* 05 tilted wordmark */
 .f05 .word { position: absolute; left: -60px; top: 560px; font-size: 300px; rotate: -90deg; transform-origin: 50% 50%; width: 1350px; text-align: center; translate: -480px 0; color: var(--ink); }
-.f05 .puck { position: absolute; left: 430px; top: 300px; }
+.f05 > .puck { position: absolute; left: 430px; top: 300px; }
 .f05 .heat { position: absolute; left: 560px; top: 820px; width: 380px; height: 200px; }
 /* 06 packaging grid */
 .f06 .grid { position: absolute; left: 110px; right: 110px; top: 300px; display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
@@ -103,7 +103,7 @@ ul { list-style: none; }
 .f12 .cons .puck { position: absolute; left: 0; top: 0; }
 /* 13 credits */
 .f13 .card { position: absolute; left: 110px; right: 110px; top: 110px; bottom: 150px; background: #121417; }
-.f13 .puck { position: absolute; left: 330px; top: 120px; }
+.f13 > .puck { position: absolute; left: 330px; top: 120px; }
 .f13 dl { position: absolute; left: 200px; right: 200px; top: 610px; display: grid; grid-template-columns: 1fr 1.3fr; gap: 18px 30px; font: 500 15px/1.35 Mono, monospace; letter-spacing: .06em; text-transform: uppercase; }
 .f13 dt { text-align: right; opacity: .6; }
 /* 14 monitor */

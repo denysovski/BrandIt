@@ -1,6 +1,6 @@
 // BrandIt Studio: sign in (simulated), Library, Editor, Sets and Brands over the shared library.
 // Everything is stored in this browser's localStorage, per account. Nothing is sent anywhere.
-import { templates, categories, formats, palettes, fonts, render, getTemplate, css, toSVG, toPNG, brandDefaults } from '../lib/brandit.js';
+import { templates, categories, formats, palettes, fonts, render, getTemplate, css, toSVG, toPNG, brandDefaults } from '../lib/brandit.js?v=5';
 
 const FONTS = '../fonts/';
 document.getElementById('bi-css').textContent = css(FONTS);
@@ -12,7 +12,7 @@ const readFile = (file, as = 'dataURL') => new Promise((r, j) => { const fr = ne
 /* ---------------- sounds: short synthesised clicks, off with the speaker toggle ---------------- */
 let actx = null;
 function click(kind = 'tap') {
-  if (state?.muted) return;
+  if (kind !== 'nav' || state?.muted) return;
   try {
     actx ||= new (window.AudioContext || window.webkitAudioContext)();
     const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain(), f = actx.createBiquadFilter();
@@ -32,7 +32,7 @@ const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); retu
 async function hash(s) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('brandit:' + s)); return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, '0')).join(''); }
 
 const newBrand = (o = {}) => ({ id: uid(), ...brandDefaults, logo: '', useLogo: false, colors: { bg: '#0b0b0b', ink: '#ffffff', accent: '#e8401c', g1: '#e8401c', g2: '#0b0b0b' }, fonts: { d: '', t: '', m: '' }, ...o });
-const freshState = (name) => ({ name, tpl: 'mo-crosshair', format: 'portrait', custom: { w: 1080, h: 1350 }, libFormat: 'portrait', libPal: 'own', cat: 'All', set: 'Launch week', setFormat: 'portrait', fields: {}, styles: {}, pal: {}, brands: [newBrand({ name: 'north.', short: 'NO' })], brand: null, userFonts: [], muted: false });
+const freshState = (name) => ({ name, tpl: 'mo-crosshair', format: 'portrait', custom: { w: 1080, h: 1350 }, libFormat: 'portrait', libPal: 'own', cat: 'All', set: 'Launch week', setFormat: 'portrait', fields: {}, styles: {}, pal: {}, brands: [newBrand({ name: 'north.', short: 'NO' })], brand: null, userFonts: [], muted: false, fx: true });
 let user = null, state = null, image = null, picked = null;
 
 function save() {
@@ -90,9 +90,10 @@ function drawTop() {
     if (v === '+') { const b = newBrand({ name: `Brand ${state.brands.length + 1}`, short: 'BR' }); state.brands.push(b); state.brand = b.id; save(); location.hash = 'brands'; drawTop(); show(); return; }
     state.brand = v; save(); click('ok'); drawTop(); show(true);
   });
-  dd('user', [{ value: 'sound', label: state.muted ? 'Sound: off' : 'Sound: on' }, { value: 'out', label: 'Sign out' }], null, (v) => {
-    if (v === 'sound') { state.muted = !state.muted; save(); drawTop(); click('tap'); }
-    if (v === 'out') { localStorage.removeItem(LS.session); location.reload(); }
+  dd('user', [{ value: 'settings', label: 'Settings' }, { value: 'backup', label: 'Download backup' }, { value: 'out', label: 'Sign out' }], null, (v) => {
+    if (v === 'settings') openSettings();
+    if (v === 'backup') backup();
+    if (v === 'out') signOut();
   });
   $('[data-dd="user"] .dd-btn span').textContent = state.name || user;
 }
@@ -106,12 +107,12 @@ function show(keepScroll) {
   if (s === 'editor' && arg && templates.some((t) => t.id === arg)) { if (state.tpl !== arg) picked = null; state.tpl = arg; }
   screens.forEach((n) => { $('#' + n).hidden = n !== s; });
   $$('[data-screen]').forEach((a) => (a.dataset.screen === s ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
-  if (lastScreen && lastScreen !== s) click('nav');
   lastScreen = s;
   ({ library: drawLibrary, editor: drawEditor, sets: drawSets, brands: drawBrands })[s]();
   if (!keepScroll) scrollTo(0, 0);
 }
 addEventListener('hashchange', () => show());
+document.addEventListener('click', (e) => { if (e.target.closest('.dock a, .top .logo')) click('nav'); });
 
 /* ---------------- Library ---------------- */
 function drawLibrary(animate) {
@@ -168,6 +169,8 @@ function drawCanvas() {
 }
 let redraw = 0; const soon = () => { cancelAnimationFrame(redraw); redraw = requestAnimationFrame(drawCanvas); };
 $('#editor').addEventListener('click', (e) => {
+  const tab = e.target.closest('[data-tab]');
+  if (tab) { $$('[data-tab]').forEach((t) => t.setAttribute('aria-selected', String(t === tab))); $$('[data-pane]').forEach((pn) => { pn.hidden = pn.dataset.pane !== tab.dataset.tab; }); }
   const f = e.target.closest('[data-format]'), p = e.target.closest('[data-pal]'), r = e.target.closest('[data-reset]'), m = e.target.closest('[data-move]');
   if (f) { state.format = f.dataset.format; save(); click('tap'); drawEditor(); }
   if (p) { state.pal[state.tpl] = p.dataset.pal; const st = styleOf(state.tpl); ['bg', 'ink', 'accent', 'g1', 'g2'].forEach((k) => delete st[k]); save(); click('tap'); drawEditor(); }
@@ -317,6 +320,93 @@ $('[data-brand-delete]').onclick = () => {
 };
 function confirmDelete() { const btn = $('[data-brand-delete]'); if (btn.dataset.armed) { delete btn.dataset.armed; btn.textContent = 'Delete this brand'; return true; } btn.dataset.armed = '1'; btn.textContent = 'Click again to delete'; setTimeout(() => { delete btn.dataset.armed; btn.textContent = 'Delete this brand'; }, 3000); return false; }
 
+
+/* ---------------- click ripple, button press, theme ---------------- */
+const reduced = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+const fxOn = () => (state ? state.fx !== false : true) && !reduced();
+document.addEventListener('pointerdown', (e) => {
+  if (!fxOn() || e.button > 0) return;
+  const r = document.createElement('span'); r.className = 'ripple'; r.style.left = e.clientX + 'px'; r.style.top = e.clientY + 'px';
+  document.body.appendChild(r); setTimeout(() => r.remove(), 700);
+});
+function applyTheme(t) {
+  try { localStorage.setItem('brandit.theme', t); } catch { /* blocked */ }
+  document.documentElement.dataset.theme = t === 'system' ? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : t;
+  $$('[data-theme-v]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.themeV === t)));
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if ((localStorage.getItem('brandit.theme') || 'system') === 'system') applyTheme('system'); });
+document.documentElement.classList.toggle('no-fx', false);
+
+/* ---------------- settings sheet ---------------- */
+function openSettings() {
+  const sh = $('[data-settings]'), bg = $('[data-sheet-bg]');
+  $('[data-account]').textContent = `${state.name} · ${user}`;
+  $('[data-toggle="sound"]').setAttribute('aria-checked', String(!state.muted));
+  $('[data-toggle="fx"]').setAttribute('aria-checked', String(state.fx !== false));
+  applyTheme(localStorage.getItem('brandit.theme') || 'system');
+  sh.hidden = false; bg.hidden = false; requestAnimationFrame(() => { sh.classList.add('open'); bg.classList.add('open'); });
+  $('[data-close]').focus(); click('tap');
+}
+function closeSettings() {
+  const sh = $('[data-settings]'), bg = $('[data-sheet-bg]');
+  sh.classList.remove('open'); bg.classList.remove('open');
+  setTimeout(() => { sh.hidden = true; bg.hidden = true; }, 380);
+}
+$('[data-close]').onclick = closeSettings; $('[data-sheet-bg]').onclick = closeSettings;
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('[data-settings]').hidden) closeSettings(); });
+$('[data-settings]').addEventListener('click', (e) => {
+  const t = e.target.closest('[data-toggle]'), th = e.target.closest('[data-theme-v]');
+  if (t) {
+    if (t.dataset.toggle === 'sound') state.muted = !state.muted;
+    if (t.dataset.toggle === 'fx') { state.fx = state.fx === false; document.documentElement.classList.toggle('no-fx', state.fx === false); }
+    t.setAttribute('aria-checked', String(t.dataset.toggle === 'sound' ? !state.muted : state.fx !== false));
+    save(); click('tap');
+  }
+  if (th) { applyTheme(th.dataset.themeV); click('tap'); }
+});
+$('[data-signout]').onclick = signOut;
+function signOut() { localStorage.removeItem(LS.session); location.reload(); }
+
+/* ---------------- backup and restore ---------------- */
+function backup() {
+  const data = { app: 'BrandIt Studio', version: 1, exported: new Date().toISOString(), account: { email: user, name: state.name }, theme: localStorage.getItem('brandit.theme') || 'system', data: state, photo: image };
+  const blob = new Blob([JSON.stringify(data, null, 1)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `brandit-backup-${(state.name || 'account').replace(/\W+/g, '-')}-${new Date().toISOString().slice(0, 10)}.json`; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  const n = $('[data-backup-note]'); if (n) n.textContent = `Saved: ${state.brands.length} brands, ${Object.keys(state.fields).length} edited templates, ${state.userFonts.length} fonts${image ? ', the current photo' : ''}.`;
+  click('ok');
+}
+$('[data-backup]').onclick = backup;
+$('[data-restore]').onchange = async (e) => {
+  const f = e.target.files[0]; if (!f) return; const note = $('[data-backup-note]');
+  try {
+    const j = JSON.parse(await f.text());
+    if (j.app !== 'BrandIt Studio' || !j.data || !Array.isArray(j.data.brands)) throw new Error('not a BrandIt backup');
+    const users = load(LS.users, {}); users[user].data = { ...freshState(state.name), ...j.data, name: state.name };
+    if (!store(LS.users, users)) throw new Error('this browser has no room left for it');
+    if (j.theme) applyTheme(j.theme);
+    image = j.photo || image;
+    note.textContent = `Restored ${j.data.brands.length} brands from ${new Date(j.exported).toLocaleDateString()}.`;
+    click('ok'); start(user, true);
+  } catch (err) { note.textContent = 'Could not restore: ' + err.message + '.'; }
+};
+
+/* ---------------- 3D: sign-in orbit and the loading deck ---------------- */
+const SHOW = ['mo-crosshair', 'x-lime-statement', 'mo-aura', 'y-focus-window', 'x-big-stat', 'z-colour-cards', 'mo-ribbon', 'y-stacked-accent'];
+const thumb = (id) => `<div class="ad" style="--ar:4/5">${render(id, { palette: 'own' })}</div>`;
+function drawOrbit() {
+  const o = $('[data-orbit]'); if (!o || o.childElementCount) return;
+  o.innerHTML = SHOW.map((id, i) => `<div class="orb-card" style="--i:${i};--n:${SHOW.length}">${thumb(id)}</div>`).join('');
+}
+function playLoader(done) {
+  if (!fxOn()) return done();
+  const l = $('[data-loader]'); $('[data-deck]').innerHTML = SHOW.slice(0, 5).map((id, i) => `<div class="deck-card" style="--i:${i}">${thumb(id)}</div>`).join('');
+  l.hidden = false; requestAnimationFrame(() => l.classList.add('run'));
+  setTimeout(() => { done(); l.classList.add('out'); }, 1500);
+  setTimeout(() => { l.hidden = true; l.classList.remove('run', 'out'); }, 2100);
+}
+
 /* ---------------- sign in ---------------- */
 let mode = 'in';
 function authMode(m) {
@@ -342,17 +432,18 @@ $('[data-auth-form]').onsubmit = async (e) => {
   } else if (!users[email] || users[email].pass !== h) return err('Email or password does not match an account in this browser.');
   store(LS.session, email); click('ok'); start(email);
 };
-function start(email) {
+function start(email, quiet) {
   const users = load(LS.users, {});
-  if (!users[email]) { $('#auth').hidden = false; authMode('in'); return; }
+  if (!users[email]) { $('#auth').hidden = false; authMode('in'); drawOrbit(); return; }
   user = email;
   state = { ...freshState(users[email].name), ...users[email].data };
   state.brands = (state.brands?.length ? state.brands : [newBrand()]).map((b) => ({ ...newBrand(), ...b, colors: { ...newBrand().colors, ...(b.colors || {}) }, fonts: { ...newBrand().fonts, ...(b.fonts || {}) } }));
   state.brand ||= state.brands[0].id;
   installFonts();
   state.userFonts.forEach((f) => { fetch(f.data).then((r) => r.arrayBuffer()).then((buf) => document.fonts.add(new FontFace(f.name, buf))).catch(() => {}); });
-  $('#auth').hidden = true; $('#app').hidden = false; $('[data-dock]').hidden = false;
-  drawTop(); show();
+  document.documentElement.classList.toggle('no-fx', state.fx === false);
+  const go = () => { $('#auth').hidden = true; $('#app').hidden = false; $('[data-dock]').hidden = false; drawTop(); show(); };
+  if (quiet) go(); else playLoader(go);
 }
 const session = load(LS.session, null);
-if (session) start(session); else { $('#auth').hidden = false; authMode('in'); }
+if (session) start(session); else { $('#auth').hidden = false; authMode('in'); drawOrbit(); }

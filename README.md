@@ -57,8 +57,10 @@ blend modes. They are not baked into the template, so they work on any photo and
 **Your data.** Sign-in is a local demo. Accounts, brands, logos, imported fonts, texts and settings are saved in
 this browser's localStorage. Nothing is sent anywhere. Photos stay in memory only.
 
-**Sound.** The studio plays short synthesised clicks when you navigate and pick things. Turn them off in the
-account menu (top right).
+**Settings** (account menu, top right): sound on or off (a short click only when you use the navigation), motion and
+click effects on or off, light, dark or system appearance, and **Backup**. Backup downloads one JSON file with
+everything in the account: brands, logos, fonts, texts, colours, positions and the current photo. **Restore** loads it
+back on any computer.
 
 ## Showcase
 

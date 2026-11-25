@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PELLA: a BrandIt showcase in 10 frames</title>
+<meta name="description" content="A 10-frame Instagram case study for PELLA, a fictional press-on nail brand in liquid chrome. Packaging, wordmark, stickers, a 5 × 3 board and a feed plan, drawn in SVG with BrandIt.">
+<link rel="stylesheet" href="frames.css">
+<style>
+:root { --ink: #0a0a0b; --chrome: #b9c2cb; --chrome-hi: #eef3f7; --ice: #cfe3f2; --shadow: #5a6570; --paper: #ffffff; }
+.fr { background: var(--paper); color: var(--ink); }
+.fr.dark { background: var(--ink); color: var(--chrome-hi); }
+.fr.ice { background: linear-gradient(180deg, #e9f2f9 0%, #cfe3f2 62%, #b4cde0 100%); }
+.pw { font-weight: 900; font-stretch: 112%; letter-spacing: -.045em; line-height: .8; }
+.sheet { position: absolute; inset: 0; background-image: linear-gradient(rgba(10,10,11,.12) 1px, transparent 1px), linear-gradient(90deg, rgba(10,10,11,.12) 1px, transparent 1px); background-size: 90px 90px; background-position: -1px -1px; }
+.board { position: absolute; left: 60px; right: 60px; top: 220px; bottom: 170px; display: grid; grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(3, 1fr); gap: 12px; }
+.board > div { position: relative; overflow: hidden; background: #f2f5f8; display: grid; place-items: center; }
+.board > div > .m { left: 8px; top: 8px; font-size: 10px; }
+.board .k { background: var(--ink); color: var(--chrome-hi); }
+.board .i { background: var(--ice); }
+.stk { position: absolute; display: grid; place-items: center; text-align: center; }
+.feed { position: absolute; left: 150px; right: 150px; top: 250px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.feed > div { position: relative; aspect-ratio: 4 / 5; overflow: hidden; background: #eef3f7; display: grid; place-items: center; }
+.feed > div > .m { left: 8px; bottom: 8px; font-size: 10px; }
+.tag { position: absolute; right: 8px; top: 8px; padding: 3px 7px; border-radius: 99px; background: var(--ink); color: #fff; font: 500 10px/1.2 Mono, monospace; letter-spacing: .06em; text-transform: uppercase; }
+.sw { position: absolute; left: 60px; right: 60px; bottom: 60px; height: 300px; display: grid; grid-template-columns: repeat(6, 1fr); }
+.sw div { position: relative; } .sw .m { left: 14px; bottom: 14px; }
+</style>
+</head>
+<body>
+<header class="top"><span>PELLA · a BrandIt showcase · 10 frames, 1080 × 1350</span><a href="../README.md#showcase">How to use it</a></header>
+<main class="wall" id="wall"></main>
+<script type="module">
+import { chromeBox, chromeWord, chromeBlob, nail } from './draw.js';
+const F = [];
+const corners = (a, b, c, d) => [[a, 'left:60px;top:56px'], [b, 'right:60px;top:56px;text-align:right'], [c, 'left:60px;bottom:52px', 'dim'], [d, 'right:60px;bottom:52px;text-align:right', 'dim']]
+  .filter(([t]) => t).map(([t, s, k = '']) => `<p class="m s ${k}" style="${s}">${t}</p>`).join('');
+const at = (x, y, html) => `<div class="ab" style="left:${x}px;top:${y}px">${html}</div>`;
+const nails = (x, y, k = 1, seed = 1) => [0, 1, 2, 3, 4].map((i) => at(x + i * 86 * k, y + [40, 10, 0, 14, 60][i] * k, nail({ w: 70 * k, h: [190, 230, 250, 226, 170][i] * k, seed: seed + i, tilt: [-8, -3, 0, 4, 10][i] }))).join('');
+const sticker = (x, y, d, bg, fg, html, rot = 0) => `<div class="stk" style="left:${x}px;top:${y}px;width:${d}px;height:${d}px;border-radius:50%;background:${bg};color:${fg};rotate:${rot}deg">${html}</div>`;
+const pill = (x, y, w, h, bg, fg, html, rot = 0) => `<div class="stk" style="left:${x}px;top:${y}px;width:${w}px;height:${h}px;border-radius:${h}px;background:${bg};color:${fg};rotate:${rot}deg">${html}</div>`;
+
+// 01 wordmark on a grid sheet
+F.push(['Wordmark', 'f01', `<div class="sheet"></div>
+  <p class="word pw" style="left:52px;top:490px;font-size:268px">PELLA</p>
+  <p class="m s" style="left:60px;top:400px">Press-on nails</p><p class="m s" style="right:60px;top:400px;text-align:right">Wordmark</p>
+  <p class="m s" style="left:60px;top:780px;max-width:360px">Archivo Black at 112 % width,<br>tracking −4.5 %, one weight</p>
+  ${corners('PELLA®', 'Identity<br>2026', 'Fictional brand', '01')}`]);
+// 02 chrome box hero
+F.push(['Box', 'f02 ice', `${at(230, 330, chromeBox({ size: 640, seed: 4 }))}
+  <p class="word pw" style="left:60px;top:150px;font-size:118px">CHROME<br>FOR TEN</p>
+  ${corners('PELLA®', 'Packaging', 'Liquid-chrome board,<br>black foil', '24 nails · 12 sizes')}`]);
+// 03 5 × 3 board
+const cell = (k, label, html) => `<div class="${k}"><p class="m">${label}</p>${html}</div>`;
+F.push(['Board', 'f03', `${corners('PELLA®', 'Board · 5 × 3', 'Everything on one artboard', '03')}
+  <p class="word pw" style="left:60px;top:120px;font-size:64px">THE BOARD</p>
+  <div class="board">
+    ${cell('', 'A1', chromeBox({ size: 170, seed: 2 }))}
+    ${cell('k', 'A2', '<p class="word pw" style="position:static;font-size:46px">PELLA</p>')}
+    ${cell('i', 'A3', nails(18, 20, 0.42, 3))}
+    ${cell('', 'A4', chromeBlob({ w: 150, h: 150, seed: 5 }))}
+    ${cell('k', 'A5', chromeWord({ word: 'P', w: 150, h: 170, size: 170, seed: 9 }))}
+    ${cell('i', 'B1', '<p class="m" style="position:static;font-size:13px">24 pcs<br>12 sizes<br>1 glue tab</p>')}
+    ${cell('', 'B2', chromeBox({ size: 170, seed: 7, open: true, word: '' }))}
+    ${cell('k', 'B3', chromeBlob({ w: 130, h: 180, seed: 11 }))}
+    ${cell('', 'B4', '<p class="word pw" style="position:static;font-size:46px">PELLA</p>')}
+    ${cell('i', 'B5', chromeBox({ size: 170, seed: 12 }))}
+    ${cell('k', 'C1', nails(18, 26, 0.42, 8))}
+    ${cell('', 'C2', chromeWord({ word: 'PELLA', w: 180, h: 80, size: 44, seed: 14 }))}
+    ${cell('i', 'C3', chromeBlob({ w: 150, h: 150, seed: 16 }))}
+    ${cell('', 'C4', '<p class="m" style="position:static;font-size:13px">Ten minutes.<br>No lamp.</p>')}
+    ${cell('k', 'C5', chromeBox({ size: 170, seed: 18 }))}
+  </div>`]);
+// 04 chrome wordmark on black
+F.push(['Chrome', 'f04 dark', `${at(60, 500, chromeWord({ word: 'PELLA', w: 960, h: 300, size: 290, seed: 6 }))}
+  ${corners('PELLA®', 'Chrome', 'The wordmark cast<br>in the box finish', '04')}
+  <p class="m" style="left:60px;top:900px;max-width:420px">Same letters,<br>poured in metal.</p>`]);
+// 05 stickers
+F.push(['Stickers', 'f05', `<div class="sheet"></div>
+  ${sticker(120, 220, 360, 'var(--ink)', '#fff', '<p class="word pw" style="position:static;font-size:84px">PELLA</p>', -8)}
+  ${sticker(560, 260, 300, 'var(--ice)', 'var(--ink)', '<p class="m" style="position:static;font-size:22px">Ten<br>minutes<br>no lamp</p>', 6)}
+  ${pill(160, 680, 460, 120, 'var(--chrome-hi)', 'var(--ink)', '<p class="word pw" style="position:static;font-size:60px">24 PCS</p>', 3)}
+  ${at(640, 620, chromeBlob({ w: 300, h: 300, seed: 21 }))}
+  ${pill(120, 900, 380, 90, 'var(--ink)', 'var(--chrome-hi)', '<p class="m" style="position:static;font-size:20px">Reusable · 3 wears</p>', -4)}
+  ${sticker(600, 930, 220, '#fff;box-shadow:0 0 0 2px #0a0a0b inset,0 18px 40px -20px rgba(10,10,11,.5)', 'var(--ink)', '<p class="word pw" style="position:static;font-size:90px">P</p>', 12)}
+  ${corners('PELLA®', 'Stickers', 'Seal, size and promise', '05')}`]);
+// 06 nails
+F.push(['Nails', 'f06 ice', `${nails(250, 380, 1.4, 31)}
+  <p class="word pw" style="left:60px;top:150px;font-size:118px">FIVE<br>SHAPES</p>
+  <p class="m s" style="left:250px;top:830px;width:600px;display:flex;justify-content:space-between"><span>Thumb</span><span>Index</span><span>Middle</span><span>Ring</span><span>Little</span></p>
+  ${corners('PELLA®', 'Nails', 'Almond, medium length', '06')}`]);
+// 07 stack of boxes
+F.push(['Stack', 'f07 dark', `${at(320, 640, chromeBox({ size: 520, seed: 41 }))}${at(250, 400, chromeBox({ size: 460, seed: 42, word: '' }))}${at(390, 200, chromeBox({ size: 380, seed: 43, open: true, word: '' }))}
+  ${corners('PELLA®', 'Stack', 'Three sets a month', '07')}
+  <p class="word pw" style="left:60px;bottom:110px;font-size:96px;color:var(--chrome-hi)">REFILL<br>MONTHLY</p>`]);
+// 08 type and colour
+const pal = [['#0a0a0b', 'Ink', '#fff'], ['#5a6570', 'Shadow', '#fff'], ['#b9c2cb', 'Chrome', '#0a0a0b'], ['#cfe3f2', 'Ice', '#0a0a0b'], ['#eef3f7', 'Chrome hi', '#0a0a0b'], ['#ffffff', 'Paper', '#0a0a0b']];
+F.push(['Type and colour', 'f08', `${corners('PELLA®', 'Type and colour', '', '08')}
+  <p class="m s dim" style="left:60px;top:200px">Display: Archivo 900, 112 % width</p>
+  <p class="word pw" style="left:60px;top:250px;font-size:200px">PELLA</p>
+  <p class="m s dim" style="left:60px;top:500px">Text: Host Grotesk 400</p>
+  <p style="position:absolute;left:60px;top:540px;max-width:820px;font-size:46px;line-height:1.1;letter-spacing:-.015em">Chrome nails in ten minutes. No lamp, no salon, three wears a set.</p>
+  <p class="m s dim" style="left:60px;top:740px">Labels: IBM Plex Mono 500</p>
+  <p class="m" style="left:60px;top:775px">24 pcs · 12 sizes · Almond</p>
+  <div class="sw" style="outline:1px solid #e3e7eb">${pal.map(([c, n, t]) => `<div style="background:${c};color:${t}"><p class="m s">${n}<br>${c}</p></div>`).join('')}</div>`]);
+// 09 feed plan: the feed rhythm rule applied to nine posts
+const plan = [['Product', chromeBox({ size: 220, seed: 51 }), 'P'], ['Styling', nails(20, 40, 0.5, 52), ''], ['Brand', '<p class="word pw" style="position:static;font-size:56px">PELLA</p>', ''],
+  ['Fit', '<p class="m" style="position:static;font-size:13px;text-align:center">12 sizes<br>fit any nail</p>', ''], ['Product', chromeBox({ size: 220, seed: 53, open: true, word: '' }), 'P'], ['Use', nails(20, 40, 0.5, 54), ''],
+  ['Product', chromeWord({ word: 'PELLA', w: 240, h: 100, size: 58, seed: 55 }) + chromeBox({ size: 150, seed: 56, word: '' }), 'P'], ['Proof', '<p class="m" style="position:static;font-size:13px;text-align:center">3 wears<br>per set</p>', ''], ['Concept', chromeBlob({ w: 200, h: 200, seed: 57 }), 'No product']];
+F.push(['Feed plan', 'f09', `${corners('PELLA®', 'Feed plan', 'In every nine: three product posts,<br>one without product, the rest answer doubts', '09')}
+  <p class="word pw" style="left:60px;top:120px;font-size:64px">NINE POSTS</p>
+  <div class="feed">${plan.map(([l, a, t]) => `<div>${a}<p class="m">${l}</p>${t ? `<span class="tag">${t}</span>` : ''}</div>`).join('')}</div>`]);
+// 10 credits
+F.push(['Credits', 'f10 dark', `${at(310, 160, chromeBox({ size: 460, seed: 61 }))}
+  <p class="word pw" style="left:0;right:0;top:700px;text-align:center;font-size:110px;color:var(--chrome-hi)">PELLA®</p>
+  <p class="m s" style="left:200px;top:860px;width:300px;text-align:right;color:var(--chrome);line-height:2">Project<br>Year<br>Scope<br>Made with</p>
+  <p class="m s" style="left:540px;top:860px;width:400px;color:var(--chrome-hi);line-height:2">PELLA® press-on nails<br>2026<br>Identity, packaging, feed<br>BrandIt</p>
+  <p class="m s dim" style="left:0;right:0;bottom:120px;text-align:center;color:var(--chrome)">Fictional brand · concept study</p>`]);
+
+const exportMode = new URLSearchParams(location.search).has('export');
+if (exportMode) document.documentElement.classList.add('export');
+document.getElementById('wall').innerHTML = F.map(([name, cls, html], i) => `<figure><div class="slot"><section class="fr ${cls}" id="frame-${String(i + 1).padStart(2, '0')}" aria-label="${name}">${html}</section></div><figcaption class="cap">${String(i + 1).padStart(2, '0')} / ${name}</figcaption></figure>`).join('');
+document.fonts.ready.then(() => document.documentElement.dataset.ready = '1');
+</script>
+</body>
+</html>

@@ -19,6 +19,8 @@ Clean, ready-made ads for Instagram and the web. Pick a template, add your photo
    - **Series:** number the posts of a carousel with squares, dots, story bars or numbers.
 4. **Export** as PNG, PNG at 2× or SVG.
 
+**Showcase folder.** In the Library, press *Load showcase folder* and pick a folder of photos. Every template then shows one of them, with a random palette. Templates with several photos get several. On every refresh the photos and colours are shuffled again, and clicking a template opens it in the editor with the same photo. The photos stay in this browser (IndexedDB) and are never uploaded. *Remove showcase photos* deletes them.
+
 **Brands.** Save as many brands as you like, each with its own name, logo, colours and fonts. Switch the brand in the top bar and every template changes to it.
 
 **Projects.** Press *Save to project* to plan a series before you post it. In *My projects* (in the dock or your account menu), put the posts in order, edit them later and export them all at once. Numbering follows the order automatically.

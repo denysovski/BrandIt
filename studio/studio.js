@@ -1,6 +1,6 @@
 // BrandIt Studio: sign in (simulated), Library, Editor, Sets and Brands over the shared library.
 // Everything is stored in this browser's localStorage, per account. Nothing is sent anywhere.
-import { templates, categories, formats, palettes, fonts, pagerKinds, render, getTemplate, css, toSVG, toPNG, brandDefaults } from '../lib/brandit.js?v=8';
+import { templates, categories, formats, palettes, fonts, pagerKinds, render, getTemplate, css, toSVG, toPNG, brandDefaults } from '../lib/brandit.js?v=9';
 
 const FONTS = '../fonts/';
 document.getElementById('bi-css').textContent = css(FONTS);
@@ -35,6 +35,32 @@ const newBrand = (o = {}) => ({ id: uid(), ...brandDefaults, logo: '', useLogo: 
 const freshState = (name) => ({ name, tpl: 'mo-crosshair', format: 'portrait', custom: { w: 1080, h: 1350 }, libFormat: 'portrait', libPal: 'own', cat: 'All', set: 'Launch week', setFormat: 'portrait', fields: {}, styles: {}, pal: {}, brands: [newBrand({ name: 'north.', short: 'NO' })], brand: null, userFonts: [], muted: false, fx: true, snap: true, myPalettes: [], projects: [{ id: uid(), name: 'My first series', posts: [] }], project: null, editing: null });
 let user = null, state = null, image = null, picked = null;
 const slotImgs = {};
+/* ---------------- showcase: random photos and colours on every refresh ---------------- */
+// Photos from a folder the user picks, kept in IndexedDB in this browser only (never uploaded).
+let pool = [];
+const shuf = { photo: {}, slots: {}, pal: {} };
+const idb = () => new Promise((res, rej) => { const r = indexedDB.open('brandit-showcase', 1); r.onupgradeneeded = () => r.result.createObjectStore('photos'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
+async function poolLoad() { try { const db = await idb(); return await new Promise((res) => { const q = db.transaction('photos').objectStore('photos').get(user); q.onsuccess = () => res(q.result || []); q.onerror = () => res([]); }); } catch { return []; } }
+async function poolSave(list) { const db = await idb(); return new Promise((res, rej) => { const t = db.transaction('photos', 'readwrite'); t.objectStore('photos').put(list, user); t.oncomplete = res; t.onerror = () => rej(t.error); }); }
+const lum = (h) => { const m = String(h).match(/^#?([0-9a-f]{6})/i); if (!m) return .5; const n = parseInt(m[1], 16); return (.299 * (n >> 16) + .587 * ((n >> 8) & 255) + .114 * (n & 255)) / 255; };
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+function reshuffle() {
+  shuf.photo = {}; shuf.slots = {}; shuf.pal = {};
+  if (state.shuffle === false) return;
+  const bag = [...pool].sort(() => Math.random() - .5); let k = 0;
+  const next = () => (bag.length ? bag[k++ % bag.length] : undefined);
+  // palettes with light text stay readable over photos; all palettes are fine on flat backgrounds
+  const lightInk = Object.keys(palettes).filter((p) => lum(palettes[p].ink) > .7);
+  const any = Object.keys(palettes);
+  for (const t of templates) {
+    if (pool.length) { shuf.photo[t.id] = next(); if (t.slots) shuf.slots[t.id] = t.slots.map(() => next()); }
+    const photo = !!(t.art || t.photo || t.slots);
+    shuf.pal[t.id] = Math.random() < .4 ? 'own' : pick(photo ? lightInk : any);
+  }
+}
+const photoFor = (id) => image || shuf.photo[id];
+const slotsFor = (id) => slotImgs[id] || shuf.slots[id] || [];
+const palFor = (id) => state.pal[id] ?? shuf.pal[id] ?? 'own';
 
 function save() {
   if (!user) return;
@@ -83,7 +109,7 @@ const palSwatch = (k) => { const p = k === 'brand' ? brand().colors : typeof k =
 const styleOf = (id) => (state.styles[id] ||= {});
 const ad = (id, { format, palette, image: im, fields, style } = {}) => {
   const f = fmt(format);
-  return `<div class="ad" style="--ar:${f.w}/${f.h}">${render(id, { palette: palObj(palette ?? state.pal[id] ?? 'own'), style: style ?? state.styles[id] ?? {}, fields: fields || state.fields[id] || {}, brand: brandForRender(), image: im, images: slotImgs[id] || [] })}</div>`;
+  return `<div class="ad" style="--ar:${f.w}/${f.h}">${render(id, { palette: palObj(palette ?? palFor(id)), style: style ?? state.styles[id] ?? {}, fields: fields || state.fields[id] || {}, brand: brandForRender(), image: im ?? photoFor(id), images: slotsFor(id) })}</div>`;
 };
 
 /* ---------------- top bar: brand switcher and account ---------------- */
@@ -122,14 +148,25 @@ function drawLibrary(animate) {
   $('[data-cats]').innerHTML = ['All', ...categories].map((c) => `<button type="button" class="chip" data-c="${c}" aria-pressed="${c === state.cat}">${c}<span>${c === 'All' ? templates.length : templates.filter((t) => t.cat === c).length}</span></button>`).join('');
   dd('lib-format', formatItems(), state.libFormat, (v) => { state.libFormat = v; save(); drawLibrary(true); });
   dd('lib-pal', [{ value: 'own', label: 'Each its own' }, ...palList().slice(1).map(([k, l]) => ({ value: k, label: l, swatch: palSwatch(k) }))], state.libPal, (v) => { state.libPal = v; save(); drawLibrary(true); });
+  $('[data-sc-note]').textContent ||= pool.length ? `${pool.length} showcase photos · shuffled on every refresh` : 'Load a folder of photos to see every template with them.';
+  $('[data-sc-clear]').hidden = !pool.length;
   const grid = $('[data-lib-grid]');
   const paint = () => {
-    grid.innerHTML = templates.filter((t) => state.cat === 'All' || t.cat === state.cat).map((t, i) => `<li style="--i:${i % 12}"><a class="card" href="#/editor/${t.id}">${ad(t.id, { format: state.libFormat, palette: state.libPal === 'own' ? state.pal[t.id] ?? 'own' : state.libPal, image })}<span class="name">${esc(t.name)}<span>${t.cat}</span></span></a></li>`).join('');
+    grid.innerHTML = templates.filter((t) => state.cat === 'All' || t.cat === state.cat).map((t, i) => `<li style="--i:${i % 12}"><a class="card" href="#/editor/${t.id}">${ad(t.id, { format: state.libFormat, palette: state.libPal === 'own' ? palFor(t.id) : state.libPal })}<span class="name">${esc(t.name)}<span>${t.cat}</span></span></a></li>`).join('');
   };
   if (!animate || matchMedia('(prefers-reduced-motion: reduce)').matches) return paint();
   grid.classList.add('is-swapping');
   setTimeout(() => { paint(); requestAnimationFrame(() => requestAnimationFrame(() => grid.classList.remove('is-swapping'))); }, 220);
 }
+$('[data-sc-folder]').onchange = async (e) => {
+  const files = [...e.target.files].filter((f) => /^image\//.test(f.type)).slice(0, 120); if (!files.length) return;
+  const note = $('[data-sc-note]'); note.textContent = `Loading ${files.length} photos…`;
+  const out = []; for (const f of files) out.push(await shrink(await readFile(f), 1200));
+  pool = out; try { await poolSave(out); note.textContent = `${out.length} photos saved in this browser. They shuffle on every refresh.`; } catch { note.textContent = `${out.length} photos loaded for this visit (the browser has no room to keep them).`; }
+  image = null; reshuffle(); drawLibrary(true);
+};
+$('[data-sc-shuffle]').onclick = () => { reshuffle(); drawLibrary(true); };
+$('[data-sc-clear]').onclick = async () => { if (!(await ask('Remove the showcase photos?', 'They are deleted from this browser. Your own uploads and projects stay.'))) return; pool = []; try { await poolSave([]); } catch {} reshuffle(); drawLibrary(true); $('[data-sc-note]').textContent = 'Showcase photos removed.'; };
 $('[data-lib-image]').onchange = async (e) => { const f = e.target.files[0]; if (!f) return; image = await shrink(await readFile(f)); click('ok'); drawLibrary(true); };
 $('[data-cats]').addEventListener('click', (e) => { const b = e.target.closest('.chip'); if (!b) return; state.cat = b.dataset.c; save(); click('tap'); drawLibrary(true); });
 
@@ -143,7 +180,7 @@ function drawEditor() {
   $('[data-ed-formats]').innerHTML = formatItems().map((f) => `<button type="button" class="chip" data-format="${f.value}" aria-pressed="${f.value === state.format}">${f.value === 'custom' ? 'Custom' : esc(f.label)}</button>`).join('')
     + (state.format === 'custom' ? `<span class="size"><input type="number" min="200" max="4000" value="${state.custom.w}" data-size="w" aria-label="Width in pixels"> × <input type="number" min="200" max="4000" value="${state.custom.h}" data-size="h" aria-label="Height in pixels"> px</span>` : '');
   // colours
-  const cur = state.pal[tpl.id] ?? 'own';
+  const cur = palFor(tpl.id);
   $('[data-ed-pals]').innerHTML = palList().map(([k, l]) => `<button type="button" class="sw" data-pal="${k}" aria-pressed="${k === cur}" title="${esc(l)}" aria-label="${esc(l)} colours" style="background:${palSwatch(k)}"></button>`).join('');
   const look = tpl.look || {};
   const pobj = palObj(cur);
@@ -153,7 +190,7 @@ function drawEditor() {
   for (const k of ['fd', 'ft', 'fm']) dd(k, fontItems('Template default'), st[k] || '', (v) => { if (v) st[k] = v; else delete st[k]; save(); drawEditor(); });
   // photo sliders
   const slots = tpl.slots || [];
-  $('[data-slots]').innerHTML = slots.length ? `<p class="g-title">This design has ${slots.length} photos</p>` + slots.map((l, i) => { const src = (slotImgs[tpl.id] || [])[i]; return `<label class="slot">${src ? `<img src="${src}" alt="">` : '<i>+</i>'}<span>${esc(l)}</span><b>${src ? 'Replace' : 'Upload'}</b><input type="file" accept="image/*" data-slot="${i}" hidden></label>`; }).join('') : '';
+  $('[data-slots]').innerHTML = slots.length ? `<p class="g-title">This design has ${slots.length} photos</p>` + slots.map((l, i) => { const src = slotsFor(tpl.id)[i]; return `<label class="slot">${src ? `<img src="${src}" alt="">` : '<i>+</i>'}<span>${esc(l)}</span><b>${src ? 'Replace' : 'Upload'}</b><input type="file" accept="image/*" data-slot="${i}" hidden></label>`; }).join('') : '';
   $('[data-one-photo] .file-btn').firstChild.textContent = slots.length ? 'Same photo everywhere' : 'Upload photo';
   $$('[data-st]').forEach((r) => { const k = r.dataset.st; r.value = st[k] ?? { ix: 50, iy: 50, iz: 1, ov: 0.6, ls: 1 }[k]; });
   // text fields, each with its own font, size and colour
@@ -203,11 +240,11 @@ const toHex = (c) => (/^#[0-9a-f]{6}$/i.test(c) ? c : '#000000');
 function drawCanvas() {
   const f = fmt(state.format), canvas = $('[data-canvas]');
   canvas.style.setProperty('--fw', `${Math.round(560 * Math.min(1.7, f.w / f.h))}px`);
-  canvas.innerHTML = ad(state.tpl, { format: state.format, image });
+  canvas.innerHTML = ad(state.tpl, { format: state.format });
   if (picked != null) $(`[data-canvas] [data-n="${picked}"]`)?.classList.add('is-picked');
   $('[data-picked]').textContent = picked != null ? `Text ${+picked + 1} selected. Drag it, or use the pad.` : 'Click a text in the preview to select it.';
-  $('[data-v-formats]').innerHTML = formatItems().slice(0, 5).map((x) => `<button type="button" data-format="${x.value}">${ad(state.tpl, { format: x.value, image })}${esc(x.label)}</button>`).join('');
-  $('[data-v-pals]').innerHTML = palList().slice(0, 9).map(([k, l]) => `<button type="button" data-pal="${k}">${ad(state.tpl, { format: 'square', palette: k, image, style: { ...styleOf(state.tpl), bg: '', ink: '', accent: '', g1: '', g2: '' } })}${esc(l)}</button>`).join('');
+  $('[data-v-formats]').innerHTML = formatItems().slice(0, 5).map((x) => `<button type="button" data-format="${x.value}">${ad(state.tpl, { format: x.value })}${esc(x.label)}</button>`).join('');
+  $('[data-v-pals]').innerHTML = palList().slice(0, 9).map(([k, l]) => `<button type="button" data-pal="${k}">${ad(state.tpl, { format: 'square', palette: k, style: { ...styleOf(state.tpl), bg: '', ink: '', accent: '', g1: '', g2: '' } })}${esc(l)}</button>`).join('');
 }
 let redraw = 0; const soon = () => { cancelAnimationFrame(redraw); redraw = requestAnimationFrame(drawCanvas); };
 $('#editor').addEventListener('click', (e) => {
@@ -297,7 +334,7 @@ addEventListener('keydown', (e) => {
   const k = { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] }[e.key]; if (!k) return;
   e.preventDefault(); const s = e.shiftKey ? 5 : 1; nudgeBy(k[0] * s, k[1] * s);
 });
-$('[data-slots]').addEventListener('change', async (e) => { const i = e.target.dataset.slot; const f = e.target.files?.[0]; if (i == null || !f) return; (slotImgs[state.tpl] ||= [])[+i] = await shrink(await readFile(f)); drawEditor(); });
+$('[data-slots]').addEventListener('change', async (e) => { const i = e.target.dataset.slot; const f = e.target.files?.[0]; if (i == null || !f) return; (slotImgs[state.tpl] ||= [...slotsFor(state.tpl)])[+i] = await shrink(await readFile(f)); drawEditor(); });
 $('[data-ed-image]').onchange = async (e) => { const f = e.target.files[0]; if (!f) return; image = await shrink(await readFile(f)); click('ok'); drawEditor(); status('Photo added. Drag it in the preview to move it.'); };
 $('[data-ed-logo]').onchange = async (e) => { const f = e.target.files[0]; if (!f) return; const b = brand(); b.logo = await readFile(f); b.useLogo = true; save(); click('ok'); drawEditor(); status(`Logo saved to ${b.name}.`); };
 $('[data-font-file]').onchange = async (e) => {
@@ -317,7 +354,7 @@ function shrink(src, max = 1600) {
 }
 
 /* ---------------- Projects: save designs, order them, number them ---------------- */
-const snapshot = () => ({ tpl: state.tpl, format: state.format, custom: { ...state.custom }, palette: state.pal[state.tpl] ?? 'own', style: JSON.parse(JSON.stringify(state.styles[state.tpl] || {})), fields: { ...(state.fields[state.tpl] || {}) }, image, images: [...(slotImgs[state.tpl] || [])] });
+const snapshot = () => ({ tpl: state.tpl, format: state.format, custom: { ...state.custom }, palette: palFor(state.tpl), style: JSON.parse(JSON.stringify(state.styles[state.tpl] || {})), fields: { ...(state.fields[state.tpl] || {}) }, image: photoFor(state.tpl), images: [...slotsFor(state.tpl)] });
 function savePost() {
   const pr = projectOf(state.project); if (!pr) return;
   const ed = state.editing && projectOf(state.editing.pid)?.posts.find((x) => x.id === state.editing.postId);
@@ -421,7 +458,7 @@ function status(t) { const el = $('[data-status]'); if (el) el.textContent = t; 
 const download = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
 async function exportOne(id, format, kind = 'png', scale = 1) {
   const f = fmt(format);
-  const markup = render(id, { palette: palObj(state.pal[id] ?? 'own'), style: state.styles[id] || {}, fields: state.fields[id] || {}, brand: brandForRender(), image });
+  const markup = render(id, { palette: palObj(palFor(id)), style: state.styles[id] || {}, fields: state.fields[id] || {}, brand: brandForRender(), image: photoFor(id), images: slotsFor(id) });
   const svg = await toSVG(markup, { w: f.w, h: f.h, fontBase: new URL(FONTS, location.href).href, extraCss: userFontCss() });
   const name = `${id}-${f.w}x${f.h}`;
   if (kind === 'svg') return download(new Blob([svg], { type: 'image/svg+xml' }), name + '.svg');
@@ -457,7 +494,7 @@ const SETS = {
 function drawSets() {
   $('[data-sets]').innerHTML = Object.keys(SETS).map((s) => `<button type="button" class="chip" data-set="${s}" aria-pressed="${s === state.set}">${s}</button>`).join('');
   dd('set-format', formatItems(), state.setFormat, (v) => { state.setFormat = v; save(); drawSets(); });
-  $('[data-set-grid]').innerHTML = (SETS[state.set] || []).map((id, i) => { const t = getTemplate(id); return `<li style="--i:${i}"><a class="card" href="#/editor/${id}">${ad(id, { format: state.setFormat, image })}<span class="name">${esc(t.name)}<span>edit</span></span></a></li>`; }).join('');
+  $('[data-set-grid]').innerHTML = (SETS[state.set] || []).map((id, i) => { const t = getTemplate(id); return `<li style="--i:${i}"><a class="card" href="#/editor/${id}">${ad(id, { format: state.setFormat })}<span class="name">${esc(t.name)}<span>edit</span></span></a></li>`; }).join('');
 }
 $('[data-sets]').addEventListener('click', (e) => { const b = e.target.closest('.chip'); if (!b) return; state.set = b.dataset.set; save(); click('tap'); drawSets(); });
 $('[data-set-export]').onclick = async () => { for (const id of SETS[state.set]) { await exportOne(id, state.setFormat); await new Promise((r) => setTimeout(r, 350)); } };
@@ -480,7 +517,7 @@ function contrast(a, c) {
 }
 function drawKitPreview() {
   const b = brand();
-  $('[data-kit-preview]').innerHTML = ['x-lime-statement', 'mo-aura', 'x-blue-statement', 'y-letter-window'].map((id) => ad(id, { format: 'square', palette: 'brand', image })).join('');
+  $('[data-kit-preview]').innerHTML = ['x-lime-statement', 'mo-aura', 'x-blue-statement', 'y-letter-window'].map((id) => ad(id, { format: 'square', palette: 'brand' })).join('');
   const r = contrast(toHex(b.colors.bg), toHex(b.colors.ink));
   $('[data-contrast]').textContent = `${r.toFixed(1)} : 1 text on background, ${r >= 4.5 ? 'passes AA' : 'too low for small text'}`;
 }
@@ -620,7 +657,7 @@ $('[data-auth-form]').onsubmit = async (e) => {
   } else if (!users[email] || users[email].pass !== h) return err('Email or password does not match an account in this browser.');
   store(LS.session, email); click('ok'); start(email);
 };
-function start(email, quiet) {
+async function start(email, quiet) {
   const users = load(LS.users, {});
   if (!users[email]) { $('#auth').hidden = false; authMode('in'); drawOrbit(); return; }
   user = email;
@@ -631,6 +668,7 @@ function start(email, quiet) {
   installFonts();
   state.userFonts.forEach((f) => { fetch(f.data).then((r) => r.arrayBuffer()).then((buf) => document.fonts.add(new FontFace(f.name, buf))).catch(() => {}); });
   document.documentElement.classList.toggle('no-fx', state.fx === false);
+  pool = await poolLoad(); reshuffle();
   const go = () => { $('#auth').hidden = true; $('#app').hidden = false; $('[data-dock]').hidden = false; drawTop(); show(); };
   if (quiet) go(); else playLoader(go);
 }

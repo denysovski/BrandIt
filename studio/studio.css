@@ -384,3 +384,6 @@ button.cdot { padding: 0; background: var(--surface); }
 .group:not(.mover) { display: flex; flex-direction: column; }
 .pane > .dd.full { display: grid; }
 .pane[hidden], [hidden] { display: none !important; }
+.showcase-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 0 var(--m) 22px; }
+.showcase-bar .hint { margin: 0; }
+@media (max-width: 720px) { .showcase-bar { padding: 0 14px 16px; } .showcase-bar .btn { flex: 1; } }

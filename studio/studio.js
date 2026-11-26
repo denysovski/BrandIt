@@ -1,6 +1,6 @@
 // BrandIt Studio: sign in (simulated), Library, Editor, Sets and Brands over the shared library.
 // Everything is stored in this browser's localStorage, per account. Nothing is sent anywhere.
-import { templates, categories, formats, palettes, fonts, pagerKinds, render, getTemplate, css, toSVG, toPNG, brandDefaults } from '../lib/brandit.js?v=7';
+import { templates, categories, formats, palettes, fonts, pagerKinds, render, getTemplate, css, toSVG, toPNG, brandDefaults } from '../lib/brandit.js?v=8';
 
 const FONTS = '../fonts/';
 document.getElementById('bi-css').textContent = css(FONTS);
@@ -448,6 +448,8 @@ const SETS = {
   'App release': ['x-app-promo', 'x-claim', 'x-profile-card', 'x-wordmark-phone'],
   'Shop drop': ['x-shop-drop', 'x-red-wall', 'x-sale-band', 'y-notch'],
   'Growth report': ['x-big-stat', 'x-kpi', 'x-growth', 'x-price'],
+  'Performance agency': ['q-question', 'q-donut', 'q-mixed', 'q-percent-star'],
+  'Red studio': ['q-cinema', 'q-services', 'q-centre-mark', 'q-red-words'],
   'Strategy deck': ['z-orange-statement', 'z-peach-stat', 'z-bars', 'z-split-underline'],
   'Editorial grey': ['z-year', 'z-vertical-address', 'z-oval', 'z-date-card'],
   'Team and events': ['y-team-intro', 'y-dot-grid', 'y-numbered-quote', 'x-badge'],

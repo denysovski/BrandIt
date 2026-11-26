@@ -6,7 +6,7 @@
 <title>BrandIt Studio</title>
 <meta name="description" content="Make social posts and ads from the BrandIt library: pick a template, add your photo and logo, change colours and fonts, export PNG or SVG.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%23111' stroke-width='2.4'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23e8401c'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="studio.css?v=5">
+<link rel="stylesheet" href="studio.css?v=7">
 <script>try{var t=localStorage.getItem("brandit.theme")||"system";t=t.replace(/"/g,"");document.documentElement.dataset.theme=t==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;}catch(e){}</script>
 </head>
 <body>
@@ -30,7 +30,7 @@
 
 <div class="page" id="app" hidden>
   <header class="top">
-    <a class="logo" href="#library">BrandIt <span>Studio</span></a>
+    <a class="logo" href="#/library">BrandIt <span>Studio</span></a>
     <div class="top-right">
       <div class="dd" data-dd="brand" data-label="Brand"></div>
       <div class="dd" data-dd="user"></div>
@@ -59,17 +59,31 @@
           <button type="button" role="tab" data-tab="colours" aria-selected="false">Colours</button>
           <button type="button" role="tab" data-tab="type" aria-selected="false">Type</button>
           <button type="button" role="tab" data-tab="size" aria-selected="false">Size</button>
+          <button type="button" role="tab" data-tab="series" aria-selected="false">Series</button>
         </div>
 
         <div class="pane" data-pane="text" role="tabpanel">
+          <label class="check"><input type="checkbox" data-onefont> One font for every text</label>
+          <div class="dd full" data-dd="onefont" data-label="Font" hidden></div>
           <div data-fields class="fields"></div>
-          <div class="group"><p class="g-title">Move a text</p><p class="hint">Click a text in the preview, then drag it or use the arrows.</p>
-            <div class="nudge" data-nudge><button type="button" data-move="0,-1" aria-label="Move up">↑</button><button type="button" data-move="-1,0" aria-label="Move left">←</button><button type="button" data-move="1,0" aria-label="Move right">→</button><button type="button" data-move="0,1" aria-label="Move down">↓</button><span data-picked>No text selected</span></div></div>
-          <div class="links"><button type="button" class="link" data-reset="text">Back to the example text</button><button type="button" class="link" data-reset="nudge">Reset positions</button></div>
+          <div class="row2"><button type="button" class="btn btn--line" data-reset="text">Back to example</button><button type="button" class="btn btn--line" data-reset="nudge">Reset positions</button></div>
+          <div class="group mover">
+            <div><p class="g-title">Move the selected text</p><p class="hint" data-picked>Click a text in the preview to select it.</p>
+              <label class="check small"><input type="checkbox" data-snap checked> Snap to grid and centre, keep inside the edges</label>
+              </div>
+            <div class="pad" data-nudge aria-label="Move text">
+              <button type="button" class="u" data-move="0,-1" aria-label="Move up"><svg viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></svg></button>
+              <button type="button" class="l" data-move="-1,0" aria-label="Move left"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+              <button type="button" class="c" data-move="center" aria-label="Centre horizontally"><i></i></button>
+              <button type="button" class="r" data-move="1,0" aria-label="Move right"><svg viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></svg></button>
+              <button type="button" class="d" data-move="0,1" aria-label="Move down"><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+            </div>
+          </div>
         </div>
 
         <div class="pane" data-pane="photo" role="tabpanel" hidden>
-          <div class="row2">
+          <div class="slots" data-slots></div>
+          <div class="row2" data-one-photo>
             <label class="btn file-btn">Upload photo<input type="file" accept="image/*" data-ed-image hidden></label>
             <label class="btn btn--line file-btn">Import logo<input type="file" accept="image/*,.svg" data-ed-logo hidden></label>
           </div>
@@ -81,15 +95,15 @@
             <label class="range"><span>Overlay</span><input type="range" min="0" max="1" step=".01" data-st="ov"></label>
             <label class="range"><span>Logo size</span><input type="range" min=".4" max="3" step=".05" data-st="ls"></label>
           </div>
-          <div class="links"><button type="button" class="link" data-reset="photo">Reset photo</button></div>
+          <button type="button" class="btn btn--line" data-reset="photo">Reset photo</button>
         </div>
 
         <div class="pane" data-pane="colours" role="tabpanel" hidden>
           <p class="g-title">Ready-made colours</p>
           <div class="swatches" data-ed-pals></div>
-          <p class="g-title">Your own colours</p>
+          <p class="g-title">Your own colours</p><p class="hint">Click a colour to change it. Lower the opacity to make a gradient softer or see-through.</p>
           <div class="colours" data-ed-colours></div>
-          <div class="links"><button type="button" class="link" data-reset="colours">Reset colours</button></div>
+          <div class="row2"><button type="button" class="btn btn--line" data-save-pal>Save as my palette</button><button type="button" class="btn btn--line" data-reset="colours">Reset colours</button></div>
         </div>
 
         <div class="pane" data-pane="type" role="tabpanel" hidden>
@@ -103,13 +117,26 @@
         <div class="pane" data-pane="size" role="tabpanel" hidden>
           <div class="chips sizes" data-ed-formats></div>
         </div>
+
+        <div class="pane" data-pane="series" role="tabpanel" hidden>
+          <p class="hint">Number the posts of a carousel or a planned series. Posts saved to a project are numbered by their order automatically.</p>
+          <div class="chips" data-pager-kinds></div>
+          <div class="pager-ctl" data-pager-ctl>
+            <label class="stepper"><span>This post</span><button type="button" data-pg="i,-1" aria-label="Previous">−</button><output data-pg-i>1</output><button type="button" data-pg="i,1" aria-label="Next">+</button></label>
+            <label class="stepper"><span>Posts in total</span><button type="button" data-pg="n,-1" aria-label="Fewer">−</button><output data-pg-n>5</output><button type="button" data-pg="n,1" aria-label="More">+</button></label>
+            <p class="g-title">Position</p><div class="chips" data-pager-pos></div>
+            <p class="colour-one">Colour <button type="button" class="cdot" data-pager-cbtn aria-label="Numbering colour"><i></i></button></p>
+          </div>
+        </div>
       </form>
       <div class="stage">
+        <p class="editing" data-editing hidden></p>
         <div class="canvas" data-canvas></div>
         <div class="actions">
           <button type="button" class="btn" data-export="png">Export PNG</button>
           <button type="button" class="btn btn--line" data-export="png2">PNG 2×</button>
           <button type="button" class="btn btn--line" data-export="svg">SVG</button>
+          <div class="save-row"><div class="dd" data-dd="project"></div><button type="button" class="btn btn--accent" data-save-post>Save to project</button></div>
           <button type="button" class="btn btn--line" data-export="json">Copy settings</button>
           <p class="status" role="status" data-status></p>
         </div>
@@ -126,6 +153,19 @@
     <div class="intro"><p class="label">Sets</p><h1 id="set-h" class="statement">A campaign is a few posts that look like one family. Pick a set, check it, export it in one go.</h1></div>
     <div class="bar"><div class="chips" role="group" aria-label="Set" data-sets></div><div class="bar-right"><div class="dd" data-dd="set-format" data-label="Format"></div><button type="button" class="btn" data-set-export>Export the set</button></div></div>
     <ul class="grid set" data-set-grid></ul>
+  </section>
+
+  <!-- Projects -->
+  <section class="screen" id="projects" aria-labelledby="pr-h" hidden>
+    <div class="intro"><p class="label">My projects</p><h1 id="pr-h" class="statement">Plan a series before you post it. Save designs to a project, put them in order and export them in one go.</h1></div>
+    <div class="projects">
+      <aside class="proj-list"><ul data-proj-list></ul><button type="button" class="btn btn--line" data-proj-new>+ New project</button></aside>
+      <div class="proj-main">
+        <div class="proj-head"><input class="proj-name" data-proj-name aria-label="Project name" maxlength="40"><div class="proj-actions"><button type="button" class="btn" data-proj-export>Export all as PNG</button><button type="button" class="link danger" data-proj-delete>Delete project</button></div></div>
+        <p class="hint" data-proj-hint></p>
+        <ol class="grid posts" data-proj-grid></ol>
+      </div>
+    </div>
   </section>
 
   <!-- Brands -->
@@ -155,6 +195,7 @@
 </div>
 
 <div class="loader" data-loader hidden aria-hidden="true"><div class="deck" data-deck></div><p>Loading your studio</p></div>
+<div class="confirm" data-confirm hidden role="alertdialog" aria-modal="true" aria-labelledby="cf-t"><div class="confirm-card"><p id="cf-t" class="h3" data-cf-title></p><p class="muted" data-cf-text></p><div class="row2"><button type="button" class="btn btn--line" data-cf-no>Cancel</button><button type="button" class="btn" data-cf-yes>Yes, do it</button></div></div></div>
 <div class="sheet-bg" data-sheet-bg hidden></div>
 <section class="sheet" data-settings hidden role="dialog" aria-modal="true" aria-labelledby="set-title">
   <div class="sheet-head"><h2 id="set-title" class="h2">Settings</h2><button type="button" class="x" data-close aria-label="Close settings">×</button></div>
@@ -167,13 +208,14 @@
   <div class="opt"><div><b>Account</b><span>Signed in on this browser only</span></div><button type="button" class="btn btn--line" data-signout>Sign out</button></div>
 </section>
 <nav class="dock" aria-label="Screens" data-dock hidden>
-  <a href="#library" data-screen="library">Library</a>
-  <a href="#editor" data-screen="editor">Editor</a>
-  <a href="#sets" data-screen="sets">Sets</a>
-  <a href="#brands" data-screen="brands">Brands</a>
+  <a href="#/library" data-screen="library">Library</a>
+  <a href="#/editor" data-screen="editor">Editor</a>
+  <a href="#/sets" data-screen="sets">Sets</a>
+  <a href="#/projects" data-screen="projects">Projects</a>
+  <a href="#/brands" data-screen="brands">Brands</a>
 </nav>
 <style id="bi-css"></style>
 <style id="bi-user-fonts"></style>
-<script type="module" src="studio.js?v=5"></script>
+<script type="module" src="studio.js?v=7"></script>
 </body>
 </html>

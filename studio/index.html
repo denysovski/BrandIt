@@ -6,7 +6,7 @@
 <title>BrandIt Studio</title>
 <meta name="description" content="Make social posts and ads from the BrandIt library: pick a template, add your photo and logo, change colours and fonts, export PNG or SVG.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%23111' stroke-width='2.4'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23e8401c'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="studio.css?v=19">
+<link rel="stylesheet" href="studio.css?v=20">
 <script>try{var t=localStorage.getItem("brandit.theme")||"system";t=t.replace(/"/g,"");document.documentElement.dataset.theme=t==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;}catch(e){}</script>
 </head>
 <body>
@@ -163,7 +163,7 @@
     <div class="projects">
       <aside class="proj-list"><ul data-proj-list></ul><button type="button" class="btn btn--line" data-proj-new>+ New project</button></aside>
       <div class="proj-main">
-        <div class="proj-head"><input class="proj-name" data-proj-name aria-label="Project name" maxlength="40"><div class="proj-actions"><button type="button" class="btn" data-proj-export>Export all as PNG</button><button type="button" class="link danger" data-proj-delete>Delete project</button></div></div>
+        <div class="proj-head"><input class="proj-name" data-proj-name aria-label="Project name" maxlength="40"><div class="proj-actions"><button type="button" class="btn" data-proj-export>Export all as PNG</button><div class="proj-set"><button type="button" class="btn btn--line ic" data-proj-set aria-haspopup="menu" aria-expanded="false" aria-label="Project settings" title="Project settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button><div class="xlist" role="menu" data-proj-menu hidden><button type="button" role="menuitem" data-proj-rename>Rename project</button><hr><button type="button" role="menuitem" class="danger" data-proj-delete>Delete project</button></div></div></div></div>
         <p class="hint" data-proj-hint></p>
         <ol class="grid posts" data-proj-grid></ol>
       </div>
@@ -272,9 +272,7 @@
         <label>Handle<input name="handle" maxlength="40"></label>
         <label>Website<input name="url" maxlength="60"></label>
         <label>City<input name="place" maxlength="40"></label>
-        <fieldset class="colours"><legend>Brand colours</legend>
-          <label>Background<input type="color" name="c-bg"></label><label>Text<input type="color" name="c-ink"></label><label>Accent<input type="color" name="c-accent"></label><label>Gradient 1<input type="color" name="c-g1"></label><label>Gradient 2<input type="color" name="c-g2"></label>
-        </fieldset>
+        <fieldset class="bcols"><legend>Brand colours</legend><div class="colours" data-bcols></div></fieldset>
         <div class="dd full" data-dd="bfd" data-label="Brand headline font"></div>
         <div class="dd full" data-dd="bft" data-label="Brand text font"></div>
         <p class="hint">Contrast: <span data-contrast></span></p>
@@ -285,7 +283,7 @@
   </section>
 </div>
 
-<div class="loader" data-loader hidden aria-hidden="true"><div class="deck" data-deck></div><div class="bloom" role="presentation"><i style="--k:0"></i><i style="--k:1"></i><i style="--k:2"></i><i style="--k:3"></i><i style="--k:4"></i><i style="--k:5"></i></div><p>Loading your studio</p></div>
+<div class="loader" data-loader hidden aria-hidden="true"><div class="deck" data-deck></div><div class="bloom" role="presentation"><i style="--k:0"></i><i style="--k:1"></i><i style="--k:2"></i><i style="--k:3"></i><i style="--k:4"></i><i style="--k:5"></i></div><p><span>Loading your studio</span></p></div>
 <div class="confirm" data-confirm hidden role="alertdialog" aria-modal="true" aria-labelledby="cf-t"><div class="confirm-card"><p id="cf-t" class="h3" data-cf-title></p><p class="muted" data-cf-text></p><div class="row2"><button type="button" class="btn btn--danger" data-cf-yes>Yes, do it</button><button type="button" class="btn btn--line" data-cf-no>Cancel</button></div></div></div>
 <div class="sheet-bg" data-sheet-bg hidden></div>
 <section class="sheet" data-settings hidden role="dialog" aria-modal="true" aria-labelledby="set-title">
@@ -307,6 +305,6 @@
 </nav>
 <style id="bi-css"></style>
 <style id="bi-user-fonts"></style>
-<script type="module" src="studio.js?v=19"></script>
+<script type="module" src="studio.js?v=20"></script>
 </body>
 </html>

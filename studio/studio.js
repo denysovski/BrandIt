@@ -1,6 +1,6 @@
 // BrandIt Studio: sign in (simulated), Library, Editor, Sets and Brands over the shared library.
 // Everything is stored in this browser's localStorage, per account. Nothing is sent anywhere.
-import { templates, categories, formats, palettes, fonts, pagerKinds, render, getTemplate, css, toSVG, toPNG, brandDefaults } from '../lib/brandit.js?v=10';
+import { templates, categories, formats, palettes, fonts, pagerKinds, gradients, hasPhoto, render, getTemplate, css, toSVG, toPNG, brandDefaults } from '../lib/brandit.js?v=12';
 
 const FONTS = '../fonts/';
 document.getElementById('bi-css').textContent = css(FONTS);
@@ -32,7 +32,7 @@ const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); retu
 async function hash(s) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('brandit:' + s)); return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, '0')).join(''); }
 
 const newBrand = (o = {}) => ({ id: uid(), ...brandDefaults, logo: '', useLogo: false, colors: { bg: '#0b0b0b', ink: '#ffffff', accent: '#e8401c', g1: '#e8401c', g2: '#0b0b0b' }, fonts: { d: '', t: '', m: '' }, ...o });
-const freshState = (name) => ({ name, tpl: 'mo-crosshair', format: 'portrait', custom: { w: 1080, h: 1350 }, libFormat: 'portrait', libPal: 'own', cat: 'All', set: 'Launch week', setFormat: 'portrait', fields: {}, styles: {}, pal: {}, brands: [newBrand({ name: 'north.', short: 'NO' })], brand: null, userFonts: [], muted: false, fx: true, snap: true, myPalettes: [], projects: [{ id: uid(), name: 'My first series', posts: [] }], project: null, editing: null });
+const freshState = (name) => ({ name, tpl: 'mo-crosshair', format: 'portrait', custom: { w: 1080, h: 1350 }, libFormat: 'portrait', libPal: 'own', cat: 'All', set: 'Launch week', setFormat: 'portrait', fields: {}, styles: {}, pal: {}, brands: [newBrand({ name: 'north.', short: 'NO' })], brand: null, userFonts: [], muted: false, fx: true, snap: true, rulers: true, mirror: true, guides: { v: [], h: [] }, myPalettes: [], projects: [{ id: uid(), name: 'My first series', posts: [] }], project: null, editing: null });
 let user = null, state = null, image = null, picked = null;
 const slotImgs = {};
 /* ---------------- showcase: random photos and colours on every refresh ---------------- */
@@ -131,7 +131,7 @@ function drawTop() {
 }
 
 /* ---------------- screens ---------------- */
-const screens = ['library', 'editor', 'sets', 'projects', 'brands'];
+const screens = ['library', 'editor', 'sets', 'projects', 'brands', 'guide'];
 let lastScreen = '';
 function show(keepScroll) {
   const [name, arg] = (location.hash.replace(/^#\/?/, '') || 'library').split('/');
@@ -140,14 +140,14 @@ function show(keepScroll) {
   screens.forEach((n) => { $('#' + n).hidden = n !== s; });
   $$('[data-screen]').forEach((a) => (a.dataset.screen === s ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
   lastScreen = s;
-  ({ library: drawLibrary, editor: drawEditor, sets: drawSets, projects: drawProjects, brands: drawBrands })[s]();
+  ({ library: drawLibrary, editor: drawEditor, sets: drawSets, projects: drawProjects, brands: drawBrands, guide: () => {} })[s]();
   if (!keepScroll) scrollTo(0, 0);
 }
 addEventListener('hashchange', () => show());
 document.addEventListener('click', (e) => { const a = e.target.closest('.dock a, .top .logo'); if (!a) return; click('nav'); if (a.getAttribute('href') === location.hash) { e.preventDefault(); show(); } });
 
 /* ---------------- Library ---------------- */
-function drawLibrary(animate) {
+function drawLibrary(animate, skeleton) {
   $('[data-cats]').innerHTML = ['All', ...categories].map((c) => `<button type="button" class="chip" data-c="${c}" aria-pressed="${c === state.cat}">${c}<span>${c === 'All' ? templates.length : templates.filter((t) => t.cat === c).length}</span></button>`).join('');
   dd('lib-format', formatItems(), state.libFormat, (v) => { state.libFormat = v; save(); drawLibrary(true); });
   dd('lib-pal', [{ value: 'own', label: 'Each its own' }, ...palList().slice(1).map(([k, l]) => ({ value: k, label: l, swatch: palSwatch(k) }))], state.libPal, (v) => { state.libPal = v; save(); drawLibrary(true); });
@@ -155,9 +155,15 @@ function drawLibrary(animate) {
   $('[data-sc-clear]').hidden = !ownPool;
   const grid = $('[data-lib-grid]');
   const paint = () => {
-    grid.innerHTML = templates.filter((t) => state.cat === 'All' || t.cat === state.cat).map((t, i) => `<li style="--i:${i % 12}"><a class="card" href="#/editor/${t.id}">${ad(t.id, { format: state.libFormat, palette: state.libPal === 'own' ? palFor(t.id) : state.libPal })}<span class="name">${esc(t.name)}<span>${t.cat}</span></span></a></li>`).join('');
+    grid.innerHTML = templates.filter((t) => state.cat === 'All' || t.cat === state.cat).map((t, i) => `<li style="--i:${i % 12}"><a class="card" href="#/editor/${t.id}">${ad(t.id, { format: state.libFormat, palette: state.libPal === 'own' ? palFor(t.id) : state.libPal })}<span class="name">${esc(t.name)}<span>${t.cat}</span></span></a></li>`).join('') + `<li class="soon-li"><div class="soon" style="--ar:${fmt(state.libFormat).w}/${fmt(state.libFormat).h}"><span class="soon-dot"></span><b>More coming soon</b><span>New templates are in development</span></div></li>`;
   };
   if (!animate || matchMedia('(prefers-reduced-motion: reduce)').matches) return paint();
+  if (skeleton) {
+    const f = fmt(state.libFormat), n = templates.filter((t) => state.cat === 'All' || t.cat === state.cat).length;
+    grid.innerHTML = Array.from({ length: n }, (_, i) => `<li class="sk" style="--i:${i % 12}"><div class="ad sk-ad" style="--ar:${f.w}/${f.h}"><i></i><i></i><i></i></div><span class="name"><i class="sk-l"></i></span></li>`).join('');
+    setTimeout(() => { paint(); grid.classList.add('is-revealing'); setTimeout(() => grid.classList.remove('is-revealing'), 900); }, 750);
+    return;
+  }
   grid.classList.add('is-swapping');
   setTimeout(() => { paint(); requestAnimationFrame(() => requestAnimationFrame(() => grid.classList.remove('is-swapping'))); }, 220);
 }
@@ -168,9 +174,16 @@ $('[data-sc-folder]').onchange = async (e) => {
   pool = out; ownPool = true; try { await poolSave(out); note.textContent = `${out.length} photos saved in this browser. They shuffle on every refresh.`; } catch { note.textContent = `${out.length} photos loaded for this visit (the browser has no room to keep them).`; }
   image = null; reshuffle(); drawLibrary(true);
 };
-$('[data-sc-shuffle]').onclick = () => { reshuffle(); drawLibrary(true); };
+$('[data-sc-shuffle]').onclick = () => { reshuffle(); drawLibrary(true, true); };
 $('[data-sc-clear]').onclick = async () => { if (!(await ask('Remove the showcase photos?', 'They are deleted from this browser. Your own uploads and projects stay.'))) return; ownPool = false; try { await poolSave([]); } catch {} pool = await builtinPool(); reshuffle(); drawLibrary(true); $('[data-sc-note]').textContent = 'Your photos were removed. The built-in showcase is back.'; };
 $('[data-lib-image]').onchange = async (e) => { const f = e.target.files[0]; if (!f) return; image = await shrink(await readFile(f)); click('ok'); drawLibrary(true); };
+$('[data-lib-grid]').addEventListener('click', (e) => {
+  const a = e.target.closest('a.card'); if (!a) return;
+  const id = a.getAttribute('href').split('/').pop();
+  state.format = state.libFormat;
+  if (state.libPal !== 'own') state.pal[id] = state.libPal; else if (state.pal[id] == null && shuf.pal[id]) state.pal[id] = shuf.pal[id];
+  save();
+});
 $('[data-cats]').addEventListener('click', (e) => { const b = e.target.closest('.chip'); if (!b) return; state.cat = b.dataset.c; save(); click('tap'); drawLibrary(true); });
 
 /* ---------------- Editor ---------------- */
@@ -196,6 +209,8 @@ function drawEditor() {
   $('[data-slots]').innerHTML = slots.length ? `<p class="g-title">This design has ${slots.length} photos</p>` + slots.map((l, i) => { const src = slotsFor(tpl.id)[i]; return `<label class="slot">${src ? `<img src="${src}" alt="">` : '<i>+</i>'}<span>${esc(l)}</span><b>${src ? 'Replace' : 'Upload'}</b><input type="file" accept="image/*" data-slot="${i}" hidden></label>`; }).join('') : '';
   $('[data-one-photo] .file-btn').firstChild.textContent = slots.length ? 'Same photo everywhere' : 'Upload photo';
   $$('[data-st]').forEach((r) => { const k = r.dataset.st; r.value = st[k] ?? { ix: 50, iy: 50, iz: 1, ov: 0.6, ls: 1 }[k]; });
+  $('[data-ed-grads]').hidden = !hasPhoto(tpl); $('[data-ed-grads-l]').hidden = !hasPhoto(tpl);
+  $('[data-ed-grads]').innerHTML = [['', 'None'], ...Object.entries(gradients).map(([k, v]) => [k, v.label])].map(([k, l]) => `<button type="button" class="chip" data-grad="${k}" aria-pressed="${(st.grad || '') === k}">${esc(l)}</button>`).join('');
   // text fields, each with its own font, size and colour
   const values = { ...tpl.fields, ...(state.fields[tpl.id] || {}) };
   const map = fieldMap(tpl.id);
@@ -205,7 +220,7 @@ function drawEditor() {
   $('[data-fields]').innerHTML = Object.entries(values).map(([k, v]) => {
     const long = String(tpl.fields[k]).includes('\n') || String(tpl.fields[k]).length > 40;
     const ns = map[k] || [], e = (st.el || {})[ns[0]] || {};
-    const tools = ns.length ? `<div class="ftools">${st.oneFont ? '' : `<div class="dd mini" data-dd="ff-${k}"></div>`}<span class="sizer"><button type="button" data-fz="${k},-1" aria-label="Smaller text">A−</button><output>${Math.round((e.z || 1) * 100)}%</output><button type="button" data-fz="${k},1" aria-label="Bigger text">A+</button></span><button type="button" class="cdot" title="Text colour" aria-label="Text colour" data-fcp="${k}" data-v="${esc(e.c || '#ffffff')}"><i style="background:${e.c || 'conic-gradient(#e8401c,#1f3fe0,#c6f432,#e8401c)'}"></i></button>${e.c ? `<button type="button" class="link" data-fcx="${k}">Reset colour</button>` : ''}</div>` : '';
+    const tools = ns.length ? `<div class="ftools">${st.oneFont ? '' : `<div class="dd mini" data-dd="ff-${k}"></div>`}<span class="sizer"><button type="button" data-fz="${k},-1" aria-label="Smaller text">A−</button><output>${Math.round((e.z || 1) * 100)}%</output><button type="button" data-fz="${k},1" aria-label="Bigger text">A+</button></span><button type="button" class="sel" data-select="${k}">Select</button><button type="button" class="cdot" title="Text colour" aria-label="Text colour" data-fcp="${k}" data-v="${esc(e.c || '#ffffff')}"><i style="background:${e.c || 'conic-gradient(#e8401c,#1f3fe0,#c6f432,#e8401c)'}"></i></button>${e.c ? `<button type="button" class="link" data-fcx="${k}">Reset colour</button>` : ''}</div>` : '';
     return `<div class="field"><label for="f-${k}">${esc(k)}</label>${long ? `<textarea id="f-${k}" data-k="${k}" rows="${Math.min(8, String(v).split('\n').length + 1)}">${esc(v)}</textarea>` : `<input id="f-${k}" data-k="${k}" value="${esc(v)}">`}${tools}</div>`;
   }).join('');
   if (!st.oneFont) for (const [k, ns] of Object.entries(map)) if (ns.length) dd(`ff-${k}`, fontItems('Font'), ((st.el || {})[ns[0]] || {}).f || '', (v) => { ns.forEach((n) => { const e = elOf(n); v ? (e.f = v) : delete e.f; }); save(); drawEditor(); });
@@ -240,15 +255,89 @@ function fieldMap(id) {
 const elOf = (n) => { const st = styleOf(state.tpl); st.el ||= {}; return (st.el[n] ||= {}); };
 const projectOf = (id) => state.projects.find((p) => p.id === id);
 const toHex = (c) => (/^#[0-9a-f]{6}$/i.test(c) ? c : '#000000');
+let zoom = 1;
+const tickStep = (pxPerUnit) => { for (const st of [5, 10, 20, 25, 50, 100, 200, 250, 500, 1000]) if (st * pxPerUnit >= 46) return st; return 1000; };
+function rulerHtml(axis, len, total) {
+  const k = len / total, st = tickStep(k), out = [];
+  for (let v = 0; v <= total; v += st / 5) { const major = Math.abs(v / st - Math.round(v / st)) < 1e-6; out.push(`<i class="${major ? 'mj' : ''}" style="${axis === 'x' ? 'left' : 'top'}:${(v * k).toFixed(1)}px"></i>${major ? `<b style="${axis === 'x' ? 'left' : 'top'}:${(v * k).toFixed(1)}px">${Math.round(v)}</b>` : ''}`); }
+  return out.join('');
+}
 function drawCanvas() {
-  const f = fmt(state.format), canvas = $('[data-canvas]');
-  canvas.style.setProperty('--fw', `${Math.round(560 * Math.min(1.7, f.w / f.h))}px`);
-  canvas.innerHTML = ad(state.tpl, { format: state.format });
+  const f = fmt(state.format), canvas = $('[data-canvas]'), R = state.rulers !== false ? 22 : 0;
+  const avail = Math.max(200, canvas.clientWidth - 48 - R), maxH = Math.max(260, innerHeight * (innerWidth < 1100 ? .42 : .66));
+  const base = Math.min(avail, 560 * Math.min(1.7, f.w / f.h), maxH * (f.w / f.h));
+  const W = Math.round(base * zoom), H = Math.round(W * f.h / f.w);
+  const g = state.guides || { v: [], h: [] };
+  const keep = canvas.querySelector('.cv-scroll'); const sl = keep?.scrollLeft || 0, stp = keep?.scrollTop || 0;
+  canvas.innerHTML = `<div class="cv-tools">
+      <div class="cv-l"><button type="button" class="tb${R ? ' on' : ''}" data-cv="rulers" title="Show or hide rulers"><svg viewBox="0 0 24 24"><path d="M3 8h18v8H3zM7 8v3M11 8v4M15 8v3M19 8v4"/></svg><span>${R ? 'Hide rulers' : 'Rulers'}</span></button>${R ? `<button type="button" class="tb${state.mirror !== false ? ' on' : ''}" data-cv="mirror" title="Mirror new guides from the centre"><svg viewBox="0 0 24 24"><path d="M12 3v18M8 7l-4 5 4 5M16 7l4 5-4 5"/></svg><span>Mirror</span></button>${g.v.length + g.h.length ? '<button type="button" class="tb" data-cv="clear"><span>Clear guides</span></button>' : ''}` : ''}</div>
+      <div class="cv-r"><button type="button" class="tb ic" data-cv="out" aria-label="Zoom out"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21M7.5 10.5h6"/></svg></button><button type="button" class="tb zl" data-cv="fit" title="Fit">${Math.round(zoom * 100)}%</button><button type="button" class="tb ic" data-cv="in" aria-label="Zoom in"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21M7.5 10.5h6M10.5 7.5v6"/></svg></button></div></div>
+    <div class="cv-scroll"><div class="cv-wrap" style="width:${W + R}px;height:${H + R}px;--R:${R}px">
+      ${R ? `<div class="ruler x" data-ruler="h" style="width:${W}px">${rulerHtml('x', W, f.w)}</div><div class="ruler y" data-ruler="v" style="height:${H}px">${rulerHtml('y', H, f.h)}</div><i class="ruler-c"></i>` : ''}
+      <div class="cv-art" style="width:${W}px;height:${H}px">${ad(state.tpl, { format: state.format })}
+        ${R ? `<div class="guides">${g.v.map((x, i) => `<i class="gl v" data-g="v,${i}" style="left:${x}%"></i>`).join('')}${g.h.map((y, i) => `<i class="gl h" data-g="h,${i}" style="top:${y}%"></i>`).join('')}<i class="gl c v" style="left:50%"></i><i class="gl c h" style="top:50%"></i></div>` : ''}
+      </div></div></div>`;
+  const sc = canvas.querySelector('.cv-scroll'); sc.scrollLeft = sl; sc.scrollTop = stp;
   if (picked != null) $(`[data-canvas] [data-n="${picked}"]`)?.classList.add('is-picked');
-  $('[data-picked]').textContent = picked != null ? `Text ${+picked + 1} selected. Drag it, or use the pad.` : 'Click a text in the preview to select it.';
+  $('[data-picked]').textContent = picked != null ? `Text ${+picked + 1} selected. Drag it, use the pad or the arrow keys.` : 'Click a text in the preview, or press Select under a field.';
   $('[data-v-formats]').innerHTML = formatItems().slice(0, 5).map((x) => `<button type="button" data-format="${x.value}">${ad(state.tpl, { format: x.value })}${esc(x.label)}</button>`).join('');
+  const tplNow = getTemplate(state.tpl), gsec = $('[data-v-grads]');
+  gsec.hidden = !hasPhoto(tplNow); $('[data-v-grads-l]').hidden = !hasPhoto(tplNow);
+  if (hasPhoto(tplNow)) gsec.innerHTML = [['', 'None'], ...Object.entries(gradients).map(([k, v]) => [k, v.label])].map(([k, l]) => `<button type="button" data-grad="${k}" aria-pressed="${(styleOf(state.tpl).grad || '') === k}">${ad(state.tpl, { format: 'square', style: { ...styleOf(state.tpl), grad: k } })}${esc(l)}</button>`).join('');
   $('[data-v-pals]').innerHTML = palList().slice(0, 9).map(([k, l]) => `<button type="button" data-pal="${k}">${ad(state.tpl, { format: 'square', palette: k, style: { ...styleOf(state.tpl), bg: '', ink: '', accent: '', g1: '', g2: '' } })}${esc(l)}</button>`).join('');
 }
+// The text's own ink box (not its full CSS box), so short lines can move to the edge.
+function inkRect(el) { try { const r = document.createRange(); r.selectNodeContents(el); const b = r.getBoundingClientRect(); return b.width ? b : el.getBoundingClientRect(); } catch { return el.getBoundingClientRect(); } }
+// Magnetic snapping: the slower you move, the wider the pull, like Photoshop. Returns [value, snappedTo|null].
+function magnet(v, targets, speed, px) { const th = (px || 8) / (1 + speed * 2.5); let best = null; for (const t of targets) if (Math.abs(v - t) <= th && (best == null || Math.abs(v - t) < Math.abs(v - best))) best = t; return best == null ? [v, null] : [best, best]; }
+function speedOf(tr, ev) { const now = performance.now(), d = Math.hypot(ev.clientX - tr.x, ev.clientY - tr.y) / Math.max(1, now - tr.t); tr.v = tr.v * .7 + d * .3; tr.x = ev.clientX; tr.y = ev.clientY; tr.t = now; return tr.v; }
+function dragGuide(axis, idx, e) {
+  const art = $('[data-canvas] .cv-art'); if (!art) return; e.preventDefault();
+  const g = state.guides ||= { v: [], h: [] }, list = g[axis], r = art.getBoundingClientRect(), len = axis === 'v' ? r.width : r.height;
+  const old = idx == null ? null : list[idx], partner = old == null || state.mirror === false ? -1 : list.findIndex((x, j) => j !== idx && Math.abs(x - (100 - old)) < .3);
+  let line = idx == null ? null : art.querySelector(`[data-g="${axis},${idx}"]`);
+  if (!line) { line = document.createElement('i'); line.className = `gl ${axis} live`; art.querySelector('.guides').appendChild(line); }
+  const mline = partner >= 0 ? art.querySelector(`[data-g="${axis},${partner}"]`) : null;
+  const tr = { x: e.clientX, y: e.clientY, t: performance.now(), v: 0 }; let pos = old ?? 0;
+  const others = list.filter((_, j) => j !== idx && j !== partner);
+  const move = (ev) => {
+    const sp = speedOf(tr, ev), raw = ((axis === 'v' ? ev.clientX - r.left : ev.clientY - r.top) / len) * 100;
+    const tg = [50, 0, 100, ...others, ...others.map((x) => 100 - x)];
+    const [p, hit] = magnet(raw * len / 100, tg.map((x) => x * len / 100), sp, 10);
+    pos = +(p / len * 100).toFixed(2);
+    line.style[axis === 'v' ? 'left' : 'top'] = pos + '%'; line.classList.toggle('hit', hit != null); line.classList.toggle('out', pos < -1 || pos > 101);
+    if (mline) mline.style[axis === 'v' ? 'left' : 'top'] = (100 - pos) + '%';
+  };
+  const up = () => {
+    removeEventListener('pointermove', move);
+    const gone = pos < -1 || pos > 101;
+    const rest = list.filter((_, j) => j !== idx && j !== partner);
+    if (!gone) { rest.push(pos); if (state.mirror !== false && Math.abs(pos - 50) > .3 && (partner >= 0 || idx == null)) rest.push(+(100 - pos).toFixed(2)); }
+    g[axis] = [...new Set(rest.map((x) => +x.toFixed(2)))].sort((a, b) => a - b); save(); drawCanvas();
+  };
+  addEventListener('pointermove', move); addEventListener('pointerup', up, { once: true });
+}
+function setZoom(z, cx, cy) {
+  const sc = $('[data-canvas] .cv-scroll'), art = $('[data-canvas] .cv-art');
+  const old = zoom; zoom = Math.max(.5, Math.min(4, +z.toFixed(2))); if (zoom === old) return;
+  let fx = .5, fy = .5, ox = 0, oy = 0;
+  if (sc && art && cx != null) { const a = art.getBoundingClientRect(), s0 = sc.getBoundingClientRect(); fx = (cx - a.left) / a.width; fy = (cy - a.top) / a.height; ox = cx - s0.left; oy = cy - s0.top; }
+  drawCanvas();
+  const sc2 = $('[data-canvas] .cv-scroll'), a2 = $('[data-canvas] .cv-art'); if (!sc2 || !a2) return;
+  const ax = a2.offsetLeft + a2.parentElement.offsetLeft, ay = a2.offsetTop + a2.parentElement.offsetTop;
+  if (cx != null) { sc2.scrollLeft = ax + fx * a2.offsetWidth - ox; sc2.scrollTop = ay + fy * a2.offsetHeight - oy; }
+  else { sc2.scrollLeft = (sc2.scrollWidth - sc2.clientWidth) / 2; sc2.scrollTop = (sc2.scrollHeight - sc2.clientHeight) / 2; }
+}
+$('[data-canvas]').addEventListener('wheel', (e) => { if (!e.target.closest('.cv-art')) return; e.preventDefault(); setZoom(zoom * (e.deltaY < 0 ? 1.12 : 1 / 1.12), e.clientX, e.clientY); }, { passive: false });
+$('[data-canvas]').addEventListener('click', (e) => {
+  const b = e.target.closest('[data-cv]'); if (!b) return;
+  const k = b.dataset.cv;
+  if (k === 'in') setZoom(zoom * 1.25); if (k === 'out') setZoom(zoom / 1.25); if (k === 'fit') { zoom = 1; drawCanvas(); }
+  if (k === 'rulers') { state.rulers = state.rulers === false; save(); drawCanvas(); }
+  if (k === 'mirror') { state.mirror = state.mirror === false; save(); drawCanvas(); }
+  if (k === 'clear') ask('Remove all guides?', 'The rulers stay, only the guide lines go.').then((ok) => { if (ok) { state.guides = { v: [], h: [] }; save(); drawCanvas(); } });
+});
+new ResizeObserver(() => { if (!$('#editor').hidden) soon(); }).observe($('[data-canvas]'));
 let redraw = 0; const soon = () => { cancelAnimationFrame(redraw); redraw = requestAnimationFrame(drawCanvas); };
 $('#editor').addEventListener('click', (e) => {
   const tab = e.target.closest('[data-tab]');
@@ -270,6 +359,8 @@ $('#editor').addEventListener('click', (e) => {
     save(); click('tap'); drawEditor();
   }
   if (m && picked != null) { if (m.dataset.move === 'center') centreX(); else { const [dx, dy] = m.dataset.move.split(',').map(Number); const k = state.snap !== false ? 2 : 1; nudgeBy(dx * k, dy * k); } }
+  const gb = e.target.closest('[data-grad]'); if (gb) { const st = styleOf(state.tpl); if (gb.dataset.grad) st.grad = gb.dataset.grad; else delete st.grad; save(); drawEditor(); }
+  const sel = e.target.closest('[data-select]'); if (sel) { const ns = fieldMap(state.tpl)[sel.dataset.select] || []; if (ns.length) { picked = ns[0]; drawCanvas(); const c = $('[data-canvas]'); if (c.getBoundingClientRect().bottom < 0 || c.getBoundingClientRect().top > innerHeight) c.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
   const fz = e.target.closest('[data-fz]'); if (fz) { const [k, d] = fz.dataset.fz.split(','); (fieldMap(state.tpl)[k] || []).forEach((n) => { const el = elOf(n); el.z = Math.max(.4, Math.min(3, +((el.z || 1) + d * .1).toFixed(2))); }); save(); drawEditor(); }
   const fcx = e.target.closest('[data-fcx]'); if (fcx) { (fieldMap(state.tpl)[fcx.dataset.fcx] || []).forEach((n) => delete elOf(n).c); save(); drawEditor(); }
   const pk = e.target.closest('[data-pk]'); if (pk) { const st = styleOf(state.tpl); st.pager = { i: 1, n: 5, pos: 'tr', ...(st.pager || {}), kind: pk.dataset.pk }; save(); drawEditor(); }
@@ -284,7 +375,7 @@ $('#editor').addEventListener('click', (e) => {
 });
 function centreX() {
   const adEl = $('[data-canvas] .bi-ad'), el = $(`[data-canvas] [data-n="${picked}"]`); if (!adEl || !el) return;
-  const a = adEl.getBoundingClientRect(), r = el.getBoundingClientRect(), u = Math.min(a.width, a.height) / 100;
+  const a = adEl.getBoundingClientRect(), r = inkRect(el), u = Math.min(a.width, a.height) / 100;
   nudgeBy(((a.left + a.width / 2) - (r.left + r.width / 2)) / u, 0);
 }
 function nudgeBy(dx, dy) { const st = styleOf(state.tpl); st.nudge ||= {}; const v = st.nudge[picked] || [0, 0]; st.nudge[picked] = [+(v[0] + dx).toFixed(2), +(v[1] + dy).toFixed(2)]; save(); soon(); }
@@ -301,24 +392,37 @@ $('#editor').addEventListener('input', (e) => {
 });
 // pick and drag text, or drag the photo
 $('[data-canvas]').addEventListener('pointerdown', (e) => {
+  const rl = e.target.closest('[data-ruler]'); if (rl) return dragGuide(rl.dataset.ruler, null, e);
+  const gl = e.target.closest('[data-g]'); if (gl) { const [ax, i] = gl.dataset.g.split(','); return dragGuide(ax, +i, e); }
   const adEl = e.target.closest('.bi-ad'); if (!adEl) return;
   const rect = adEl.getBoundingClientRect(), u = Math.min(rect.width, rect.height) / 100;
-  const textEl = e.target.closest('[data-n]'), st = styleOf(state.tpl);
+  // pick the text whose own letters are under the pointer (a wide text box must not hide a smaller one)
+  const hits = $$('[data-n]', adEl).filter((n) => { const r = inkRect(n); return e.clientX >= r.left - 4 && e.clientX <= r.right + 4 && e.clientY >= r.top - 4 && e.clientY <= r.bottom + 4; });
+  const textEl = hits.find((n) => n.dataset.n === String(picked)) || hits.sort((a, b) => { const A = inkRect(a), B = inkRect(b); return A.width * A.height - B.width * B.height; })[0] || null, st = styleOf(state.tpl);
   const sx = e.clientX, sy = e.clientY;
   e.preventDefault();
   if (textEl) {
     picked = textEl.dataset.n; $$('[data-canvas] .is-picked').forEach((x) => x.classList.remove('is-picked')); textEl.classList.add('is-picked'); $('[data-picked]').textContent = `Text ${+picked + 1} selected. Drag it, or use the pad.`;
-    const v0 = (st.nudge || {})[picked] || [0, 0], r0 = textEl.getBoundingClientRect(), snap = state.snap !== false;
-    const canvas = $('[data-canvas]'); canvas.classList.add('guiding'); canvas.style.setProperty('--gx', `${rect.left - canvas.getBoundingClientRect().left}px`);
+    const v0 = (st.nudge || {})[picked] || [0, 0], r0 = inkRect(textEl), snap = state.snap !== false;
+    const canvas = $('[data-canvas]'); canvas.classList.add('guiding');
     const lim = (d, lo, hi) => (hi < lo ? d : Math.max(lo, Math.min(hi, d)));
+    const g = state.guides || { v: [], h: [] }, tr = { x: sx, y: sy, t: performance.now(), v: 0 };
+    const vx = [50, ...(state.rulers !== false ? g.v : [])].map((p) => rect.left + rect.width * p / 100), hy = [50, ...(state.rulers !== false ? g.h : [])].map((p) => rect.top + rect.height * p / 100);
     const move = (ev) => {
       let dx = (ev.clientX - sx) / u, dy = (ev.clientY - sy) / u;
       if (snap) {
+        const sp = speedOf(tr, ev);
         dx = lim(dx, (rect.left - r0.left) / u, (rect.right - r0.right) / u); dy = lim(dy, (rect.top - r0.top) / u, (rect.bottom - r0.bottom) / u);
-        const cx = (r0.left + r0.right) / 2 + dx * u - (rect.left + rect.width / 2), cy = (r0.top + r0.bottom) / 2 + dy * u - (rect.top + rect.height / 2);
-        canvas.classList.toggle('on-x', Math.abs(cx) < u * 1.5); canvas.classList.toggle('on-y', Math.abs(cy) < u * 1.5);
-        if (Math.abs(cx) < u * 1.5) dx -= cx / u; else dx = Math.round((v0[0] + dx) / 2) * 2 - v0[0];
-        if (Math.abs(cy) < u * 1.5) dy -= cy / u; else dy = Math.round((v0[1] + dy) / 2) * 2 - v0[1];
+        const L = r0.left + dx * u, Rr = r0.right + dx * u, C = (L + Rr) / 2, T = r0.top + dy * u, B = r0.bottom + dy * u, M = (T + B) / 2;
+        let sxHit = null, syHit = null;
+        for (const edge of [C, L, Rr]) { const [v, h] = magnet(edge, vx, sp, 9); if (h != null) { dx += (v - edge) / u; sxHit = h; break; } }
+        for (const edge of [M, T, B]) { const [v, h] = magnet(edge, hy, sp, 9); if (h != null) { dy += (v - edge) / u; syHit = h; break; } }
+        canvas.classList.toggle('on-x', sxHit === vx[0]); canvas.classList.toggle('on-y', syHit === hy[0]);
+        $$('[data-canvas] .gl').forEach((l) => l.classList.remove('hit'));
+        if (sxHit != null && sxHit !== vx[0]) $(`[data-canvas] [data-g="v,${vx.indexOf(sxHit) - 1}"]`)?.classList.add('hit');
+        if (syHit != null && syHit !== hy[0]) $(`[data-canvas] [data-g="h,${hy.indexOf(syHit) - 1}"]`)?.classList.add('hit');
+        if (sxHit == null) dx = Math.round((v0[0] + dx) * 2) / 2 - v0[0];
+        if (syHit == null) dy = Math.round((v0[1] + dy) * 2) / 2 - v0[1];
       }
       st.nudge ||= {}; st.nudge[picked] = [+(v0[0] + dx).toFixed(2), +(v0[1] + dy).toFixed(2)];
       textEl.style.setProperty('--nx', st.nudge[picked][0]); textEl.style.setProperty('--ny', st.nudge[picked][1]);
@@ -621,6 +725,7 @@ $('[data-restore]').onchange = async (e) => {
 };
 
 /* ---------------- 3D: sign-in orbit and the loading deck ---------------- */
+const DECK = ['stat-poster', 'year-mark', 'wordmark-photo', 'book-call', 'mo-bracket'];
 const SHOW = ['mo-crosshair', 'x-lime-statement', 'mo-aura', 'y-focus-window', 'x-big-stat', 'z-colour-cards', 'mo-ribbon', 'y-stacked-accent'];
 const thumb = (id, im) => `<div class="ad" style="--ar:4/5">${render(id, { palette: 'own', image: im })}</div>`;
 const rnd = (a) => (a && a.length ? a[Math.floor(Math.random() * a.length)] : undefined);
@@ -630,7 +735,7 @@ function drawOrbit() {
 }
 function playLoader(done) {
   if (!fxOn()) return done();
-  const l = $('[data-loader]'); $('[data-deck]').innerHTML = SHOW.slice(0, 5).map((id, i) => `<div class="deck-card" style="--i:${i}">${thumb(id, rnd(builtin))}</div>`).join('');
+  const l = $('[data-loader]'); $('[data-deck]').innerHTML = DECK.map((id, i) => `<div class="deck-card" style="--i:${i}">${thumb(id, rnd(pool.length ? pool : builtin))}</div>`).join('');
   l.hidden = false; requestAnimationFrame(() => l.classList.add('run'));
   setTimeout(() => { done(); l.classList.add('out'); }, 1500);
   setTimeout(() => { l.hidden = true; l.classList.remove('run', 'out'); }, 2100);

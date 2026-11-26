@@ -11,6 +11,15 @@ const readFile = (file, as = 'dataURL') => new Promise((r, j) => { const fr = ne
 
 /* ---------------- sounds: short synthesised clicks, off with the speaker toggle ---------------- */
 let actx = null;
+function pop() {
+  if (state?.muted) return;
+  try {
+    actx ||= new (window.AudioContext || window.webkitAudioContext)();
+    const t = actx.currentTime;
+    // two soft bubble pops, the second a little higher
+    [[0, 520, 1250], [0.075, 760, 1700]].forEach(([d, f0, f1]) => { const o = actx.createOscillator(), g = actx.createGain(); o.type = 'sine'; o.frequency.setValueAtTime(f0, t + d); o.frequency.exponentialRampToValueAtTime(f1, t + d + 0.05); g.gain.setValueAtTime(0.0001, t + d); g.gain.exponentialRampToValueAtTime(0.18, t + d + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.11); o.connect(g).connect(actx.destination); o.start(t + d); o.stop(t + d + 0.13); });
+  } catch { /* audio blocked */ }
+}
 function click(kind = 'tap') {
   if (kind !== 'nav' || state?.muted) return;
   try {
@@ -524,8 +533,8 @@ $('#projects').addEventListener('click', async (e) => {
   const del = e.target.closest('[data-pdel]'); if (del && await ask('Remove this post?', 'It is taken out of this project. This cannot be undone.')) { pr.posts = pr.posts.filter((x) => x.id !== del.dataset.pdel); save(); drawProjects(); }
   const op = e.target.closest('[data-popen]'); if (op) { const p = pr.posts.find((x) => x.id === op.dataset.popen); state.tpl = p.tpl; state.format = p.format; if (p.custom) state.custom = { ...p.custom }; state.pal[p.tpl] = p.palette; state.styles[p.tpl] = JSON.parse(JSON.stringify(p.style || {})); state.fields[p.tpl] = { ...p.fields }; image = p.image || null; slotImgs[p.tpl] = [...(p.images || [])]; state.editing = { pid: pr.id, postId: p.id }; state.project = pr.id; save(); location.hash = '/editor/' + p.tpl; }
   if (e.target.closest('[data-proj-set]')) { const m = $('[data-proj-menu]'); m.hidden = !m.hidden; $('[data-proj-set]').setAttribute('aria-expanded', String(!m.hidden)); }
-  if (e.target.closest('[data-proj-delete]')) { $('[data-proj-menu]').hidden = true; if (await ask(`Delete “${pr.name}”?`, `The project and its ${pr.posts.length} saved post${pr.posts.length === 1 ? '' : 's'} are removed. This cannot be undone.`)) { state.projects = state.projects.filter((x) => x.id !== pr.id); state.project = null; save(); drawProjects(); } }
-  if (e.target.closest('[data-proj-rename]')) { $('[data-proj-menu]').hidden = true; $('[data-proj-name]').select(); }
+  if (e.target.closest('[data-proj-delete]')) { $('[data-proj-menu]').hidden = true; $('[data-proj-set]').setAttribute('aria-expanded', 'false'); if (await ask(`Delete “${pr.name}”?`, `The project and its ${pr.posts.length} saved post${pr.posts.length === 1 ? '' : 's'} are removed. This cannot be undone.`)) { state.projects = state.projects.filter((x) => x.id !== pr.id); state.project = null; save(); drawProjects(); } }
+  if (e.target.closest('[data-proj-rename]')) { $('[data-proj-menu]').hidden = true; $('[data-proj-set]').setAttribute('aria-expanded', 'false'); $('[data-proj-name]').focus(); $('[data-proj-name]').select(); }
   if (e.target.closest('[data-proj-export]')) { for (const [i, p] of pr.posts.entries()) { const f = p.format === 'custom' ? p.custom : formats[p.format] || formats.portrait; const svg = await toSVG(render(p.tpl, { palette: palObj(p.palette), style: postStyle(pr, p), fields: p.fields, brand: brandForRender(), image: p.image, images: p.images || [] }), { w: f.w, h: f.h, fontBase: new URL(FONTS, location.href).href, extraCss: userFontCss() }); download(await toPNG(svg, { w: f.w, h: f.h }), `${pr.name.replace(/\W+/g, '-')}-${String(i + 1).padStart(2, '0')}.png`); await new Promise((r) => setTimeout(r, 350)); } }
 });
 $('[data-proj-name]').addEventListener('input', (e) => { const pr = projectOf(state.project); if (pr) { pr.name = e.target.value || 'Untitled'; save(); $(`[data-pid="${pr.id}"] span`).textContent = pr.name; } });
@@ -598,7 +607,22 @@ function closePicker() {
 }
 
 /* ---------------- Export ---------------- */
-function status(t) { const el = $('[data-status]'); if (el) el.textContent = t; }
+function status(t) { if (t) toast(t); }
+// small notices in the bottom right corner: they pop in with a sound and leave after a few seconds
+function toast(text, { time = 4200 } = {}) {
+  let box = $('.toasts'); if (!box) { box = document.createElement('div'); box.className = 'toasts'; box.setAttribute('role', 'status'); box.setAttribute('aria-live', 'polite'); document.body.appendChild(box); }
+  const last = box.lastElementChild; if (last && last.dataset.text === text) return;
+  const busy = /…$/.test(text);
+  const el = document.createElement('div'); el.className = 'toast'; el.dataset.text = text;
+  el.innerHTML = `<i class="toast-dot${busy ? ' busy' : ''}"></i><p>${esc(text)}</p><button type="button" aria-label="Close">×</button><b class="toast-bar" style="animation-duration:${time}ms"></b>`;
+  box.appendChild(el); while (box.children.length > 3) box.firstElementChild.remove();
+  // an "…in progress" notice is replaced by the next one
+  [...box.children].forEach((x) => { if (x !== el && /…$/.test(x.dataset.text)) x.remove(); });
+  requestAnimationFrame(() => el.classList.add('in')); if (!busy) pop();
+  let timer; const close = () => { clearTimeout(timer); el.classList.remove('in'); el.classList.add('out'); setTimeout(() => el.remove(), 320); };
+  const arm = () => { timer = setTimeout(close, time); };
+  el.querySelector('button').onclick = close; el.onmouseenter = () => { clearTimeout(timer); el.classList.add('hold'); }; el.onmouseleave = () => { el.classList.remove('hold'); arm(); }; arm();
+}
 const download = (blob, name) => { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
 async function exportOne(id, format, kind = 'png', scale = 1) {
   const f = fmt(format);
@@ -636,23 +660,26 @@ const PACKS = [
 ].map((p) => ({ ...p, ids: p.ids.filter((id) => getTemplate(id)) }));
 const packOf = () => PACKS.find((p) => p.name === state.set) || PACKS[0];
 const packLook = (pk) => ({ palette: state.setPal === 'brand' ? 'brand' : pk.pal, style: { fd: pk.fd, ft: pk.ft, fm: pk.fm } });
-function drawSets() {
+function drawSets(animate) {
   const pk = packOf(); state.set = pk.name;
-  $('[data-sets]').innerHTML = PACKS.map((p) => `<button type="button" class="pack" data-set="${esc(p.name)}" aria-pressed="${p === pk}"><span class="pack-sw">${['bg', 'ink', 'accent'].map((k) => `<i style="background:${palettes[p.pal]?.[k] || '#888'}"></i>`).join('')}</span><b>${esc(p.name)}</b><small>${p.ids.length} posts · ${esc(fonts[p.fd]?.label || '')}</small></button>`).join('');
+  $('[data-sets]').innerHTML = PACKS.map((p) => `<button type="button" class="chip" data-set="${esc(p.name)}" aria-pressed="${p === pk}">${esc(p.name)}<span>${p.ids.length}</span></button>`).join('');
   $('[data-pack-about]').innerHTML = `<h2>${esc(pk.name)}</h2><p>${esc(pk.about)}</p>`;
-  dd('set-format', formatItems(), state.setFormat, (v) => { state.setFormat = v; save(); drawSets(); });
-  dd('set-pal', [{ value: 'pack', label: 'Pack colours' }, { value: 'brand', label: 'My brand colours' }], state.setPal === 'brand' ? 'brand' : 'pack', (v) => { state.setPal = v; save(); drawSets(); });
-  const look = packLook(pk);
-  $('[data-set-grid]').innerHTML = pk.ids.map((id, i) => `<li style="--i:${i}"><a class="card" href="#/editor/${id}" data-pack-open="${id}">${ad(id, { format: state.setFormat, ...look })}<span class="name">${esc(getTemplate(id).name)}<span>edit</span></span></a></li>`).join('');
+  dd('set-format', formatItems(), state.setFormat, (v) => { state.setFormat = v; save(); drawSets(true); });
+  dd('set-pal', [{ value: 'pack', label: 'Pack colours' }, { value: 'brand', label: 'My brand colours' }], state.setPal === 'brand' ? 'brand' : 'pack', (v) => { state.setPal = v; save(); drawSets(true); });
+  const look = packLook(pk), grid = $('[data-set-grid]');
+  const paint = () => { grid.innerHTML = pk.ids.map((id, i) => `<li style="--i:${i}"><a class="card" href="#/editor/${id}" data-pack-open="${id}">${ad(id, { format: state.setFormat, ...look })}<span class="name">${esc(getTemplate(id).name)}<span>${esc(getTemplate(id).cat)}</span></span></a></li>`).join(''); };
+  if (!animate || matchMedia('(prefers-reduced-motion: reduce)').matches) return paint();
+  grid.classList.add('is-swapping');
+  setTimeout(() => { paint(); requestAnimationFrame(() => requestAnimationFrame(() => grid.classList.remove('is-swapping'))); }, 220);
 }
-$('[data-sets]').addEventListener('click', (e) => { const b = e.target.closest('[data-set]'); if (!b) return; state.set = b.dataset.set; save(); click('tap'); drawSets(); });
+$('[data-sets]').addEventListener('click', (e) => { const b = e.target.closest('[data-set]'); if (!b) return; state.set = b.dataset.set; save(); click('tap'); drawSets(true); });
 // opening a post from a pack carries the pack's colours, fonts and format into the editor
 $('[data-set-grid]').addEventListener('click', (e) => { const a = e.target.closest('[data-pack-open]'); if (!a) return; const id = a.dataset.packOpen, pk = packOf(), look = packLook(pk); state.pal[id] = look.palette; Object.assign(state.styles[id] ||= {}, look.style); state.format = state.setFormat; save(); });
 $('[data-set-export]').onclick = async () => { const pk = packOf(), look = packLook(pk); status(''); for (const id of pk.ids) { const prev = [state.pal[id], state.styles[id]]; state.pal[id] = look.palette; state.styles[id] = { ...(state.styles[id] || {}), ...look.style }; await exportOne(id, state.setFormat); [state.pal[id], state.styles[id]] = prev; await new Promise((r) => setTimeout(r, 350)); } };
 $('[data-set-save]').onclick = () => {
   const pk = packOf(), look = packLook(pk), f = state.setFormat;
   const pr = { id: uid(), name: pk.name, posts: pk.ids.map((id) => ({ id: uid(), tpl: id, format: f, custom: { ...state.custom }, palette: look.palette, style: { ...JSON.parse(JSON.stringify(state.styles[id] || {})), ...look.style }, fields: { ...(state.fields[id] || {}) }, image: photoFor(id), images: [...slotsFor(id)] })) };
-  state.projects.push(pr); state.project = pr.id; save(); click('ok'); location.hash = '#/projects';
+  state.projects.push(pr); state.project = pr.id; save(); click('ok'); location.hash = '#/projects'; toast(`Saved “${pk.name}” as a project with ${pr.posts.length} posts.`);
 };
 
 /* ---------------- Brands ---------------- */
@@ -867,39 +894,67 @@ $('[data-deck]').addEventListener('pointermove', (e) => {
 });
 $('[data-deck]').addEventListener('pointerout', (e) => { const c = e.target.closest('.deck-card'); if (c && !c.contains(e.relatedTarget)) { c.style.removeProperty('--rx'); c.style.removeProperty('--ry'); } });
 
-document.addEventListener('pointerdown', (e) => { const m = $('[data-proj-menu]'); if (m && !m.hidden && !e.target.closest('.proj-set')) m.hidden = true; });
-/* hold a post and drag it to a new place; the others slide aside */
+document.addEventListener('pointerdown', (e) => { const m = $('[data-proj-menu]'); if (m && !m.hidden && !e.target.closest('.proj-set')) { m.hidden = true; $('[data-proj-set]').setAttribute('aria-expanded', 'false'); } });
+/* hold a post and drag it to a new place; the others slide aside.
+   The slots never move during a drag (same number of equal cells), so the target is simply the slot under the pointer.
+   A copy follows the pointer while the original stays in the grid as the empty place it will drop into. */
 $('[data-proj-grid]').addEventListener('pointerdown', (e) => {
   const li = e.target.closest('[data-post]'); if (!li || e.button !== 0 || e.target.closest('button')) return;
   const grid = li.parentElement, pr = projectOf(state.project); if (!pr || pr.posts.length < 2) return;
   e.preventDefault();
-  const sx = e.clientX, sy = e.clientY; let dragging = false;
+  const sx = e.clientX, sy = e.clientY; let ghost = null, raf = 0, last = e, slots = null, gx = 0, gy = 0;
   const items = () => [...grid.children].filter((x) => x.dataset.post);
-  const flip = (fn) => { const before = new Map(items().map((x) => [x, x.getBoundingClientRect()])); fn(); items().forEach((x) => { if (x === li) return; const a = before.get(x), b = x.getBoundingClientRect(); if (!a) return; const dx = a.left - b.left, dy = a.top - b.top; if (dx || dy) x.animate([{ transform: `translate(${dx}px,${dy}px)` }, { transform: 'none' }], { duration: 260, easing: 'cubic-bezier(.2,.8,.2,1)' }); }); };
-  let ox = 0, oy = 0;
+  const docRect = (el) => { const r = el.getBoundingClientRect(); return { l: r.left + scrollX, t: r.top + scrollY, w: r.width, h: r.height }; };
+  const start = () => {
+    items().forEach((x) => x.getAnimations().forEach((a) => a.cancel()));
+    slots = items().map(docRect);
+    const r = li.getBoundingClientRect(); gx = sx - r.left; gy = sy - r.top;
+    ghost = li.cloneNode(true); ghost.removeAttribute('data-post'); ghost.className = 'post post-ghost';
+    Object.assign(ghost.style, { width: r.width + 'px', height: r.height + 'px', left: '0px', top: '0px', transform: `translate(${r.left}px, ${r.top}px)` });
+    document.body.appendChild(ghost); li.classList.add('is-placeholder'); grid.classList.add('sorting'); document.body.classList.add('is-sorting');
+  };
+  const place = () => {
+    raf = 0; if (!ghost) return;
+    const x = last.clientX, y = last.clientY;
+    ghost.style.transform = `translate(${x - gx}px, ${y - gy}px) rotate(1.5deg) scale(1.03)`;
+    // the slot nearest to the pointer, measured in page coordinates
+    const px = x + scrollX, py = y + scrollY;
+    let best = -1, bd = Infinity;
+    slots.forEach((s, i) => { const inside = px >= s.l && px <= s.l + s.w && py >= s.t && py <= s.t + s.h; const d = inside ? -1 : Math.hypot(px - (s.l + s.w / 2), py - (s.t + s.h / 2)); if (d < bd) { bd = d; best = i; } });
+    const list = items(), from = list.indexOf(li);
+    if (best < 0 || best === from) return;
+    const before = new Map(list.map((n) => [n, n.getBoundingClientRect()]));
+    const ref = list[best]; grid.insertBefore(li, best > from ? ref.nextSibling : ref);
+    items().forEach((n) => {
+      if (n === li) return;
+      const a = before.get(n), b = n.getBoundingClientRect(); const dx = a.left - b.left, dy = a.top - b.top;
+      if (!dx && !dy) return;
+      n.getAnimations().forEach((an) => an.cancel());
+      const b2 = n.getBoundingClientRect();
+      n.animate([{ transform: `translate(${a.left - b2.left}px, ${a.top - b2.top}px)` }, { transform: 'none' }], { duration: 240, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    });
+    // keep the page moving when the pointer is near the top or bottom
+  };
+  let scrollTimer = 0;
+  const edgeScroll = () => { if (!ghost) return; const y = last.clientY, m = 48; const v = y < m ? -(m - y) / 4 : y > innerHeight - m ? (y - (innerHeight - m)) / 4 : 0; if (v) { scrollBy(0, v); if (!raf) raf = requestAnimationFrame(place); } scrollTimer = requestAnimationFrame(edgeScroll); };
   const move = (ev) => {
-    if (!dragging) { if (Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return; dragging = true; li.classList.add('dragging'); grid.classList.add('sorting'); }
-    const r0 = li.getBoundingClientRect();
-    li.style.transform = 'none'; const base = li.getBoundingClientRect(); li.style.transform = `translate(${ev.clientX - sx - ox}px, ${ev.clientY - sy - oy}px) scale(1.03)`;
-    const over = items().find((x) => { if (x === li) return false; const r = x.getBoundingClientRect(); return ev.clientX > r.left && ev.clientX < r.right && ev.clientY > r.top && ev.clientY < r.bottom; });
-    if (over) {
-      const list = items(), from = list.indexOf(li), to = list.indexOf(over);
-      flip(() => grid.insertBefore(li, to > from ? over.nextSibling : over));
-      const nb = li.getBoundingClientRect(); li.style.transform = 'none'; const moved = li.getBoundingClientRect();
-      ox += moved.left - base.left; oy += moved.top - base.top;
-      li.style.transform = `translate(${ev.clientX - sx - ox}px, ${ev.clientY - sy - oy}px) scale(1.03)`;
-      void nb; void r0;
-    }
+    last = ev;
+    if (!ghost) { if (Math.hypot(ev.clientX - sx, ev.clientY - sy) < 6) return; start(); scrollTimer = requestAnimationFrame(edgeScroll); }
+    if (!raf) raf = requestAnimationFrame(place);
   };
   const up = () => {
-    removeEventListener('pointermove', move);
-    if (!dragging) return;
-    li.classList.remove('dragging'); grid.classList.remove('sorting');
-    li.animate([{ transform: li.style.transform }, { transform: 'none' }], { duration: 220, easing: 'cubic-bezier(.2,.8,.2,1)' }); li.style.transform = '';
-    const order = items().map((x) => x.dataset.post); pr.posts.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id)); save(); click('ok');
-    setTimeout(drawProjects, 240);
+    removeEventListener('pointermove', move); removeEventListener('pointercancel', up); cancelAnimationFrame(scrollTimer);
+    if (!ghost) return;
+    cancelAnimationFrame(raf);
+    const r = li.getBoundingClientRect(), g = ghost;
+    g.style.transition = 'transform .26s cubic-bezier(.2,.8,.2,1)'; g.style.transform = `translate(${r.left}px, ${r.top}px)`;
+    setTimeout(() => { g.remove(); li.classList.remove('is-placeholder'); grid.classList.remove('sorting'); document.body.classList.remove('is-sorting'); }, 260);
+    const order = items().map((x) => x.dataset.post);
+    const changed = order.some((id, i) => pr.posts[i]?.id !== id);
+    pr.posts.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id)); save();
+    if (changed) { click('ok'); setTimeout(drawProjects, 300); }
   };
-  addEventListener('pointermove', move); addEventListener('pointerup', up, { once: true });
+  addEventListener('pointermove', move); addEventListener('pointerup', up, { once: true }); addEventListener('pointercancel', up, { once: true });
 });
 
 $('[data-bcols]').addEventListener('click', (e) => {

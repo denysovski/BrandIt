@@ -6,7 +6,7 @@
 <title>BrandIt Studio</title>
 <meta name="description" content="Make social posts and ads from the BrandIt library: pick a template, add your photo and logo, change colours and fonts, export PNG or SVG.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%23111' stroke-width='2.4'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23e8401c'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="studio.css?v=14">
+<link rel="stylesheet" href="studio.css?v=16">
 <script>try{var t=localStorage.getItem("brandit.theme")||"system";t=t.replace(/"/g,"");document.documentElement.dataset.theme=t==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;}catch(e){}</script>
 </head>
 <body>
@@ -175,44 +175,42 @@
   <section class="screen" id="guide" aria-labelledby="gd-h" hidden>
     <article class="article">
       <a class="link back" href="#/library">← Back to the library</a>
-      <p class="label">Guide · 8 minute read</p>
-      <h1 id="gd-h">How to have better marketing</h1>
-      <p class="lead">Good posts are not a design trick. They come from knowing who you are, who you are talking to and what one picture should make them feel. Templates make the work fast; this guide makes it right.</p>
+      <header class="g-hero">
+        <p class="label">Guide · 5 minute read</p>
+        <h1 id="gd-h">How to have better marketing</h1>
+        <p class="lead">Good posts come from knowing who you are, who you talk to and what one picture should make them feel.</p>
+      </header>
 
-      <h2>1. Decide what your brand stands for</h2>
-      <p>Before you open a template, write one sentence that finishes: <em>“We exist so that…”</em>. Not what you sell, but what changes for someone after they meet you. A bakery sells bread; a good bakery sells slow mornings. Everything you post should be able to sit under that sentence.</p>
-      <p>Then pick three words for how you want to be seen, for example <em>calm, precise, warm</em>. You will use these words to judge every photo, colour and headline. If a post feels <em>loud</em> and your words say <em>calm</em>, it does not go out.</p>
-
-      <h2>2. Picture the people you want</h2>
-      <p>Describe the world of the person you want to buy from you: where they live, what they read, what a good weekend looks like, what they are tired of. Brands do not attract “everyone”; they attract people who recognise themselves. When you know their world, you know which photos, places and words feel like home to them.</p>
-      <ul><li>Who is it for, and who is it deliberately not for?</li><li>What do they already believe that you can agree with?</li><li>What stops them from buying today: price, trust, fit, time?</li></ul>
-
-      <h2>3. Set your identity once, then stop changing it</h2>
-      <p>Choose one display font and one text font, a background colour, a text colour and a single accent. Add your logo in <a href="#/brands">Brands</a> so every template uses it. Consistency is what makes people recognise you in a fast feed; changing your look every week resets that memory to zero.</p>
-      <p>Use the accent for one thing only: the most important word, number or button. If everything is highlighted, nothing is.</p>
-
-      <h2>4. The picture is the message</h2>
-      <p>People decide in under a second, and they decide on the image. Spend more time on photos than on copy.</p>
-      <ul><li><b>One subject.</b> A face, a product or a gesture. Clutter reads as noise.</li><li><b>Leave room for text.</b> Shoot with empty sky, wall or floor, or crop so the headline has space.</li><li><b>Keep a light.</b> Pick one mood, for example soft daylight or hard studio flash, and stay with it across posts.</li><li><b>Show real use.</b> Hands, people and places beat floating products.</li><li><b>Own your images.</b> Use photos you shot or properly licensed; it protects you and it looks like you.</li></ul>
-
-      <h2>5. Know what each post is for</h2>
-      <p>Every post has one job. Before you design it, write the job down: <em>show the product</em>, <em>answer a doubt</em>, <em>prove it works</em>, <em>invite to act</em> or <em>show who we are</em>. Pick the template that fits the job, not the one that looks newest.</p>
-      <p>A simple rhythm keeps a feed selling: in every six posts at least two show only the product, and in every nine at most one has no product at all. The rest answer doubts: how it is used, how it fits, what it is made of, what people say.</p>
-
-      <h2>6. A weekly workflow in BrandIt</h2>
-      <ol>
-        <li><b>Monday, 20 minutes:</b> write the jobs for this week's posts and the one sentence each post must say.</li>
-        <li><b>Pick two or three templates</b> that suit your brand and reuse them. A small set of layouts is a system; a different layout every day is chaos.</li>
-        <li><b>Drop in your photos</b>, write the headline in fewer than eight words and move the text so it sits on calm areas of the photo. Use the rulers to keep the same margins every time.</li>
-        <li><b>Save each design to a project</b> and turn on numbering for carousels. Check the whole week side by side in <a href="#/projects">Projects</a>: does it look like one brand?</li>
-        <li><b>Export everything</b> and schedule it. Done in one sitting.</li>
+      <ol class="g-steps">
+        <li><span class="g-n">01</span><h2>Decide what you stand for</h2><p>Finish one sentence: <em>“We exist so that…”</em>. Then pick three words for how you want to be seen, like <em>calm, precise, warm</em>. Every post must fit them.</p></li>
+        <li><span class="g-n">02</span><h2>Picture the people you want</h2><p>Where they live, what they read, what they are tired of. Brands attract people who recognise themselves, not “everyone”.</p></li>
+        <li><span class="g-n">03</span><h2>Set your identity, then keep it</h2><p>Two fonts, a background, a text colour and one accent. Save them in <a href="#/brands">Brands</a>. Use the accent for one thing only.</p></li>
+        <li><span class="g-n">04</span><h2>The picture is the message</h2><p>One subject, room for text, one kind of light, real use. Shoot or license your own images.</p></li>
+        <li><span class="g-n">05</span><h2>Give every post one job</h2><p>Show the product, answer a doubt, prove it works, invite to act or show who you are. Pick the template for the job.</p></li>
+        <li><span class="g-n">06</span><h2>Learn from what you post</h2><p>Watch saves and shares, not likes. Make more of what gets saved, quietly drop the rest.</p></li>
       </ol>
 
-      <h2>7. Check before you post</h2>
-      <ul class="checks"><li>Can someone read the headline in one second on a phone?</li><li>Is there one clear thing to look at first?</li><li>Does it use your fonts, colours and logo?</li><li>Would it still make sense without the caption?</li><li>Does it match your three words?</li></ul>
+      <section class="g-block g-wide">
+        <div class="g-head"><p class="label">Learn from the best</p><h2>Profiles that build a brand in public</h2><p>Each of these accounts shows the basics of brand building: identity, logos, colour combinations and the intent behind every choice. Open one and notice how few decisions they repeat.</p></div>
+        <ul class="ex-grid"><li><a class="ex" href="https://www.instagram.com/distopion/" target="_blank" rel="noopener noreferrer" aria-label="@distopion on Instagram"><img src="photos/photo-03.jpg" alt="" loading="lazy"><span class="ex-name"><b>@distopion</b><em>Open on Instagram ↗</em></span></a></li><li><a class="ex" href="https://www.instagram.com/atem.lab/" target="_blank" rel="noopener noreferrer" aria-label="@atem.lab on Instagram"><img src="photos/photo-09.jpg" alt="" loading="lazy"><span class="ex-name"><b>@atem.lab</b><em>Open on Instagram ↗</em></span></a></li><li><a class="ex" href="https://www.instagram.com/obby.jappari/" target="_blank" rel="noopener noreferrer" aria-label="@obby.jappari on Instagram"><img src="photos/photo-14.jpg" alt="" loading="lazy"><span class="ex-name"><b>@obby.jappari</b><em>Open on Instagram ↗</em></span></a></li><li><a class="ex" href="https://www.instagram.com/softriver.co/" target="_blank" rel="noopener noreferrer" aria-label="@softriver.co on Instagram"><img src="photos/photo-19.jpg" alt="" loading="lazy"><span class="ex-name"><b>@softriver.co</b><em>Open on Instagram ↗</em></span></a></li><li><a class="ex" href="https://www.instagram.com/ovyonlabs/" target="_blank" rel="noopener noreferrer" aria-label="@ovyonlabs on Instagram"><img src="photos/photo-24.jpg" alt="" loading="lazy"><span class="ex-name"><b>@ovyonlabs</b><em>Open on Instagram ↗</em></span></a></li><li><a class="ex" href="https://www.instagram.com/pedro.ajo/" target="_blank" rel="noopener noreferrer" aria-label="@pedro.ajo on Instagram"><img src="photos/photo-29.jpg" alt="" loading="lazy"><span class="ex-name"><b>@pedro.ajo</b><em>Open on Instagram ↗</em></span></a></li><li><a class="ex" href="https://www.instagram.com/archived/" target="_blank" rel="noopener noreferrer" aria-label="@archived on Instagram"><img src="photos/photo-34.jpg" alt="" loading="lazy"><span class="ex-name"><b>@archived</b><em>Open on Instagram ↗</em></span></a></li></ul>
+        <ul class="g-look"><li><b>One system.</b> The same grid, margins and type on every post.</li><li><b>Few colours.</b> Usually two plus a single accent.</li><li><b>Clear intent.</b> You can tell what each post is for in a second.</li><li><b>A recognisable mark.</b> The logo is small, but always in the same place.</li></ul>
+      </section>
 
-      <h2>8. Learn from what you post</h2>
-      <p>After two weeks, look at saves and shares, not only likes. Saves mean “useful”, shares mean “this is me”. Make more of what gets saved and shared, and quietly drop the rest. Small, steady improvements beat a big redesign every month.</p>
+      <section class="g-block">
+        <p class="label">Workflow</p><h2>One week in BrandIt</h2>
+        <ol class="g-flow">
+          <li><b>Plan</b><span>Write the job and one sentence for each post.</span></li>
+          <li><b>Pick</b><span>Two or three templates. Reuse them all week.</span></li>
+          <li><b>Make</b><span>Drop in photos, headline under eight words, same margins.</span></li>
+          <li><b>Review</b><span>Save to a project and check the week side by side.</span></li>
+          <li><b>Ship</b><span>Export everything and schedule it.</span></li>
+        </ol>
+      </section>
+
+      <section class="g-block">
+        <p class="label">Checklist</p><h2>Check before you post</h2>
+        <ul class="checks" data-checks><li tabindex="0" role="checkbox" aria-checked="false">The headline reads in one second on a phone.</li><li tabindex="0" role="checkbox" aria-checked="false">There is one clear thing to look at first.</li><li tabindex="0" role="checkbox" aria-checked="false">It uses your fonts, colours and logo.</li><li tabindex="0" role="checkbox" aria-checked="false">It makes sense without the caption.</li><li tabindex="0" role="checkbox" aria-checked="false">It matches your three words.</li></ul>
+      </section>
       <a class="btn" href="#/library">Open the library</a>
     </article>
   </section>
@@ -243,7 +241,7 @@
   </section>
 </div>
 
-<div class="loader" data-loader hidden aria-hidden="true"><div class="deck" data-deck></div><div class="bloom" role="presentation"><i style="--k:0"></i><i style="--k:1"></i><i style="--k:2"></i><i style="--k:3"></i><i style="--k:4"></i><i style="--k:5"></i></div><p>Loading your studio</p></div>
+<div class="loader" data-loader hidden aria-hidden="true"><div class="deck" data-deck></div><div class="bloom" role="presentation"><i></i></div><p>Loading your studio</p></div>
 <div class="confirm" data-confirm hidden role="alertdialog" aria-modal="true" aria-labelledby="cf-t"><div class="confirm-card"><p id="cf-t" class="h3" data-cf-title></p><p class="muted" data-cf-text></p><div class="row2"><button type="button" class="btn btn--danger" data-cf-yes>Yes, do it</button><button type="button" class="btn btn--line" data-cf-no>Cancel</button></div></div></div>
 <div class="sheet-bg" data-sheet-bg hidden></div>
 <section class="sheet" data-settings hidden role="dialog" aria-modal="true" aria-labelledby="set-title">
@@ -265,6 +263,6 @@
 </nav>
 <style id="bi-css"></style>
 <style id="bi-user-fonts"></style>
-<script type="module" src="studio.js?v=14"></script>
+<script type="module" src="studio.js?v=16"></script>
 </body>
 </html>

@@ -789,3 +789,7 @@ async function start(email, quiet) {
 }
 const session = load(LS.session, null);
 if (session) start(session); else { $('#auth').hidden = false; authMode('in'); drawOrbit(); }
+
+/* guide checklist: round checks you can tick */
+document.addEventListener('click', (e) => { const li = e.target.closest('[data-checks] li'); if (!li) return; li.setAttribute('aria-checked', String(li.getAttribute('aria-checked') !== 'true')); click('tap'); });
+document.addEventListener('keydown', (e) => { const li = e.target.closest?.('[data-checks] li'); if (li && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); li.click(); } });

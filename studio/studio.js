@@ -1,6 +1,6 @@
 // BrandIt Studio: sign in (simulated), Library, Editor, Sets and Brands over the shared library.
 // Everything is stored in this browser's localStorage, per account. Nothing is sent anywhere.
-import { templates, categories, formats, palettes, fonts, pagerKinds, render, getTemplate, css, toSVG, toPNG, brandDefaults } from '../lib/brandit.js?v=9';
+import { templates, categories, formats, palettes, fonts, pagerKinds, render, getTemplate, css, toSVG, toPNG, brandDefaults } from '../lib/brandit.js?v=10';
 
 const FONTS = '../fonts/';
 document.getElementById('bi-css').textContent = css(FONTS);
@@ -37,7 +37,10 @@ let user = null, state = null, image = null, picked = null;
 const slotImgs = {};
 /* ---------------- showcase: random photos and colours on every refresh ---------------- */
 // Photos from a folder the user picks, kept in IndexedDB in this browser only (never uploaded).
-let pool = [];
+let pool = [], ownPool = false;
+// Built-in showcase photos (shipped with the site) are used until the user loads their own folder.
+let builtin = null;
+async function builtinPool() { if (builtin) return builtin; try { const list = await (await fetch('photos/manifest.json')).json(); builtin = list.map((n) => new URL('photos/' + n, location.href).href); } catch { builtin = []; } return builtin; }
 const shuf = { photo: {}, slots: {}, pal: {} };
 const idb = () => new Promise((res, rej) => { const r = indexedDB.open('brandit-showcase', 1); r.onupgradeneeded = () => r.result.createObjectStore('photos'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 async function poolLoad() { try { const db = await idb(); return await new Promise((res) => { const q = db.transaction('photos').objectStore('photos').get(user); q.onsuccess = () => res(q.result || []); q.onerror = () => res([]); }); } catch { return []; } }
@@ -148,8 +151,8 @@ function drawLibrary(animate) {
   $('[data-cats]').innerHTML = ['All', ...categories].map((c) => `<button type="button" class="chip" data-c="${c}" aria-pressed="${c === state.cat}">${c}<span>${c === 'All' ? templates.length : templates.filter((t) => t.cat === c).length}</span></button>`).join('');
   dd('lib-format', formatItems(), state.libFormat, (v) => { state.libFormat = v; save(); drawLibrary(true); });
   dd('lib-pal', [{ value: 'own', label: 'Each its own' }, ...palList().slice(1).map(([k, l]) => ({ value: k, label: l, swatch: palSwatch(k) }))], state.libPal, (v) => { state.libPal = v; save(); drawLibrary(true); });
-  $('[data-sc-note]').textContent ||= pool.length ? `${pool.length} showcase photos · shuffled on every refresh` : 'Load a folder of photos to see every template with them.';
-  $('[data-sc-clear]').hidden = !pool.length;
+  $('[data-sc-note]').textContent ||= ownPool ? `${pool.length} of your photos · shuffled on every refresh` : `Showing the built-in photos, shuffled on every refresh. Load a folder to use your own.`;
+  $('[data-sc-clear]').hidden = !ownPool;
   const grid = $('[data-lib-grid]');
   const paint = () => {
     grid.innerHTML = templates.filter((t) => state.cat === 'All' || t.cat === state.cat).map((t, i) => `<li style="--i:${i % 12}"><a class="card" href="#/editor/${t.id}">${ad(t.id, { format: state.libFormat, palette: state.libPal === 'own' ? palFor(t.id) : state.libPal })}<span class="name">${esc(t.name)}<span>${t.cat}</span></span></a></li>`).join('');
@@ -162,11 +165,11 @@ $('[data-sc-folder]').onchange = async (e) => {
   const files = [...e.target.files].filter((f) => /^image\//.test(f.type)).slice(0, 120); if (!files.length) return;
   const note = $('[data-sc-note]'); note.textContent = `Loading ${files.length} photos…`;
   const out = []; for (const f of files) out.push(await shrink(await readFile(f), 1200));
-  pool = out; try { await poolSave(out); note.textContent = `${out.length} photos saved in this browser. They shuffle on every refresh.`; } catch { note.textContent = `${out.length} photos loaded for this visit (the browser has no room to keep them).`; }
+  pool = out; ownPool = true; try { await poolSave(out); note.textContent = `${out.length} photos saved in this browser. They shuffle on every refresh.`; } catch { note.textContent = `${out.length} photos loaded for this visit (the browser has no room to keep them).`; }
   image = null; reshuffle(); drawLibrary(true);
 };
 $('[data-sc-shuffle]').onclick = () => { reshuffle(); drawLibrary(true); };
-$('[data-sc-clear]').onclick = async () => { if (!(await ask('Remove the showcase photos?', 'They are deleted from this browser. Your own uploads and projects stay.'))) return; pool = []; try { await poolSave([]); } catch {} reshuffle(); drawLibrary(true); $('[data-sc-note]').textContent = 'Showcase photos removed.'; };
+$('[data-sc-clear]').onclick = async () => { if (!(await ask('Remove the showcase photos?', 'They are deleted from this browser. Your own uploads and projects stay.'))) return; ownPool = false; try { await poolSave([]); } catch {} pool = await builtinPool(); reshuffle(); drawLibrary(true); $('[data-sc-note]').textContent = 'Your photos were removed. The built-in showcase is back.'; };
 $('[data-lib-image]').onchange = async (e) => { const f = e.target.files[0]; if (!f) return; image = await shrink(await readFile(f)); click('ok'); drawLibrary(true); };
 $('[data-cats]').addEventListener('click', (e) => { const b = e.target.closest('.chip'); if (!b) return; state.cat = b.dataset.c; save(); click('tap'); drawLibrary(true); });
 
@@ -619,14 +622,15 @@ $('[data-restore]').onchange = async (e) => {
 
 /* ---------------- 3D: sign-in orbit and the loading deck ---------------- */
 const SHOW = ['mo-crosshair', 'x-lime-statement', 'mo-aura', 'y-focus-window', 'x-big-stat', 'z-colour-cards', 'mo-ribbon', 'y-stacked-accent'];
-const thumb = (id) => `<div class="ad" style="--ar:4/5">${render(id, { palette: 'own' })}</div>`;
+const thumb = (id, im) => `<div class="ad" style="--ar:4/5">${render(id, { palette: 'own', image: im })}</div>`;
+const rnd = (a) => (a && a.length ? a[Math.floor(Math.random() * a.length)] : undefined);
 function drawOrbit() {
   const o = $('[data-orbit]'); if (!o || o.childElementCount) return;
-  o.innerHTML = SHOW.map((id, i) => `<div class="orb-card" style="--i:${i};--n:${SHOW.length}">${thumb(id)}</div>`).join('');
+  builtinPool().then((ph) => { o.innerHTML = SHOW.map((id, i) => `<div class="orb-card" style="--i:${i};--n:${SHOW.length}">${thumb(id, rnd(ph))}</div>`).join(''); });
 }
 function playLoader(done) {
   if (!fxOn()) return done();
-  const l = $('[data-loader]'); $('[data-deck]').innerHTML = SHOW.slice(0, 5).map((id, i) => `<div class="deck-card" style="--i:${i}">${thumb(id)}</div>`).join('');
+  const l = $('[data-loader]'); $('[data-deck]').innerHTML = SHOW.slice(0, 5).map((id, i) => `<div class="deck-card" style="--i:${i}">${thumb(id, rnd(builtin))}</div>`).join('');
   l.hidden = false; requestAnimationFrame(() => l.classList.add('run'));
   setTimeout(() => { done(); l.classList.add('out'); }, 1500);
   setTimeout(() => { l.hidden = true; l.classList.remove('run', 'out'); }, 2100);
@@ -668,7 +672,7 @@ async function start(email, quiet) {
   installFonts();
   state.userFonts.forEach((f) => { fetch(f.data).then((r) => r.arrayBuffer()).then((buf) => document.fonts.add(new FontFace(f.name, buf))).catch(() => {}); });
   document.documentElement.classList.toggle('no-fx', state.fx === false);
-  pool = await poolLoad(); reshuffle();
+  pool = await poolLoad(); ownPool = pool.length > 0; if (!ownPool) pool = await builtinPool(); reshuffle();
   const go = () => { $('#auth').hidden = true; $('#app').hidden = false; $('[data-dock]').hidden = false; drawTop(); show(); };
   if (quiet) go(); else playLoader(go);
 }

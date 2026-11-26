@@ -595,7 +595,7 @@ html.is-loading, html.is-loading body { overflow: hidden; }
 .guide > .back { margin: 0 0 40px; }
 .guide .g-hero { max-width: none; } .guide .g-hero h1 { margin-bottom: 16px; } .guide .g-hero .lead { margin-bottom: 64px; }
 .g-sec { margin: 0 0 64px; } .g-sec h2 { font-size: 26px !important; letter-spacing: -.02em; margin: 0 0 12px !important; }
-.g-sec > p { margin: 0 0 14px; line-height: 1.6; } .g-sec a:not(.acc) { color: inherit; }
+.g-sec > p { margin: 0 0 14px; line-height: 1.6; } .g-sec a:not(.ig-acc) { color: inherit; }
 .g-fill { font-size: 20px; line-height: 1.6 !important; letter-spacing: -.01em; margin: 22px 0 !important; }
 .g-fill u { text-decoration: none; padding: 1px 10px; border-radius: 99px; background: var(--soft); color: var(--muted); white-space: nowrap; }
 .g-eg { color: var(--muted); margin-bottom: 22px !important; }
@@ -614,12 +614,12 @@ html.is-loading, html.is-loading body { overflow: hidden; }
 .g-flow b { font-weight: 500; padding-top: 0; } .g-flow span { color: var(--muted); font-size: 15px; }
 .article .accs { list-style: none; padding: 0; margin: 22px 0 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .accs li { margin: 0; }
-.acc { display: flex; align-items: center; gap: 12px; height: 60px; padding: 0 14px; border: 1px solid var(--line); border-radius: 16px; color: var(--ink); text-decoration: none; transition: background .2s, color .2s, border-color .2s; }
-.acc svg { flex: none; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.acc span { display: grid; min-width: 0; flex: 1; } .acc b { font-weight: 500; font-size: 14px; } .acc small { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color .2s; }
-.acc .out { width: 16px; height: 16px; opacity: .5; transition: opacity .2s; }
-.acc:hover, .acc:focus-visible { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
-.acc:hover small, .acc:focus-visible small { color: inherit; opacity: .7; } .acc:hover .out { opacity: 1; }
+.ig-acc { display: flex; align-items: center; gap: 12px; height: 60px; padding: 0 14px; border: 1px solid var(--line); border-radius: 16px; color: var(--ink); text-decoration: none; transition: background .2s, color .2s, border-color .2s; }
+.ig-acc svg { flex: none; width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.ig-acc span { display: grid; min-width: 0; flex: 1; } .ig-acc b { font-weight: 500; font-size: 14px; } .ig-acc small { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: color .2s; }
+.ig-acc .out { width: 16px; height: 16px; opacity: .5; transition: opacity .2s; }
+.ig-acc:hover, .ig-acc:focus-visible { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+.ig-acc:hover small, .ig-acc:focus-visible small { color: inherit; opacity: .7; } .ig-acc:hover .out { opacity: 1; }
 .guide .g-end { margin-top: 8px; }
 @media (max-width: 720px) { .article .accs { grid-template-columns: 1fr 1fr; } .g-kit div { grid-template-columns: 1fr; gap: 4px; } .g-fill { font-size: 17px; } }
 @media (max-width: 400px) { .article .accs { grid-template-columns: 1fr; } }
@@ -719,3 +719,28 @@ html.is-loading, html.is-loading body { overflow: hidden; }
 .kit .bcols .colours { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
 .kit .bcols .cbtn { text-align: left; }
 @media (max-width: 720px) { .kit .bcols { grid-column: 1 / -1; } }
+/* ---- guide: orange account hover, done message; logo trash ---- */
+.ig-acc { position: relative; overflow: hidden; isolation: isolate; }
+.ig-acc::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(120deg, #ff7a2e, #e2401c 60%, #b8250f); opacity: 0; transition: opacity .3s ease; }
+.ig-acc:hover, .ig-acc:focus-visible { background: transparent; color: #fff; border-color: transparent; }
+.ig-acc:hover::before, .ig-acc:focus-visible::before { opacity: 1; }
+.ig-acc:active { transform: scale(.98); }
+.ig-acc:hover small, .ig-acc:focus-visible small { color: #fff; opacity: .8; }
+.g-done { margin-top: 0; }
+.g-done p { margin: 16px 0 0; padding: 18px 20px; border-radius: 18px; background: linear-gradient(120deg, rgba(255,122,46,.16), rgba(226,64,28,.1)); line-height: 1.6; transform: translateY(-8px); transition: transform .4s cubic-bezier(.2,.8,.2,1); }
+.g-done.is-open p { transform: none; }
+.g-done b { font-weight: 500; }
+.logo-row .btn.ic { width: 40px; height: 40px; }
+.logo-row [hidden] { display: none !important; }
+/* ---- packs ---- */
+.packs { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; padding: 0 var(--m); margin-bottom: 36px; }
+.pack { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 12px; row-gap: 2px; align-items: center; padding: 12px 14px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); color: var(--ink); text-align: left; cursor: pointer; transition: border-color .2s, background .2s, color .2s; }
+.pack:hover { border-color: var(--ink); }
+.pack[aria-pressed="true"] { background: var(--ink); color: var(--on-ink); border-color: var(--ink); }
+.pack-sw { grid-row: span 2; display: flex; } .pack-sw i { width: 18px; height: 34px; box-shadow: inset 0 0 0 1px rgba(127,127,127,.25); } .pack-sw i:first-child { border-radius: 8px 0 0 8px; } .pack-sw i:last-child { border-radius: 0 8px 8px 0; }
+.pack b { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .pack small { font-size: 12px; opacity: .6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pack-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 20px; flex-wrap: wrap; padding: 0 var(--m); margin-bottom: 20px; }
+.pack-head h2 { font-size: 26px; font-weight: 400; letter-spacing: -.02em; margin: 0 0 6px; } .pack-head p { margin: 0; max-width: 520px; color: var(--muted); line-height: 1.5; }
+.pack-head .bar-right { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-left: 0; }
+.pack-head .btn { height: 40px; }
+@media (max-width: 720px) { .packs { grid-template-columns: 1fr 1fr; } .pack-sw i { width: 10px; } .pack-head .bar-right { width: 100%; } .pack-head .bar-right .btn { flex: 1; } }

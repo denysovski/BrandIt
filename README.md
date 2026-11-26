@@ -14,7 +14,7 @@ Clean, ready-made ads for Instagram and the web. Pick a template, add your photo
    - **Text:** rewrite any line. Each text has its own font, size and colour, or tick *One font for every text*. Click a text in the preview and drag it. It snaps to the centre and to your guides and stays inside the edges. If texts overlap, press *Select* under the field to pick the one you want.
    - **Photo:** upload a photo, then drag it in the preview, or use the sliders to move, zoom and darken it. If a design has several photos, each one has its own upload button. Import your logo and set its size.
    - **Colours:** pick one of 38 ready-made palettes, or set your own colours, including opacity, with the colour picker. Save your combination as *My palette* to reuse it. Photo templates also offer ready-made gradient overlays.
-   - **Type:** choose fonts for headlines, text and labels, or import your own TTF, OTF or WOFF file.
+   - **Type:** choose from 40 built-in fonts (sans, display, serif and mono) for headlines, text and labels, or import your own TTF, OTF or WOFF file. The library pairs fonts at random on every refresh, never more than two per post.
    - **Size:** 13 formats for Instagram, stories, Pinterest, YouTube, X, Facebook, banners and print, or any custom width and height. The ad adjusts itself.
    - **Series:** number the posts of a carousel with squares, dots, story bars or numbers.
    - **Canvas:** zoom with the mouse wheel or the − and + buttons. Drag guides out of the rulers. With *Mirror* on, each guide gets a twin at the same distance from the opposite edge. Guides pull magnetically, more strongly when you move slowly. Hide the rulers when you do not need them.
@@ -28,7 +28,7 @@ Clean, ready-made ads for Instagram and the web. Pick a template, add your photo
 
 **Projects.** Press *Save to project* to plan a series before you post it. In *My projects* (in the dock or your account menu), put the posts in order, edit them later and export them all at once. Numbering follows the order automatically.
 
-**Sets.** Export a whole campaign of four matching posts in one click.
+**Packs.** Nine packs of ten posts that share fonts, colours and components. Switch a pack to your brand colours, export it, or save it as a project in one click.
 
 <img src="docs/studio-library.jpg" alt="BrandIt Studio library with style filters and a grid of templates" width="100%">
 

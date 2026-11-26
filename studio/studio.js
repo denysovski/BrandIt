@@ -1,6 +1,6 @@
 // BrandIt Studio: sign in (simulated), Library, Editor, Sets and Brands over the shared library.
 // Everything is stored in this browser's localStorage, per account. Nothing is sent anywhere.
-import { templates, categories, formats, palettes, fonts, pagerKinds, gradients, hasPhoto, render, getTemplate, css, toSVG, toPNG, brandDefaults } from '../lib/brandit.js?v=12';
+import { templates, categories, formats, palettes, fonts, pagerKinds, gradients, hasPhoto, render, getTemplate, css, toSVG, toPNG, brandDefaults } from '../lib/brandit.js?v=21';
 
 const FONTS = '../fonts/';
 document.getElementById('bi-css').textContent = css(FONTS);
@@ -41,14 +41,17 @@ let pool = [], ownPool = false;
 // Built-in showcase photos (shipped with the site) are used until the user loads their own folder.
 let builtin = null;
 async function builtinPool() { if (builtin) return builtin; try { const list = await (await fetch('photos/manifest.json')).json(); builtin = list.map((n) => new URL('photos/' + n, location.href).href); } catch { builtin = []; } return builtin; }
-const shuf = { photo: {}, slots: {}, pal: {} };
+const shuf = { photo: {}, slots: {}, pal: {}, font: {} };
+// fonts that hold up in every layout; a poster gets a headline font and a text font, never more than two
+const HEAD_FONTS = ['tight', 'grotesk', 'space', 'manrope', 'sora', 'figtree', 'onest', 'bricolage', 'schibsted', 'familjen', 'redhat', 'lexend', 'garamond', 'fraunces', 'dmserif', 'young'];
+const TEXT_FONTS = ['grotesk', 'tight', 'manrope', 'figtree', 'onest', 'schibsted', 'space', 'redhat', 'dmmono'];
 const idb = () => new Promise((res, rej) => { const r = indexedDB.open('brandit-showcase', 1); r.onupgradeneeded = () => r.result.createObjectStore('photos'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); });
 async function poolLoad() { try { const db = await idb(); return await new Promise((res) => { const q = db.transaction('photos').objectStore('photos').get(user); q.onsuccess = () => res(q.result || []); q.onerror = () => res([]); }); } catch { return []; } }
 async function poolSave(list) { const db = await idb(); return new Promise((res, rej) => { const t = db.transaction('photos', 'readwrite'); t.objectStore('photos').put(list, user); t.oncomplete = res; t.onerror = () => rej(t.error); }); }
 const lum = (h) => { const m = String(h).match(/^#?([0-9a-f]{6})/i); if (!m) return .5; const n = parseInt(m[1], 16); return (.299 * (n >> 16) + .587 * ((n >> 8) & 255) + .114 * (n & 255)) / 255; };
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 function reshuffle() {
-  shuf.photo = {}; shuf.slots = {}; shuf.pal = {};
+  shuf.photo = {}; shuf.slots = {}; shuf.pal = {}; shuf.font = {};
   if (state.shuffle === false) return;
   const bag = [...pool].sort(() => Math.random() - .5); let k = 0;
   const next = () => (bag.length ? bag[k++ % bag.length] : undefined);
@@ -59,11 +62,13 @@ function reshuffle() {
     if (pool.length) { shuf.photo[t.id] = next(); if (t.slots) shuf.slots[t.id] = t.slots.map(() => next()); }
     const photo = !!(t.art || t.photo || t.slots);
     shuf.pal[t.id] = Math.random() < .4 ? 'own' : pick(photo ? lightInk : any);
+    { const h = pick(HEAD_FONTS.filter((k) => fonts[k])), b = Math.random() < .45 ? h : pick(TEXT_FONTS.filter((k) => fonts[k] && k !== h)); shuf.font[t.id] = { fd: h, ft: b, fm: b }; }
   }
 }
 const photoFor = (id) => image || shuf.photo[id];
 const slotsFor = (id) => slotImgs[id] || shuf.slots[id] || [];
 const palFor = (id) => state.pal[id] ?? shuf.pal[id] ?? 'own';
+const styleFor = (id) => { const st = state.styles[id] || {}; return st.sf || st.fd || st.ft || st.fm ? st : { ...(shuf.font[id] || {}), ...st }; };
 
 function save() {
   if (!user) return;
@@ -112,7 +117,7 @@ const palSwatch = (k) => { const p = k === 'brand' ? brand().colors : typeof k =
 const styleOf = (id) => (state.styles[id] ||= {});
 const ad = (id, { format, palette, image: im, fields, style } = {}) => {
   const f = fmt(format);
-  return `<div class="ad" style="--ar:${f.w}/${f.h}">${render(id, { palette: palObj(palette ?? palFor(id)), style: style ?? state.styles[id] ?? {}, fields: fields || state.fields[id] || {}, brand: brandForRender(), image: im ?? photoFor(id), images: slotsFor(id) })}</div>`;
+  return `<div class="ad" style="--ar:${f.w}/${f.h}">${render(id, { palette: palObj(palette ?? palFor(id)), style: style ?? styleFor(id), fields: fields || state.fields[id] || {}, brand: brandForRender(), image: im ?? photoFor(id), images: slotsFor(id) })}</div>`;
 };
 
 /* ---------------- top bar: brand switcher and account ---------------- */
@@ -182,14 +187,19 @@ $('[data-lib-grid]').addEventListener('click', (e) => {
   const id = a.getAttribute('href').split('/').pop();
   state.format = state.libFormat;
   if (state.libPal !== 'own') state.pal[id] = state.libPal; else if (state.pal[id] == null && shuf.pal[id]) state.pal[id] = shuf.pal[id];
+  const st = state.styles[id] ||= {}; if (!st.fd && !st.ft && !st.fm && shuf.font[id]) Object.assign(st, shuf.font[id]); st.sf = 1;
   save();
 });
 $('[data-cats]').addEventListener('click', (e) => { const b = e.target.closest('.chip'); if (!b) return; state.cat = b.dataset.c; save(); click('tap'); drawLibrary(true); });
 
 /* ---------------- Editor ---------------- */
-const fontItems = (lbl) => [{ value: '', label: lbl }, { group: 'Built in' }, ...Object.entries(fonts).map(([k, v]) => ({ value: k, label: v.label, font: `'${v.family}'` })), ...(state.userFonts.length ? [{ group: 'Imported' }, ...state.userFonts.map((f) => ({ value: f.name, label: f.name, font: `'${f.name}'` }))] : [])];
+const FONT_KIND = { Serif: ['serif', 'dmserif', 'young', 'gloock', 'bodoni', 'garamond', 'caslon', 'fraunces'], Mono: ['mono', 'jet', 'spacemono', 'dmmono', 'rubikmono'], Display: ['wide', 'black', 'condensed', 'unbounded', 'michroma', 'syne', 'bebas', 'oswald', 'barlow', 'shoulders', 'chakra', 'orbitron', 'monoton', 'pixel', 'dot'] };
+const fontKind = (k) => Object.keys(FONT_KIND).find((g) => FONT_KIND[g].includes(k)) || 'Sans';
+const fontItems = (lbl) => [{ value: '', label: lbl }, ...['Sans', 'Display', 'Serif', 'Mono'].flatMap((g) => [{ group: g }, ...Object.entries(fonts).filter(([k]) => fontKind(k) === g).map(([k, v]) => ({ value: k, label: v.label, font: `'${v.family}'` }))]), ...(state.userFonts.length ? [{ group: 'Imported' }, ...state.userFonts.map((f) => ({ value: f.name, label: f.name, font: `'${f.name}'` }))] : [])];
 function drawEditor() {
   const tpl = getTemplate(state.tpl), st = styleOf(tpl.id);
+  // the editor starts with the fonts the library showed; after that the choice is the user's
+  if (!st.sf) { if (!st.fd && !st.ft && !st.fm && shuf.font[tpl.id]) Object.assign(st, shuf.font[tpl.id]); st.sf = 1; save(); }
   $('[data-ed-name]').textContent = tpl.name;
   $('[data-ed-cat]').textContent = tpl.cat;
   dd('template', [...categories.flatMap((c) => [{ group: c }, ...templates.filter((t) => t.cat === c).map((t) => ({ value: t.id, label: t.name }))])], tpl.id, (v) => { location.hash = '/editor/' + v; });
@@ -431,7 +441,9 @@ $('[data-canvas]').addEventListener('pointerdown', (e) => {
     const vx = [50, ...(state.rulers !== false ? g.v : [])].map((p) => rect.left + rect.width * p / 100), hy = [50, ...(state.rulers !== false ? g.h : [])].map((p) => rect.top + rect.height * p / 100);
     const move = (ev) => {
       let dx = (ev.clientX - sx) / u, dy = (ev.clientY - sy) / u;
-      if (snap) {
+      // hold Alt to move freely: no edges, no magnets, no rounding
+      if (ev.altKey) { canvas.classList.remove('on-x', 'on-y'); $$('[data-canvas] .gl').forEach((l) => l.classList.remove('hit')); }
+      else if (snap) {
         const sp = speedOf(tr, ev);
         dx = lim(dx, (rect.left - r0.left) / u, (rect.right - r0.right) / u); dy = lim(dy, (rect.top - r0.top) / u, (rect.bottom - r0.bottom) / u);
         const L = r0.left + dx * u, Rr = r0.right + dx * u, C = (L + Rr) / 2, T = r0.top + dy * u, B = r0.bottom + dy * u, M = (T + B) / 2;
@@ -608,26 +620,38 @@ $('.actions').addEventListener('click', async (e) => {
 });
 
 /* ---------------- Sets ---------------- */
-const SETS = {
-  'Launch week': ['mo-crosshair', 'x-blue-statement', 'mo-giant-word', 'x-swiss'],
-  'Gradient story': ['mo-aura', 'mo-orb', 'mo-glow-step', 'mo-ribbon'],
-  'Run club': ['mo-route', 'mo-vertical', 'y-speed', 'mo-echo'],
-  'App release': ['x-app-promo', 'x-claim', 'x-profile-card', 'x-wordmark-phone'],
-  'Shop drop': ['x-shop-drop', 'x-red-wall', 'x-sale-band', 'y-notch'],
-  'Growth report': ['x-big-stat', 'x-kpi', 'x-growth', 'x-price'],
-  'Performance agency': ['q-question', 'q-donut', 'q-mixed', 'q-percent-star'],
-  'Red studio': ['q-cinema', 'q-services', 'q-centre-mark', 'q-red-words'],
-  'Strategy deck': ['z-orange-statement', 'z-peach-stat', 'z-bars', 'z-split-underline'],
-  'Editorial grey': ['z-year', 'z-vertical-address', 'z-oval', 'z-date-card'],
-  'Team and events': ['y-team-intro', 'y-dot-grid', 'y-numbered-quote', 'x-badge'],
-};
+// Packs: ten posts that share one look (fonts, colours and the same kind of components)
+const PACKS = [
+  { name: 'Studio launch', about: 'Big photos, one wordmark, quiet type. For a studio or a brand that opens or shows new work.', pal: 'ink', fd: 'tight', ft: 'tight', fm: 'mono', ids: ['mo-crosshair', 'wordmark-photo', 'x-photo-headline', 'mo-three-words', 'year-mark', 'mo-giant-word', 'x-swiss', 'statement', 'new-work', 'launch'] },
+  { name: 'Performance agency', about: 'Numbers, charts and questions in one cool blue. For results, case studies and offers.', pal: 'cobalt', fd: 'manrope', ft: 'manrope', fm: 'dmmono', ids: ['q-question', 'q-donut', 'q-percent-star', 'q-dark-metric', 'q-chrome-stat', 'q-curve', 'x-big-stat', 'x-kpi', 'x-growth', 'x-bar-chart'] },
+  { name: 'Red studio', about: 'Cinematic photos with red blocks and discs. For a bold creative studio or a launch with attitude.', pal: 'crimson', fd: 'grotesk', ft: 'grotesk', fm: 'mono', ids: ['q-cinema', 'q-red-words', 'q-red-block', 'q-red-disc', 'q-services', 'q-centre-mark', 'q-scribble', 'q-cut-word', 'x-red-wall', 'y-red-profile'] },
+  { name: 'Soft gradients', about: 'Haze, glow and soft colour fields. For wellness, apps and calm brands.', pal: 'violet', fd: 'sora', ft: 'sora', fm: 'dmmono', ids: ['mo-haze', 'mo-blur-word', 'mo-aura', 'mo-orb', 'mo-glow-step', 'mo-ribbon', 'mo-pills', 'z-ribbon-headline', 'z-peaks', 'x-badge'] },
+  { name: 'Editorial serif', about: 'Serif headlines, dates and quiet layouts. For magazines, galleries, architects and events.', pal: 'paper', fd: 'garamond', ft: 'grotesk', fm: 'mono', ids: ['z-serif-centre', 'z-year', 'z-vertical-address', 'z-oval', 'z-date-card', 'x-zine', 'x-type-stack', 'y-numbered-quote', 'q-asterisk', 'q-trends'] },
+  { name: 'Run club', about: 'Condensed type, speed and routes. For sport clubs, races and training plans.', pal: 'acid', fd: 'oswald', ft: 'barlow', fm: 'mono', ids: ['mo-route', 'mo-vertical', 'mo-echo', 'mo-ghost-stack', 'mo-cover', 'y-speed', 'y-lineup', 'court-match', 'court-result', 'x-acid'] },
+  { name: 'App release', about: 'Screens, specs and dark tech blue. For product launches and feature updates.', pal: 'midnight', fd: 'space', ft: 'space', fm: 'jet', ids: ['mo-data-frame', 'mo-spec-sheet', 'mo-bracket', 'mo-app-tile', 'mo-story', 'x-app-promo', 'x-claim', 'x-profile-card', 'x-wordmark-phone', 'z-cta-black'] },
+  { name: 'Strategy deck', about: 'Warm orange statements, bars and portraits. For consultants, coaches and B2B services.', pal: 'tangerine', fd: 'figtree', ft: 'figtree', fm: 'dmmono', ids: ['z-orange-statement', 'z-peach-stat', 'z-bars', 'z-split-underline', 'z-navy-photo', 'z-deep-white', 'z-portrait-card', 'x-method', 'book-call', 'team-strip'] },
+  { name: 'Soft minimal', about: 'Lowercase, pills and lots of air. For personal brands, newsletters and small shops.', pal: 'frost', fd: 'onest', ft: 'onest', fm: 'dmmono', ids: ['q-mixed', 'q-blue-claim', 'q-wave', 'q-lowercase', 'x-soft-story', 'z-pills-lower', 'mo-quiet-card', 'mo-verse', 'x-percent', 'x-asterisk'] },
+].map((p) => ({ ...p, ids: p.ids.filter((id) => getTemplate(id)) }));
+const packOf = () => PACKS.find((p) => p.name === state.set) || PACKS[0];
+const packLook = (pk) => ({ palette: state.setPal === 'brand' ? 'brand' : pk.pal, style: { fd: pk.fd, ft: pk.ft, fm: pk.fm } });
 function drawSets() {
-  $('[data-sets]').innerHTML = Object.keys(SETS).map((s) => `<button type="button" class="chip" data-set="${s}" aria-pressed="${s === state.set}">${s}</button>`).join('');
+  const pk = packOf(); state.set = pk.name;
+  $('[data-sets]').innerHTML = PACKS.map((p) => `<button type="button" class="pack" data-set="${esc(p.name)}" aria-pressed="${p === pk}"><span class="pack-sw">${['bg', 'ink', 'accent'].map((k) => `<i style="background:${palettes[p.pal]?.[k] || '#888'}"></i>`).join('')}</span><b>${esc(p.name)}</b><small>${p.ids.length} posts · ${esc(fonts[p.fd]?.label || '')}</small></button>`).join('');
+  $('[data-pack-about]').innerHTML = `<h2>${esc(pk.name)}</h2><p>${esc(pk.about)}</p>`;
   dd('set-format', formatItems(), state.setFormat, (v) => { state.setFormat = v; save(); drawSets(); });
-  $('[data-set-grid]').innerHTML = (SETS[state.set] || []).map((id, i) => { const t = getTemplate(id); return `<li style="--i:${i}"><a class="card" href="#/editor/${id}">${ad(id, { format: state.setFormat })}<span class="name">${esc(t.name)}<span>edit</span></span></a></li>`; }).join('');
+  dd('set-pal', [{ value: 'pack', label: 'Pack colours' }, { value: 'brand', label: 'My brand colours' }], state.setPal === 'brand' ? 'brand' : 'pack', (v) => { state.setPal = v; save(); drawSets(); });
+  const look = packLook(pk);
+  $('[data-set-grid]').innerHTML = pk.ids.map((id, i) => `<li style="--i:${i}"><a class="card" href="#/editor/${id}" data-pack-open="${id}">${ad(id, { format: state.setFormat, ...look })}<span class="name">${esc(getTemplate(id).name)}<span>edit</span></span></a></li>`).join('');
 }
-$('[data-sets]').addEventListener('click', (e) => { const b = e.target.closest('.chip'); if (!b) return; state.set = b.dataset.set; save(); click('tap'); drawSets(); });
-$('[data-set-export]').onclick = async () => { for (const id of SETS[state.set]) { await exportOne(id, state.setFormat); await new Promise((r) => setTimeout(r, 350)); } };
+$('[data-sets]').addEventListener('click', (e) => { const b = e.target.closest('[data-set]'); if (!b) return; state.set = b.dataset.set; save(); click('tap'); drawSets(); });
+// opening a post from a pack carries the pack's colours, fonts and format into the editor
+$('[data-set-grid]').addEventListener('click', (e) => { const a = e.target.closest('[data-pack-open]'); if (!a) return; const id = a.dataset.packOpen, pk = packOf(), look = packLook(pk); state.pal[id] = look.palette; Object.assign(state.styles[id] ||= {}, look.style); state.format = state.setFormat; save(); });
+$('[data-set-export]').onclick = async () => { const pk = packOf(), look = packLook(pk); status(''); for (const id of pk.ids) { const prev = [state.pal[id], state.styles[id]]; state.pal[id] = look.palette; state.styles[id] = { ...(state.styles[id] || {}), ...look.style }; await exportOne(id, state.setFormat); [state.pal[id], state.styles[id]] = prev; await new Promise((r) => setTimeout(r, 350)); } };
+$('[data-set-save]').onclick = () => {
+  const pk = packOf(), look = packLook(pk), f = state.setFormat;
+  const pr = { id: uid(), name: pk.name, posts: pk.ids.map((id) => ({ id: uid(), tpl: id, format: f, custom: { ...state.custom }, palette: look.palette, style: { ...JSON.parse(JSON.stringify(state.styles[id] || {})), ...look.style }, fields: { ...(state.fields[id] || {}) }, image: photoFor(id), images: [...slotsFor(id)] })) };
+  state.projects.push(pr); state.project = pr.id; save(); click('ok'); location.hash = '#/projects';
+};
 
 /* ---------------- Brands ---------------- */
 function drawBrands() {
@@ -636,7 +660,7 @@ function drawBrands() {
   const form = $('[data-kit]');
   for (const k of ['name', 'short', 'handle', 'url', 'place']) form.elements[k].value = b[k] || '';
   $('[data-bcols]').innerHTML = [['bg', 'Background'], ['ink', 'Text'], ['accent', 'Accent'], ['g1', 'Gradient 1'], ['g2', 'Gradient 2']].map(([k, l]) => { const v = b.colors[k] || '#000000'; return `<button type="button" class="cbtn" data-bcol="${k}" data-v="${esc(v)}"><i style="--c:${esc(v)}"></i><span>${l}</span><em>${esc(String(v).toUpperCase())}</em></button>`; }).join('');
-  $('[data-logo-prev]').innerHTML = b.logo ? `<img src="${esc(b.logo)}" alt="Logo">` : `<b>${esc(b.short)}</b>`;
+  $('[data-logo-remove]').hidden = !b.logo; $('[data-logo-prev]').innerHTML = b.logo ? `<img src="${esc(b.logo)}" alt="Logo">` : `<b>${esc(b.short)}</b>`;
   $('[data-use-logo]') && ($('[data-use-logo]').checked = !!b.useLogo);
   for (const [k, kk] of [['bfd', 'd'], ['bft', 't']]) dd(k, fontItems('Each template’s own'), b.fonts[kk] || '', (v) => { b.fonts[kk] = v; save(); drawBrands(); });
   drawKitPreview();
@@ -667,7 +691,7 @@ $('[data-kit]').addEventListener('input', (e) => {
   if (name === 'useLogo' || name === 'short') drawBrands();
 });
 $('[data-kit-logo]').onchange = async (e) => { const f = e.target.files[0]; if (!f) return; const b = brand(); b.logo = await readFile(f); b.useLogo = true; save(); click('ok'); drawTop(); drawBrands(); };
-$('[data-logo-remove]').onclick = () => { const b = brand(); b.logo = ''; b.useLogo = false; save(); drawBrands(); };
+$('[data-logo-remove]').onclick = async () => { const b = brand(); if (!b.logo) return; if (!(await ask('Remove the logo?', `The logo of “${b.name}” is deleted from this brand. This cannot be undone.`))) return; b.logo = ''; b.useLogo = false; save(); drawTop(); drawBrands(); };
 $('[data-brand-delete]').onclick = () => {
   if (state.brands.length < 2) return;
   if (!confirmDelete()) return;
@@ -818,7 +842,7 @@ const session = load(LS.session, null);
 if (session) start(session); else { $('#auth').hidden = false; authMode('in'); drawOrbit(); }
 
 /* guide checklist: round checks you can tick */
-document.addEventListener('click', (e) => { const li = e.target.closest('[data-checks] li'); if (!li) return; li.setAttribute('aria-checked', String(li.getAttribute('aria-checked') !== 'true')); click('tap'); });
+document.addEventListener('click', (e) => { const li = e.target.closest('[data-checks] li'); if (!li) return; li.setAttribute('aria-checked', String(li.getAttribute('aria-checked') !== 'true')); click('tap'); const all = $$('[data-checks] li').every((x) => x.getAttribute('aria-checked') === 'true'); $('[data-checks-done]').classList.toggle('is-open', all); });
 document.addEventListener('keydown', (e) => { const li = e.target.closest?.('[data-checks] li'); if (li && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); li.click(); } });
 
 /* export menu */

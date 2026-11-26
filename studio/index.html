@@ -6,7 +6,7 @@
 <title>BrandIt Studio</title>
 <meta name="description" content="Make social posts and ads from the BrandIt library: pick a template, add your photo and logo, change colours and fonts, export PNG or SVG.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%23111' stroke-width='2.4'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23e8401c'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="studio.css?v=20">
+<link rel="stylesheet" href="studio.css?v=21">
 <script>try{var t=localStorage.getItem("brandit.theme")||"system";t=t.replace(/"/g,"");document.documentElement.dataset.theme=t==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;}catch(e){}</script>
 </head>
 <body>
@@ -152,8 +152,9 @@
 
   <!-- Sets -->
   <section class="screen" id="sets" aria-labelledby="set-h" hidden>
-    <div class="intro"><p class="label">Sets</p><h1 id="set-h" class="statement">A campaign is a few posts that look like one family. Pick a set, check it, export it in one go.</h1></div>
-    <div class="bar"><div class="chips" role="group" aria-label="Set" data-sets></div><div class="bar-right"><div class="dd" data-dd="set-format" data-label="Format"></div><button type="button" class="btn" data-set-export>Export the set</button></div></div>
+    <div class="intro"><p class="label">Packs</p><h1 id="set-h" class="statement">Ten posts that share one look: the same fonts, colours and components. Pick a pack, switch it to your brand and save it as a project.</h1></div>
+    <div class="packs" role="group" aria-label="Pack" data-sets></div>
+    <div class="pack-head"><div data-pack-about></div><div class="bar-right"><div class="dd" data-dd="set-pal" data-label="Colours"></div><div class="dd" data-dd="set-format" data-label="Format"></div><button type="button" class="btn btn--line" data-set-export>Export PNGs</button><button type="button" class="btn btn--save" data-set-save>Save as project</button></div></div>
     <ul class="grid set" data-set-grid></ul>
   </section>
 
@@ -248,12 +249,13 @@
       <section class="g-sec">
         <h2>Study brands built in public</h2>
         <p>These Instagram profiles show brand building as it happens: identity, logos, colour combinations and the intent behind them. Open one and count how few decisions it repeats.</p>
-        <ul class="accs"><li><a class="acc" href="https://www.instagram.com/distopion/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/></svg><span><b>Distopion</b><small>@distopion</small></span><svg class="out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16 16 8M9 8h7v7"/></svg></a></li><li><a class="acc" href="https://www.instagram.com/atem.lab/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/></svg><span><b>Atem Lab</b><small>@atem.lab</small></span><svg class="out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16 16 8M9 8h7v7"/></svg></a></li><li><a class="acc" href="https://www.instagram.com/obby.jappari/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/></svg><span><b>Obby Jappari</b><small>@obby.jappari</small></span><svg class="out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16 16 8M9 8h7v7"/></svg></a></li><li><a class="acc" href="https://www.instagram.com/softriver.co/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/></svg><span><b>Softriver</b><small>@softriver.co</small></span><svg class="out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16 16 8M9 8h7v7"/></svg></a></li><li><a class="acc" href="https://www.instagram.com/ovyonlabs/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/></svg><span><b>Ovyon Labs</b><small>@ovyonlabs</small></span><svg class="out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16 16 8M9 8h7v7"/></svg></a></li><li><a class="acc" href="https://www.instagram.com/pedro.ajo/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/></svg><span><b>Pedro Ajo</b><small>@pedro.ajo</small></span><svg class="out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16 16 8M9 8h7v7"/></svg></a></li><li><a class="acc" href="https://www.instagram.com/archived/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/></svg><span><b>Archived</b><small>@archived</small></span><svg class="out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16 16 8M9 8h7v7"/></svg></a></li></ul>
+        <ul class="accs"><li><a class="ig-acc" href="https://www.instagram.com/distopion/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/></svg><span><b>Distopion</b><small>@distopion</small></span><svg class="out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16 16 8M9 8h7v7"/></svg></a></li><li><a class="ig-acc" href="https://www.instagram.com/atem.lab/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/></svg><span><b>Atem Lab</b><small>@atem.lab</small></span><svg class="out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16 16 8M9 8h7v7"/></svg></a></li><li><a class="ig-acc" href="https://www.instagram.com/obby.jappari/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/></svg><span><b>Obby Jappari</b><small>@obby.jappari</small></span><svg class="out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16 16 8M9 8h7v7"/></svg></a></li><li><a class="ig-acc" href="https://www.instagram.com/softriver.co/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/></svg><span><b>Softriver</b><small>@softriver.co</small></span><svg class="out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16 16 8M9 8h7v7"/></svg></a></li><li><a class="ig-acc" href="https://www.instagram.com/ovyonlabs/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/></svg><span><b>Ovyon Labs</b><small>@ovyonlabs</small></span><svg class="out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16 16 8M9 8h7v7"/></svg></a></li><li><a class="ig-acc" href="https://www.instagram.com/pedro.ajo/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/></svg><span><b>Pedro Ajo</b><small>@pedro.ajo</small></span><svg class="out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16 16 8M9 8h7v7"/></svg></a></li><li><a class="ig-acc" href="https://www.instagram.com/archived/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/></svg><span><b>Archived</b><small>@archived</small></span><svg class="out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16 16 8M9 8h7v7"/></svg></a></li></ul>
       </section>
 
       <section class="g-sec">
         <h2>Check before you post</h2>
         <ul class="checks" data-checks><li tabindex="0" role="checkbox" aria-checked="false">The headline reads in one second on a phone.</li><li tabindex="0" role="checkbox" aria-checked="false">There is one clear thing to look at first.</li><li tabindex="0" role="checkbox" aria-checked="false">It uses your fonts, colours and logo.</li><li tabindex="0" role="checkbox" aria-checked="false">It makes sense without the caption.</li><li tabindex="0" role="checkbox" aria-checked="false">It fits your three words.</li></ul>
+        <div class="reveal g-done" data-checks-done><div><p><b>You are probably ready to post.</b> Treat this as the beginning, not the finish. Keep learning from other brands and platforms, watch what your posts do, and above all keep listening to your customers: they decide what your brand means.</p></div></div>
       </section>
       <a class="btn g-end" href="#/library">Open the library</a>
     </article>
@@ -268,7 +270,7 @@
         <label>Name<input name="name" maxlength="24"></label>
         <label>Short mark (1–3 letters)<input name="short" maxlength="3"></label>
         <label class="check"><input type="checkbox" name="useLogo" data-use-logo> Use logo instead of the short mark and name</label>
-        <div class="logo-row"><span class="logo-prev" data-logo-prev></span><label class="btn btn--line file-btn">Import logo<input type="file" accept="image/*,.svg" data-kit-logo hidden></label><button type="button" class="link" data-logo-remove>Remove logo</button></div>
+        <div class="logo-row"><span class="logo-prev" data-logo-prev></span><label class="btn btn--line file-btn">Import logo<input type="file" accept="image/*,.svg" data-kit-logo hidden></label><button type="button" class="btn btn--line ic" data-logo-remove aria-label="Remove logo" title="Remove logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg></button></div>
         <label>Handle<input name="handle" maxlength="40"></label>
         <label>Website<input name="url" maxlength="60"></label>
         <label>City<input name="place" maxlength="40"></label>
@@ -299,12 +301,12 @@
 <nav class="dock" aria-label="Screens" data-dock hidden>
   <a href="#/library" data-screen="library">Library</a>
   <a href="#/editor" data-screen="editor">Editor</a>
-  <a href="#/sets" data-screen="sets">Sets</a>
+  <a href="#/sets" data-screen="sets">Packs</a>
   <a href="#/projects" data-screen="projects">Projects</a>
   <a href="#/brands" data-screen="brands">Brands</a>
 </nav>
 <style id="bi-css"></style>
 <style id="bi-user-fonts"></style>
-<script type="module" src="studio.js?v=20"></script>
+<script type="module" src="studio.js?v=21"></script>
 </body>
 </html>

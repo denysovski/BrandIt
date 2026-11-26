@@ -566,3 +566,24 @@ button.cdot { padding: 0; background: var(--surface); }
 .opt.col { gap: 16px; }
 .opt .row2 .btn { justify-content: center; text-align: center; height: 44px; font-size: 14px; padding: 0 16px; }
 .hint:empty { display: none; }
+
+/* ---- v14: no scrollbar jump after loading, petals that fill as circles one after another ---- */
+html { scrollbar-gutter: stable; }
+html.is-loading, html.is-loading body { overflow: hidden; }
+.loader { transition: opacity .6s cubic-bezier(.4,0,.2,1), visibility 0s .6s; will-change: opacity; }
+.loader.out { opacity: 0; filter: none; visibility: hidden; }
+.loader.out .deck, .loader.out .bloom, .loader.out p { transform: translateY(-10px); transition: transform .6s cubic-bezier(.4,0,.2,1); }
+.bloom { position: relative; width: 110px; height: 110px; background: none; -webkit-mask: none; mask: none; }
+.bloom i { position: absolute; display: block; width: 28%; height: 28%; margin: -14% 0 0 -14%; border-radius: 50%; background: #2a2a2e; overflow: hidden; animation: none; }
+.bloom i::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: #720004; transform: scale(0); }
+.bloom i:nth-child(1) { left: 50.00%; top: 14.00%; }
+.bloom i:nth-child(2) { left: 81.18%; top: 32.00%; }
+.bloom i:nth-child(3) { left: 81.18%; top: 68.00%; }
+.bloom i:nth-child(4) { left: 50.00%; top: 86.00%; }
+.bloom i:nth-child(5) { left: 18.82%; top: 68.00%; }
+.bloom i:nth-child(6) { left: 18.82%; top: 32.00%; }
+.loader.run .bloom i { animation: none; }
+.loader.run .bloom i::after { animation: petal .55s cubic-bezier(.34,1.2,.5,1) forwards; animation-delay: calc(var(--k) * .2s + .15s); }
+@keyframes petal { to { transform: scale(1); } }
+@media (max-width: 720px) { .bloom { width: 84px; height: 84px; } }
+@media (prefers-reduced-motion: reduce) { .loader.run .bloom i::after { animation: none; transform: scale(1); } }

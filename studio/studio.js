@@ -742,9 +742,12 @@ function playLoader(done) {
   // centre card first, then the inner pair, then the outer pair
   const order = [2, 1, 3, 0, 4];
   $('[data-deck]').innerHTML = DECK.map((id, i) => `<div class="deck-card" style="--i:${order.indexOf(i)};--d:${Math.abs(i - 2)};--s:${Math.sign(i - 2)}">${thumb(id, src.length ? src[i % src.length] : undefined)}</div>`).join('');
+  document.documentElement.classList.add('is-loading');
   l.hidden = false; requestAnimationFrame(() => l.classList.add('run'));
-  setTimeout(() => { done(); l.classList.add('out'); }, 2100);
-  setTimeout(() => { l.hidden = true; l.classList.remove('run', 'out'); }, 2700);
+  // draw the studio behind the loader first, then fade the loader away once it has settled
+  setTimeout(done, 1700);
+  setTimeout(() => l.classList.add('out'), 2050);
+  setTimeout(() => { l.hidden = true; l.classList.remove('run', 'out'); document.documentElement.classList.remove('is-loading'); }, 2700);
 }
 
 /* ---------------- sign in ---------------- */

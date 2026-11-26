@@ -475,3 +475,29 @@ button.cdot { padding: 0; background: var(--surface); }
 @keyframes bloom { to { --bloom: 360deg; } }
 @media (max-width: 720px) { .deck { --w: 17.4vw; gap: 1.6vw; } .bloom { width: 72px; height: 72px; } }
 @media (prefers-reduced-motion: reduce) { .loader.run .deck-card { animation: none; opacity: 1; transform: translateY(calc(var(--d) * var(--w) * .25)); } }
+
+/* ---- v10: confirm order, equal action heights, softer save, steady rulers, calm menus, petal loader ---- */
+.btn--danger { background: #d9381e; color: #fff; } :root[data-theme="dark"] .btn--danger { color: #fff; }
+.btn--danger:hover { background: #b92c15; }
+.actions .btn, .actions .dd-btn, .save-row .btn, .save-row .dd-btn { height: 42px; box-sizing: border-box; }
+.actions .btn--line { box-shadow: inset 0 0 0 1px var(--ink); }
+[data-save-post].btn--accent { background: #ff8a4c; color: #0b0b0b; }
+[data-save-post].btn--accent:hover { background: #ff9a62; filter: none; }
+.cv-wrap { padding: var(--R); }
+.dd-btn:active { transform: none; }
+.dd-list { transform-origin: top right; animation: dd-fade .16s ease-out; }
+.dd.full .dd-list { transform-origin: top left; }
+@keyframes dd-fade { from { opacity: 0; transform: translateY(-3px); } }
+.dd-btn { transition: border-color .15s, background-color .15s; }
+.dd.open .dd-btn { box-shadow: none; }
+.loader p { font-size: clamp(26px, 3vw, 44px); font-weight: 400; letter-spacing: -.022em; line-height: 1.05; color: var(--ink); }
+.bloom { --rr: .72; position: relative; width: 160px; height: 160px; background: none; -webkit-mask: none; mask: none; }
+.bloom i { position: absolute; width: 28%; height: 28%; margin: -14% 0 0 -14%; border-radius: 50%; background: conic-gradient(#720004 var(--bloom), #2a2a2e 0); }
+.bloom i:nth-child(1) { left: calc(50% + 0.000% * var(--rr)); top: calc(50% + -50.000% * var(--rr)); }
+.bloom i:nth-child(2) { left: calc(50% + 43.301% * var(--rr)); top: calc(50% + -25.000% * var(--rr)); }
+.bloom i:nth-child(3) { left: calc(50% + 43.301% * var(--rr)); top: calc(50% + 25.000% * var(--rr)); }
+.bloom i:nth-child(4) { left: calc(50% + 0.000% * var(--rr)); top: calc(50% + 50.000% * var(--rr)); }
+.bloom i:nth-child(5) { left: calc(50% + -43.301% * var(--rr)); top: calc(50% + 25.000% * var(--rr)); }
+.bloom i:nth-child(6) { left: calc(50% + -43.301% * var(--rr)); top: calc(50% + -25.000% * var(--rr)); }
+.loader.run .bloom i { animation: bloom .42s cubic-bezier(.45,.05,.35,1) forwards; animation-delay: calc(var(--k) * .27s); }
+@media (max-width: 720px) { .bloom { width: 110px; height: 110px; } .loader p { font-size: 24px; } }

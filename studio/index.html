@@ -6,7 +6,7 @@
 <title>BrandIt Studio</title>
 <meta name="description" content="Make social posts and ads from the BrandIt library: pick a template, add your photo and logo, change colours and fonts, export PNG or SVG.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%23111' stroke-width='2.4'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23e8401c'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="studio.css?v=12">
+<link rel="stylesheet" href="studio.css?v=13">
 <script>try{var t=localStorage.getItem("brandit.theme")||"system";t=t.replace(/"/g,"");document.documentElement.dataset.theme=t==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;}catch(e){}</script>
 </head>
 <body>
@@ -243,7 +243,7 @@
   </section>
 </div>
 
-<div class="loader" data-loader hidden aria-hidden="true"><div class="deck" data-deck></div><p>Loading your studio</p></div>
+<div class="loader" data-loader hidden aria-hidden="true"><div class="deck" data-deck></div><div class="bloom" role="presentation"><i></i></div><p>Loading your studio</p></div>
 <div class="confirm" data-confirm hidden role="alertdialog" aria-modal="true" aria-labelledby="cf-t"><div class="confirm-card"><p id="cf-t" class="h3" data-cf-title></p><p class="muted" data-cf-text></p><div class="row2"><button type="button" class="btn btn--line" data-cf-no>Cancel</button><button type="button" class="btn" data-cf-yes>Yes, do it</button></div></div></div>
 <div class="sheet-bg" data-sheet-bg hidden></div>
 <section class="sheet" data-settings hidden role="dialog" aria-modal="true" aria-labelledby="set-title">
@@ -265,6 +265,6 @@
 </nav>
 <style id="bi-css"></style>
 <style id="bi-user-fonts"></style>
-<script type="module" src="studio.js?v=12"></script>
+<script type="module" src="studio.js?v=13"></script>
 </body>
 </html>

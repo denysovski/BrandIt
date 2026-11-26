@@ -735,10 +735,16 @@ function drawOrbit() {
 }
 function playLoader(done) {
   if (!fxOn()) return done();
-  const l = $('[data-loader]'); $('[data-deck]').innerHTML = DECK.map((id, i) => `<div class="deck-card" style="--i:${i}">${thumb(id, rnd(pool.length ? pool : builtin))}</div>`).join('');
+  const l = $('[data-loader]');
+  // five different photos, never the same one twice
+  const src = [...new Set(pool.length ? pool : builtin)];
+  for (let i = src.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [src[i], src[j]] = [src[j], src[i]]; }
+  // centre card first, then the inner pair, then the outer pair
+  const order = [2, 1, 3, 0, 4];
+  $('[data-deck]').innerHTML = DECK.map((id, i) => `<div class="deck-card" style="--i:${order.indexOf(i)};--d:${Math.abs(i - 2)};--s:${Math.sign(i - 2)}">${thumb(id, src.length ? src[i % src.length] : undefined)}</div>`).join('');
   l.hidden = false; requestAnimationFrame(() => l.classList.add('run'));
-  setTimeout(() => { done(); l.classList.add('out'); }, 1500);
-  setTimeout(() => { l.hidden = true; l.classList.remove('run', 'out'); }, 2100);
+  setTimeout(() => { done(); l.classList.add('out'); }, 2100);
+  setTimeout(() => { l.hidden = true; l.classList.remove('run', 'out'); }, 2700);
 }
 
 /* ---------------- sign in ---------------- */

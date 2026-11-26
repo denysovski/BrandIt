@@ -1,50 +1,106 @@
+<div align="center">
+
 # BrandIt Studio
 
-Clean, ready-made ads for Instagram and the web. Pick a template, add your photo and logo, change the text and export it.
+**Clean ads for every feed. Pick a look, add your photo and logo, export every format.**
 
-**Open it: [denysovski.github.io/BrandIt/studio](https://denysovski.github.io/BrandIt/studio/)**
+A browser studio for social media and web ads: 134 templates, 13 formats, 40 fonts, a full editor with rulers and guides, packs of matching posts and projects for planning a series. No framework, no build step, no server.
 
-<img src="docs/studio-editor.jpg" alt="BrandIt Studio editor: tabs for text, photo, colours, type and size on the left, the ad in the middle, every format and palette on the right" width="100%">
+[**Open the studio**](https://denysovski.github.io/BrandIt/studio/) &nbsp;·&nbsp; [Library](https://denysovski.github.io/BrandIt/studio/#/library) &nbsp;·&nbsp; [Packs](https://denysovski.github.io/BrandIt/studio/#/sets) &nbsp;·&nbsp; [Marketing guide](https://denysovski.github.io/BrandIt/studio/#/guide)
 
-## How to use it
+![HTML](https://img.shields.io/badge/HTML-000000?style=flat-square&labelColor=000000&logo=html5&logoColor=white)
+![CSS](https://img.shields.io/badge/CSS%20container%20queries-000000?style=flat-square&labelColor=000000&logo=css&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript%20modules-000000?style=flat-square&labelColor=000000&logo=javascript&logoColor=white)
+![No build](https://img.shields.io/badge/build-none-000000?style=flat-square&labelColor=000000)
+![Fonts](https://img.shields.io/badge/fonts-SIL%20OFL-000000?style=flat-square&labelColor=000000)
 
-1. **Sign in.** Create an account with any email and password. It exists only in your browser.
-2. **Pick a template** in the Library. Filter by style: Minimal, Gradient, Professional, Data & stats, Bold photo, Editorial, Tech & app or Sport. Use *Preview with my photo* to see every template with your own picture.
-3. **Edit it** in the Editor:
-   - **Text:** rewrite any line. Each text has its own font, size and colour, or tick *One font for every text*. Click a text in the preview and drag it. It snaps to the centre and to your guides and stays inside the edges. If texts overlap, press *Select* under the field to pick the one you want.
-   - **Photo:** upload a photo, then drag it in the preview, or use the sliders to move, zoom and darken it. If a design has several photos, each one has its own upload button. Import your logo and set its size.
-   - **Colours:** pick one of 38 ready-made palettes, or set your own colours, including opacity, with the colour picker. Save your combination as *My palette* to reuse it. Photo templates also offer ready-made gradient overlays.
-   - **Type:** choose from 40 built-in fonts (sans, display, serif and mono) for headlines, text and labels, or import your own TTF, OTF or WOFF file. The library pairs fonts at random on every refresh, never more than two per post.
-   - **Size:** 13 formats for Instagram, stories, Pinterest, YouTube, X, Facebook, banners and print, or any custom width and height. The ad adjusts itself.
-   - **Series:** number the posts of a carousel with squares, dots, story bars or numbers.
-   - **Canvas:** zoom with the mouse wheel or the − and + buttons. Drag guides out of the rulers. With *Mirror* on, each guide gets a twin at the same distance from the opposite edge. Guides pull magnetically, more strongly when you move slowly. Hide the rulers when you do not need them.
-4. **Export** as PNG, PNG at 2× or SVG.
+<br>
 
-**Showcase folder.** In the Library, press *Load showcase folder* and pick a folder of photos. Every template then shows one of them, with a random palette. Templates with several photos get several. On every refresh the photos and colours are shuffled again, and clicking a template opens it in the editor with the same photo, colours and format. The photos stay in this browser (IndexedDB) and are never uploaded. *Remove showcase photos* deletes them.
+![Library](docs/screens/02-library.jpg)
 
-**Better marketing.** The *How to have better marketing* link in the Library leads to a short guide: what your brand stands for, who you talk to, identity, why the photo matters, goals on social media and a simple workflow.
+</div>
 
-**Brands.** Save as many brands as you like, each with its own name, logo, colours and fonts. Switch the brand in the top bar and every template changes to it.
+---
 
-**Projects.** Press *Save to project* to plan a series before you post it. In *My projects* (in the dock or your account menu), put the posts in order, edit them later and export them all at once. Numbering follows the order automatically.
+## At a glance
 
-**Packs.** Nine packs of ten posts that share fonts, colours and components. Switch a pack to your brand colours, export it, or save it as a project in one click.
+| | |
+|---|---|
+| **Templates** | 134 designs in eight styles: Minimal, Gradient, Professional, Data & stats, Bold photo, Editorial, Tech & app and Sport. Every one is a photo and text, so your own picture finishes it. |
+| **Formats** | 13 sizes for Instagram, stories, Pinterest, YouTube, X, Facebook, banners and print, plus any custom size. Layouts adapt with container queries. |
+| **Editor** | Text, photo, colours, type, size and series tabs. Rulers, mirrored magnetic guides, zoom to the pointer, drag to pan, and text you drag straight in the preview. |
+| **Type** | 40 self-hosted fonts in four groups (sans, display, serif, mono), or import your own. The library pairs two fonts at random on every refresh. |
+| **Colour** | 38 palettes, 12 photo gradients, a custom colour picker with opacity, and your own saved palettes. |
+| **Packs** | Nine packs of ten posts that share fonts, colours and components. Switch one to your brand and save it as a project. |
+| **Projects** | Plan a series, drag the posts into order, edit them later and export them all at once. |
+| **Brands** | Name, logo, colours and fonts per brand. Switch the brand and the whole library follows. |
+| **Privacy** | Accounts, brands, photos and projects stay in your browser. Nothing is uploaded. |
 
-<img src="docs/studio-library.jpg" alt="BrandIt Studio library with style filters and a grid of templates" width="100%">
+---
+
+## Start
+
+| | |
+|---|---|
+| ![Sign in](docs/screens/00-sign-in.jpg) **Sign in.** An account that exists only in this browser, next to a live wall of templates. | ![Loading](docs/screens/01-loader.jpg) **Loading your studio.** Five posts with different photos fan out and tilt towards the pointer while the flower fills, petal by petal. |
+| ![Library](docs/screens/02-library.jpg) **Library.** Filter by style, preview every template with your own photo, and choose the format and colours for the whole grid. | ![Grid](docs/screens/03-library-grid.jpg) **Grid.** Photos, palettes and font pairs are shuffled on every refresh. Opening a template keeps the same look in the editor. |
+
+---
+
+## Editor
+
+| | |
+|---|---|
+| ![Editor](docs/screens/04-editor.jpg) **Editor.** Tabs on the left, the artboard with rulers in the middle, every format and palette on the right. Save and export sit at the top. | ![Zoom](docs/screens/05-zoom.jpg) **Zoom and pan.** The mouse wheel zooms into the point under the pointer. Drag the empty area to move around. |
+| ![Fonts](docs/screens/07-fonts.jpg) **Type.** Headline, text and label fonts, grouped and previewed in their own face. | ![Export](docs/screens/08-export.jpg) **Export.** PNG, PNG at 2×, SVG or the settings as JSON, with the exact pixel size. |
+
+Drag any text in the preview. It snaps to the centre, the edges and your guides, more strongly when you move slowly. Hold **Alt** to move it freely. Drag guides out of the rulers; with *Mirror* on, each guide gets a twin at the same distance from the opposite edge.
+
+---
+
+## Packs, projects and brands
+
+| | |
+|---|---|
+| ![Packs](docs/screens/09-packs.jpg) **Packs.** Ten posts in one look. Use the pack colours or your brand colours, export the PNGs or save the pack as a project. | ![Projects](docs/screens/10-projects.jpg) **Projects.** Hold a post and drag it to a new place. Edit opens it in the editor, the bin removes it after a confirmation. |
+| ![Brands](docs/screens/11-brands.jpg) **Brands.** A round logo, brand colours with the same picker as the editor, two brand fonts and a contrast check. | ![Settings](docs/screens/13-settings.jpg) **Settings.** Sound, motion, light or dark mode, and a backup of everything in one file. |
+
+![Guide](docs/screens/12-guide.jpg)
+**How to have better marketing.** A short method you can finish in a week: the sentence you stand for, the people you want, your kit, the photo, one job per post, a weekly rhythm, profiles to learn from and a checklist before you post.
+
+---
+
+## Phone
+
+| | |
+|---|---|
+| ![Library on a phone](docs/screens/14-mobile-library.jpg) | ![Editor on a phone](docs/screens/15-mobile-editor.jpg) |
+
+---
 
 ## Where your data is
 
-Everything is saved in your browser's local storage: your account, brands, logos, fonts, texts, colours, positions, palettes and projects with their photos. Nothing is uploaded anywhere. Photos are scaled down to 1600 px so they fit, and kept with the projects you save them to.
+Everything is saved in your browser's local storage: your account, brands, logos, fonts, texts, colours, positions, palettes and projects with their photos. Photos are scaled down to 1600 px so they fit. Showcase photos you load from a folder are kept in IndexedDB.
 
-To keep your work safe or move it to another computer, open **Settings → Download backup**. You get one file with all of it, including the current photo. Load it later with **Restore from file**. Clearing your browser data deletes everything that is not in a backup.
+To keep your work safe or move it to another computer, open **Settings, Download backup**. Load the file later with **Restore from file**. Clearing your browser data deletes everything that is not in a backup.
 
-In Settings you can also turn the click sound and the motion effects on or off, and switch between light and dark mode.
+## Run it locally
 
-## Good to know
+```bash
+git clone https://github.com/denysovski/BrandIt.git
+cd BrandIt
+python3 -m http.server 8000
+# open http://localhost:8000/studio/
+```
 
-- Every template is just a photo and text. Swap in your own and the ad is finished.
-- Blur, motion and colour effects are applied to whatever photo you upload, so they always match it.
-- For a feed that sells, follow a simple rhythm. In every six posts, at least two show only the product. In every nine, at most one shows no product. Learned from [Tonya Drozdova](https://www.instagram.com/p/DdRUHR4NLUF/).
+## Structure
+
+| Path | What it holds |
+|---|---|
+| `studio/` | The app: `index.html`, `studio.js`, `studio.css` and the built-in photos. |
+| `lib/brandit.js` | Rendering, formats, palettes, gradients, SVG and PNG export. |
+| `lib/motion.js`, `lib/more*.js` | The templates and their CSS, plus the font list. |
+| `fonts/` | 40 self-hosted WOFF2 families with their licence files. |
 
 ## Licence
 

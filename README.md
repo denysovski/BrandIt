@@ -14,10 +14,6 @@ A browser studio for social media and web ads: 134 templates, 13 formats, 40 fon
 ![No build](https://img.shields.io/badge/build-none-000000?style=flat-square&labelColor=000000)
 ![Fonts](https://img.shields.io/badge/fonts-SIL%20OFL-000000?style=flat-square&labelColor=000000)
 
-<br>
-
-![Library](docs/screens/02-library.jpg)
-
 </div>
 
 ---
@@ -38,43 +34,41 @@ A browser studio for social media and web ads: 134 templates, 13 formats, 40 fon
 
 ---
 
-## Start
+## The library
 
-| | |
-|---|---|
-| ![Sign in](docs/screens/00-sign-in.jpg) **Sign in.** An account that exists only in this browser, next to a live wall of templates. | ![Loading](docs/screens/01-loader.jpg) **Loading your studio.** Five posts with different photos fan out and tilt towards the pointer while the flower fills, petal by petal. |
-| ![Library](docs/screens/02-library.jpg) **Library.** Filter by style, preview every template with your own photo, and choose the format and colours for the whole grid. | ![Grid](docs/screens/03-library-grid.jpg) **Grid.** Photos, palettes and font pairs are shuffled on every refresh. Opening a template keeps the same look in the editor. |
+![Library](docs/screens/02-library.jpg)
 
----
+The first screen after you sign in. Every template is shown with a real photo, and on every refresh the photos, palettes and font pairs are shuffled, so the library never looks the same twice. Filter by style, preview every template with your own photo, and set the format and colours for the whole grid. Clicking a template opens it in the editor with exactly the look you saw. The *How to have better marketing* link leads to a short, practical guide: the sentence your brand stands for, the people you want, your kit, the photo, one job per post, a weekly rhythm and a checklist before you post.
 
-## Editor
+## The editor
 
-| | |
-|---|---|
-| ![Editor](docs/screens/04-editor.jpg) **Editor.** Tabs on the left, the artboard with rulers in the middle, every format and palette on the right. Save and export sit at the top. | ![Zoom](docs/screens/05-zoom.jpg) **Zoom and pan.** The mouse wheel zooms into the point under the pointer. Drag the empty area to move around. |
-| ![Fonts](docs/screens/07-fonts.jpg) **Type.** Headline, text and label fonts, grouped and previewed in their own face. | ![Export](docs/screens/08-export.jpg) **Export.** PNG, PNG at 2×, SVG or the settings as JSON, with the exact pixel size. |
+![Editor](docs/screens/04-editor.jpg)
 
-Drag any text in the preview. It snaps to the centre, the edges and your guides, more strongly when you move slowly. Hold **Alt** to move it freely. Drag guides out of the rulers; with *Mirror* on, each guide gets a twin at the same distance from the opposite edge.
+Tabs on the left for text, photo, colours, type, size and series. The artboard in the middle has rulers on two sides: drag guides out of them, and with *Mirror* on every guide gets a twin at the same distance from the opposite edge. Drag any text straight in the preview. It snaps to the centre, the edges and your guides, more strongly when you move slowly, and with **Alt** held it moves freely. The mouse wheel zooms into the point under the pointer, a pinch does the same on a phone, and dragging the empty area pans. On the right are every format and palette, ready-made photo gradients, and at the top the project picker, *Save* and an export menu with PNG, PNG at 2×, SVG and the settings as JSON.
 
----
+## Brands
 
-## Packs, projects and brands
+![Brands](docs/screens/11-brands.jpg)
 
-| | |
-|---|---|
-| ![Packs](docs/screens/09-packs.jpg) **Packs.** Ten posts in one look. Use the pack colours or your brand colours, export the PNGs or save the pack as a project. | ![Projects](docs/screens/10-projects.jpg) **Projects.** Hold a post and drag it to a new place. Edit opens it in the editor, the bin removes it after a confirmation. |
-| ![Brands](docs/screens/11-brands.jpg) **Brands.** A round logo, brand colours with the same picker as the editor, two brand fonts and a contrast check. | ![Settings](docs/screens/13-settings.jpg) **Settings.** Sound, motion, light or dark mode, and a backup of everything in one file. |
+Save as many brands as you like. Each has a name, a short mark, a round logo, a handle, a website and a city, five brand colours set with the same colour picker as the editor, a headline font and a text font. A contrast check tells you whether the text is readable on the background. Switch the brand in the top bar and the whole library takes its name, logo, colours and fonts.
 
-![Guide](docs/screens/12-guide.jpg)
-**How to have better marketing.** A short method you can finish in a week: the sentence you stand for, the people you want, your kit, the photo, one job per post, a weekly rhythm, profiles to learn from and a checklist before you post.
+## My projects
+
+![My projects](docs/screens/10-projects.jpg)
+
+Plan a series before you post it. Press *Save* in the editor, or save a whole pack of ten matching posts at once. Hold a post and drag it to a new place; the others slide aside and the numbering on each post follows the order. *Edit* opens a post in the editor, the bin removes it after a confirmation, and the settings button next to *Export all as PNG* renames or deletes the project.
 
 ---
 
-## Phone
+## What comes next
 
-| | |
-|---|---|
-| ![Library on a phone](docs/screens/14-mobile-library.jpg) | ![Editor on a phone](docs/screens/15-mobile-editor.jpg) |
+- **Packs from your own photos.** Load a folder and BrandIt groups the photos by colour, light and subject, then builds a pack whose posts share that look, so a whole series feels like one shoot.
+- **More packs and templates.** New styles for restaurants, real estate, fashion drops and events, each as a pack of ten.
+- **Carousel export.** One ZIP for Instagram and one PDF for LinkedIn carousels, numbered in order.
+- **Motion.** Short animated versions of the templates as MP4 and GIF for stories and reels.
+- **Brand from a link.** Paste a website or upload a logo and get a first brand kit with its colours and fonts.
+- **Readability checks per post.** A warning when a headline is too small for a phone or too low in contrast over the photo.
+- **Sync between devices.** An optional account, so your brands and projects follow you from the laptop to the phone.
 
 ---
 

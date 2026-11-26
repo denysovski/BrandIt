@@ -115,9 +115,11 @@ const palList = () => [['own', 'Own look'], ['brand', 'Brand'], ...(state.myPale
 const palObj = (k) => (typeof k === 'string' && k.startsWith('my:') ? (state.myPalettes || []).find((p) => 'my:' + p.id === k) || 'own' : k);
 const palSwatch = (k) => { const p = k === 'brand' ? brand().colors : typeof k === 'string' && k.startsWith('my:') ? palObj(k) : palettes[k]; return p ? `linear-gradient(135deg,${p.bg} 50%,${p.accent} 50%)` : 'conic-gradient(#e8401c,#1f3fe0,#c6f432,#e8401c)'; };
 const styleOf = (id) => (state.styles[id] ||= {});
-const ad = (id, { format, palette, image: im, fields, style } = {}) => {
-  const f = fmt(format);
-  return `<div class="ad" style="--ar:${f.w}/${f.h}">${render(id, { palette: palObj(palette ?? palFor(id)), style: style ?? styleFor(id), fields: fields || state.fields[id] || {}, brand: brandForRender(), image: im ?? photoFor(id), images: slotsFor(id) })}</div>`;
+// small WebP copies of the built-in photos for previews; the editor and exports use the full photo
+const thumbOf = (u) => (typeof u === 'string' && /\/photos\/photo-\d+\.jpg$/.test(u) ? u.replace(/\/photos\/(photo-\d+)\.jpg$/, '/photos/thumb/$1.webp') : u);
+const ad = (id, { format, palette, image: im, fields, style, full } = {}) => {
+  const f = fmt(format), t = full ? (u) => u : thumbOf;
+  return `<div class="ad" style="--ar:${f.w}/${f.h}">${render(id, { palette: palObj(palette ?? palFor(id)), style: style ?? styleFor(id), fields: fields || state.fields[id] || {}, brand: brandForRender(), image: im ?? t(photoFor(id)), images: slotsFor(id).map(t) })}</div>`;
 };
 
 /* ---------------- top bar: brand switcher and account ---------------- */
@@ -274,7 +276,7 @@ function rulerHtml(axis, len, total) {
 }
 function drawCanvas() {
   const f = fmt(state.format), canvas = $('[data-canvas]'), R = state.rulers !== false ? 22 : 0;
-  const avail = Math.max(200, canvas.clientWidth - 24 - 44), maxH = Math.max(260, innerHeight * (innerWidth < 1100 ? .46 : .8) - 130);
+  const avail = Math.max(200, canvas.clientWidth - 24 - 44), maxH = Math.max(260, innerHeight * (innerWidth < 1100 ? (innerWidth >= 600 ? .62 : .5) : .8) - 130);
   const base = Math.min(avail, 720 * Math.min(1.7, f.w / f.h), maxH * (f.w / f.h)); const H1 = Math.round(base * f.h / f.w);
   const W = Math.round(base * zoom), H = Math.round(W * f.h / f.w);
   const g = state.guides || { v: [], h: [] };
@@ -284,7 +286,7 @@ function drawCanvas() {
       <div class="cv-r"><button type="button" class="tb ic" data-cv="out" aria-label="Zoom out"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21M7.5 10.5h6"/></svg></button><button type="button" class="tb zl" data-cv="fit" title="Fit">${Math.round(zoom * 100)}%</button><button type="button" class="tb ic" data-cv="in" aria-label="Zoom in"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21M7.5 10.5h6M10.5 7.5v6"/></svg></button></div></div>
     <div class="cv-scroll" style="height:${H1 + 44 + 8}px"><div class="cv-wrap" style="--R:22px">
       ${R ? `<div class="ruler x" data-ruler="h" style="width:${W}px">${rulerHtml('x', W, f.w)}</div><div class="ruler y" data-ruler="v" style="height:${H}px">${rulerHtml('y', H, f.h)}</div><i class="ruler-c"></i>` : ''}
-      <div class="cv-art" style="width:${W}px;height:${H}px">${ad(state.tpl, { format: state.format })}
+      <div class="cv-art" style="width:${W}px;height:${H}px">${ad(state.tpl, { format: state.format, full: true })}
         ${R ? `<div class="guides">${g.v.map((x, i) => `<i class="gl v" data-g="v,${i}" style="left:${x}%"></i>`).join('')}${g.h.map((y, i) => `<i class="gl h" data-g="h,${i}" style="top:${y}%"></i>`).join('')}<i class="gl c v" style="left:50%"></i><i class="gl c h" style="top:50%"></i></div>` : ''}
       </div></div></div>`;
   placeWrap();
@@ -904,3 +906,13 @@ $('[data-bcols]').addEventListener('click', (e) => {
   const cb = e.target.closest('[data-bcol]'); if (!cb) return; const k = cb.dataset.bcol;
   openPicker(cb, cb.dataset.v, (v) => { const b = brand(); b.colors[k] = v; cb.dataset.v = v; cb.querySelector('i').style.setProperty('--c', v); cb.querySelector('em').textContent = v.toUpperCase(); save(); drawKitPreview(); });
 });
+
+/* two fingers on the artboard pinch to zoom around their midpoint */
+{
+  const pts = new Map(); let pinch = null;
+  const cv = $('[data-canvas]');
+  cv.addEventListener('pointerdown', (e) => { if (e.pointerType !== 'touch' || !e.target.closest('.cv-scroll')) return; pts.set(e.pointerId, [e.clientX, e.clientY]); if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a[0] - b[0], a[1] - b[1]), z: zoom }; } }, true);
+  addEventListener('pointermove', (e) => { if (!pts.has(e.pointerId)) return; pts.set(e.pointerId, [e.clientX, e.clientY]); if (pinch && pts.size === 2) { const [a, b] = [...pts.values()]; const d = Math.hypot(a[0] - b[0], a[1] - b[1]); setZoom(pinch.z * d / pinch.d, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2); } });
+  const end = (e) => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; };
+  addEventListener('pointerup', end); addEventListener('pointercancel', end);
+}

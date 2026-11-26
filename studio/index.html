@@ -6,7 +6,7 @@
 <title>BrandIt Studio</title>
 <meta name="description" content="Make social posts and ads from the BrandIt library: pick a template, add your photo and logo, change colours and fonts, export PNG or SVG.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%23111' stroke-width='2.4'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23e8401c'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="studio.css?v=18">
+<link rel="stylesheet" href="studio.css?v=19">
 <script>try{var t=localStorage.getItem("brandit.theme")||"system";t=t.replace(/"/g,"");document.documentElement.dataset.theme=t==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;}catch(e){}</script>
 </head>
 <body>
@@ -65,7 +65,7 @@
 
         <div class="pane" data-pane="text" role="tabpanel">
           <label class="check"><input type="checkbox" data-onefont> One font for every text</label>
-          <div class="dd full" data-dd="onefont" data-label="Font" hidden></div>
+          <div class="reveal" data-onefont-wrap><div><div class="dd full" data-dd="onefont" data-label="Font"></div></div></div>
           <div data-fields class="fields"></div>
           <div class="row2"><button type="button" class="btn btn--line" data-reset="text">Back to example</button><button type="button" class="btn btn--line" data-reset="nudge">Reset positions</button></div>
           <div class="group mover">
@@ -134,17 +134,16 @@
       <div class="stage">
         <p class="editing" data-editing hidden></p>
         <div class="canvas" data-canvas></div>
-        <div class="actions">
-          <button type="button" class="btn" data-export="png">Export PNG</button>
-          <button type="button" class="btn btn--line" data-export="png2">PNG 2×</button>
-          <button type="button" class="btn btn--line" data-export="svg">SVG</button>
-          <div class="save-row"><div class="dd" data-dd="project"></div><button type="button" class="btn btn--accent" data-save-post>Save to project</button></div>
-          <button type="button" class="btn btn--line" data-export="json">Copy settings</button>
-          <p class="status" role="status" data-status></p>
-        </div>
       </div>
       <aside class="variants" aria-label="Variants">
-        <p class="label">Every format</p><div class="vgrid" data-v-formats></div>
+        <div class="actions ed-bar">
+          <div class="dd" data-dd="project"></div>
+          <button type="button" class="btn btn--save" data-save-post>Save</button>
+          <div class="xmenu"><button type="button" class="btn btn--line ic" data-xbtn aria-haspopup="menu" aria-expanded="false" aria-label="Export" title="Export"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 19h14"/></svg></button>
+            <div class="xlist" role="menu" data-xlist hidden><button type="button" role="menuitem" data-export="png">PNG<em data-xs="png"></em></button><button type="button" role="menuitem" data-export="png2">PNG 2×<em data-xs="png2"></em></button><button type="button" role="menuitem" data-export="svg">SVG<em>vector</em></button><hr><button type="button" role="menuitem" data-export="json">Copy settings</button></div></div>
+          <p class="status" role="status" data-status></p>
+        </div>
+                <p class="label">Every format</p><div class="vgrid" data-v-formats></div>
         <p class="label" data-v-grads-l>Photo gradients</p><div class="vgrid themes" data-v-grads></div>
         <p class="label">Every palette</p><div class="vgrid themes" data-v-pals></div>
       </aside>
@@ -173,45 +172,90 @@
 
   <!-- Guide -->
   <section class="screen" id="guide" aria-labelledby="gd-h" hidden>
-    <article class="article">
+    <article class="article guide">
       <a class="btn btn--line back" href="#/library">Back to the library</a>
       <header class="g-hero">
-        <p class="label">Guide · 5 minute read</p>
         <h1 id="gd-h">How to have better marketing</h1>
-        <p class="lead">Good posts come from knowing who you are, who you talk to and what one picture should make them feel.</p>
+        <p class="lead">A short method you can finish this week. Write the answers down as you read, then use them every time you open BrandIt.</p>
       </header>
 
-      <ol class="g-steps">
-        <li><span class="g-n">01</span><h2>Decide what you stand for</h2><p>Finish one sentence: <em>“We exist so that…”</em>. Then pick three words for how you want to be seen, like <em>calm, precise, warm</em>. Every post must fit them.</p></li>
-        <li><span class="g-n">02</span><h2>Picture the people you want</h2><p>Where they live, what they read, what they are tired of. Brands attract people who recognise themselves, not “everyone”.</p></li>
-        <li><span class="g-n">03</span><h2>Set your identity, then keep it</h2><p>Two fonts, a background, a text colour and one accent. Save them in <a href="#/brands">Brands</a>. Use the accent for one thing only.</p></li>
-        <li><span class="g-n">04</span><h2>The picture is the message</h2><p>One subject, room for text, one kind of light, real use. Shoot or license your own images.</p></li>
-        <li><span class="g-n">05</span><h2>Give every post one job</h2><p>Show the product, answer a doubt, prove it works, invite to act or show who you are. Pick the template for the job.</p></li>
-        <li><span class="g-n">06</span><h2>Learn from what you post</h2><p>Watch saves and shares, not likes. Make more of what gets saved, quietly drop the rest.</p></li>
-      </ol>
-
-      <section class="g-block g-wide">
-        <div class="g-head"><p class="label">Learn from the best</p><h2>Profiles that build a brand in public</h2><p>Each of these accounts shows the basics of brand building: identity, logos, colour combinations and the intent behind every choice. Open one and notice how few decisions they repeat.</p></div>
-        <ul class="ex-grid"><li><a class="ex" href="https://www.instagram.com/distopion/" target="_blank" rel="noopener noreferrer" aria-label="@distopion on Instagram"><img src="photos/photo-03.jpg" alt="" loading="lazy"><span class="ex-name"><b>@distopion</b><em>Open on Instagram ↗</em></span></a></li><li><a class="ex" href="https://www.instagram.com/atem.lab/" target="_blank" rel="noopener noreferrer" aria-label="@atem.lab on Instagram"><img src="photos/photo-09.jpg" alt="" loading="lazy"><span class="ex-name"><b>@atem.lab</b><em>Open on Instagram ↗</em></span></a></li><li><a class="ex" href="https://www.instagram.com/obby.jappari/" target="_blank" rel="noopener noreferrer" aria-label="@obby.jappari on Instagram"><img src="photos/photo-14.jpg" alt="" loading="lazy"><span class="ex-name"><b>@obby.jappari</b><em>Open on Instagram ↗</em></span></a></li><li><a class="ex" href="https://www.instagram.com/softriver.co/" target="_blank" rel="noopener noreferrer" aria-label="@softriver.co on Instagram"><img src="photos/photo-19.jpg" alt="" loading="lazy"><span class="ex-name"><b>@softriver.co</b><em>Open on Instagram ↗</em></span></a></li><li><a class="ex" href="https://www.instagram.com/ovyonlabs/" target="_blank" rel="noopener noreferrer" aria-label="@ovyonlabs on Instagram"><img src="photos/photo-24.jpg" alt="" loading="lazy"><span class="ex-name"><b>@ovyonlabs</b><em>Open on Instagram ↗</em></span></a></li><li><a class="ex" href="https://www.instagram.com/pedro.ajo/" target="_blank" rel="noopener noreferrer" aria-label="@pedro.ajo on Instagram"><img src="photos/photo-29.jpg" alt="" loading="lazy"><span class="ex-name"><b>@pedro.ajo</b><em>Open on Instagram ↗</em></span></a></li><li><a class="ex" href="https://www.instagram.com/archived/" target="_blank" rel="noopener noreferrer" aria-label="@archived on Instagram"><img src="photos/photo-34.jpg" alt="" loading="lazy"><span class="ex-name"><b>@archived</b><em>Open on Instagram ↗</em></span></a></li></ul>
-        <ul class="g-look"><li><b>One system.</b> The same grid, margins and type on every post.</li><li><b>Few colours.</b> Usually two plus a single accent.</li><li><b>Clear intent.</b> You can tell what each post is for in a second.</li><li><b>A recognisable mark.</b> The logo is small, but always in the same place.</li></ul>
+      <section class="g-sec">
+        <h2>Write the sentence you stand for</h2>
+        <p>Fill in the blanks and keep it on one line. If it does not fit, you are saying too much.</p>
+        <p class="g-fill">For <u>these people</u> who want <u>this</u>, we <u>do this</u>, so that <u>this changes for them</u>.</p>
+        <p class="g-eg">For runners who train before work, we make light jackets that dry in an hour, so that they can go straight to the office.</p>
+        <p>Then pick three words for how a stranger should describe you after one post, for example <i>calm, precise, warm</i>. Every post has to fit all three.</p>
       </section>
 
-      <section class="g-block">
-        <p class="label">Workflow</p><h2>One week in BrandIt</h2>
-        <ol class="g-flow">
-          <li><b>Plan</b><span>Write the job and one sentence for each post.</span></li>
-          <li><b>Pick</b><span>Two or three templates. Reuse them all week.</span></li>
-          <li><b>Make</b><span>Drop in photos, headline under eight words, same margins.</span></li>
-          <li><b>Review</b><span>Save to a project and check the week side by side.</span></li>
-          <li><b>Ship</b><span>Export everything and schedule it.</span></li>
-        </ol>
+      <section class="g-sec">
+        <h2>Describe the people you want</h2>
+        <p>Answer these about one real customer, not about “everyone”.</p>
+        <ul class="g-list">
+          <li>What do they already follow and buy?</li>
+          <li>What are they tired of seeing?</li>
+          <li>What would make them stop scrolling?</li>
+          <li>What do they need to believe before they buy?</li>
+        </ul>
       </section>
 
-      <section class="g-block">
-        <p class="label">Checklist</p><h2>Check before you post</h2>
-        <ul class="checks" data-checks><li tabindex="0" role="checkbox" aria-checked="false">The headline reads in one second on a phone.</li><li tabindex="0" role="checkbox" aria-checked="false">There is one clear thing to look at first.</li><li tabindex="0" role="checkbox" aria-checked="false">It uses your fonts, colours and logo.</li><li tabindex="0" role="checkbox" aria-checked="false">It makes sense without the caption.</li><li tabindex="0" role="checkbox" aria-checked="false">It matches your three words.</li></ul>
+      <section class="g-sec">
+        <h2>Fix your kit once</h2>
+        <p>Decide these one time and save them in <a href="#/brands">Brands</a>, so every post starts from the same place.</p>
+        <dl class="g-kit">
+          <div><dt>Fonts</dt><dd>Two: one for headlines, one for small text.</dd></div>
+          <div><dt>Colours</dt><dd>A background, a text colour and one accent. The accent marks one thing per post.</dd></div>
+          <div><dt>Logo</dt><dd>Small, same corner, every time.</dd></div>
+          <div><dt>Margins</dt><dd>The same distance from the edge on every format.</dd></div>
+        </dl>
       </section>
-      <a class="btn" href="#/library">Open the library</a>
+
+      <section class="g-sec">
+        <h2>Choose the photo first</h2>
+        <p>People see the picture before they read a word. A good one does half the selling.</p>
+        <ul class="g-list">
+          <li>One subject, nothing competing with it.</li>
+          <li>Empty space where the headline will sit.</li>
+          <li>The same kind of light across the whole feed.</li>
+          <li>Your own product in real use, shot or licensed by you.</li>
+        </ul>
+        <p>Squint at the post. If you cannot tell what it is about, change the photo before you change the text.</p>
+      </section>
+
+      <section class="g-sec">
+        <h2>Give each post one job</h2>
+        <p>Decide the job before you open a template, then pick the look that does it best.</p>
+        <dl class="g-kit">
+          <div><dt>Show it</dt><dd>The product, big and clear. Try <b>Bold photo</b>.</dd></div>
+          <div><dt>Prove it</dt><dd>A number, a result, a before and after. Try <b>Data &amp; stats</b>.</dd></div>
+          <div><dt>Explain it</dt><dd>Answer the question people ask most. Try <b>Editorial</b>.</dd></div>
+          <div><dt>Invite</dt><dd>One clear action and a date. Try <b>Professional</b>.</dd></div>
+          <div><dt>Be you</dt><dd>The people and the work behind it. Try <b>Minimal</b>.</dd></div>
+        </dl>
+      </section>
+
+      <section class="g-sec">
+        <h2>Keep a weekly rhythm</h2>
+        <p>Three posts a week is enough if they come every week. Plan the week on Monday in ten minutes.</p>
+        <ul class="g-flow">
+          <li><b>Plan</b><span>Write the job and one headline under eight words for each post.</span></li>
+          <li><b>Make</b><span>Use two or three templates and reuse them all week.</span></li>
+          <li><b>Review</b><span>Save the posts to one project and look at them side by side.</span></li>
+          <li><b>Ship</b><span>Export every format and schedule them.</span></li>
+        </ul>
+        <p>After four weeks, look at saves and shares, not likes. Make more of what people saved.</p>
+      </section>
+
+      <section class="g-sec">
+        <h2>Study brands built in public</h2>
+        <p>These Instagram profiles show brand building as it happens: identity, logos, colour combinations and the intent behind them. Open one and count how few decisions it repeats.</p>
+        <ul class="accs"><li><a class="acc" href="https://www.instagram.com/distopion/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/></svg><span><b>Distopion</b><small>@distopion</small></span><svg class="out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16 16 8M9 8h7v7"/></svg></a></li><li><a class="acc" href="https://www.instagram.com/atem.lab/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/></svg><span><b>Atem Lab</b><small>@atem.lab</small></span><svg class="out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16 16 8M9 8h7v7"/></svg></a></li><li><a class="acc" href="https://www.instagram.com/obby.jappari/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/></svg><span><b>Obby Jappari</b><small>@obby.jappari</small></span><svg class="out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16 16 8M9 8h7v7"/></svg></a></li><li><a class="acc" href="https://www.instagram.com/softriver.co/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/></svg><span><b>Softriver</b><small>@softriver.co</small></span><svg class="out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16 16 8M9 8h7v7"/></svg></a></li><li><a class="acc" href="https://www.instagram.com/ovyonlabs/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/></svg><span><b>Ovyon Labs</b><small>@ovyonlabs</small></span><svg class="out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16 16 8M9 8h7v7"/></svg></a></li><li><a class="acc" href="https://www.instagram.com/pedro.ajo/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/></svg><span><b>Pedro Ajo</b><small>@pedro.ajo</small></span><svg class="out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16 16 8M9 8h7v7"/></svg></a></li><li><a class="acc" href="https://www.instagram.com/archived/" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r=".6" fill="currentColor" stroke="none"/></svg><span><b>Archived</b><small>@archived</small></span><svg class="out" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16 16 8M9 8h7v7"/></svg></a></li></ul>
+      </section>
+
+      <section class="g-sec">
+        <h2>Check before you post</h2>
+        <ul class="checks" data-checks><li tabindex="0" role="checkbox" aria-checked="false">The headline reads in one second on a phone.</li><li tabindex="0" role="checkbox" aria-checked="false">There is one clear thing to look at first.</li><li tabindex="0" role="checkbox" aria-checked="false">It uses your fonts, colours and logo.</li><li tabindex="0" role="checkbox" aria-checked="false">It makes sense without the caption.</li><li tabindex="0" role="checkbox" aria-checked="false">It fits your three words.</li></ul>
+      </section>
+      <a class="btn g-end" href="#/library">Open the library</a>
     </article>
   </section>
 
@@ -263,6 +307,6 @@
 </nav>
 <style id="bi-css"></style>
 <style id="bi-user-fonts"></style>
-<script type="module" src="studio.js?v=18"></script>
+<script type="module" src="studio.js?v=19"></script>
 </body>
 </html>

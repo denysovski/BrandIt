@@ -155,7 +155,7 @@ function drawLibrary(animate, skeleton) {
   $('[data-sc-clear]').hidden = !ownPool;
   const grid = $('[data-lib-grid]');
   const paint = () => {
-    grid.innerHTML = templates.filter((t) => state.cat === 'All' || t.cat === state.cat).map((t, i) => `<li style="--i:${i % 12}"><a class="card" href="#/editor/${t.id}">${ad(t.id, { format: state.libFormat, palette: state.libPal === 'own' ? palFor(t.id) : state.libPal })}<span class="name">${esc(t.name)}<span>${t.cat}</span></span></a></li>`).join('') + `<li class="soon-li"><div class="soon" style="--ar:${fmt(state.libFormat).w}/${fmt(state.libFormat).h}"><span class="soon-dot"></span><b>More coming soon</b><span>New templates are in development</span></div></li>`;
+    grid.innerHTML = templates.filter((t) => state.cat === 'All' || t.cat === state.cat).map((t, i) => `<li style="--i:${i % 12}"><a class="card" href="#/editor/${t.id}">${ad(t.id, { format: state.libFormat, palette: state.libPal === 'own' ? palFor(t.id) : state.libPal })}<span class="name">${esc(t.name)}<span>${t.cat}</span></span></a></li>`).join('') + `<li class="soon-li"><div class="soon" style="--ar:${fmt(state.libFormat).w}/${fmt(state.libFormat).h}"><b>More coming soon</b><span>New templates are in development</span></div></li>`;
   };
   if (!animate || matchMedia('(prefers-reduced-motion: reduce)').matches) return paint();
   if (skeleton) {
@@ -215,7 +215,7 @@ function drawEditor() {
   const values = { ...tpl.fields, ...(state.fields[tpl.id] || {}) };
   const map = fieldMap(tpl.id);
   $('[data-onefont]').checked = !!st.oneFont;
-  $('[data-dd="onefont"]').hidden = !st.oneFont;
+  $('[data-onefont-wrap]').classList.toggle('is-open', !!st.oneFont);
   if (st.oneFont) dd('onefont', fontItems('Template default'), st.fd || '', (v) => { ['fd', 'ft', 'fm'].forEach((k) => (v ? (st[k] = v) : delete st[k])); Object.values(st.el || {}).forEach((e) => delete e.f); save(); drawEditor(); });
   $('[data-fields]').innerHTML = Object.entries(values).map(([k, v]) => {
     const long = String(tpl.fields[k]).includes('\n') || String(tpl.fields[k]).length > 40;
@@ -239,7 +239,7 @@ function drawEditor() {
   const ed = state.editing && projectOf(state.editing.pid)?.posts.find((x) => x.id === state.editing.postId);
   $('[data-editing]').hidden = !ed;
   if (ed) { const pr = projectOf(state.editing.pid); $('[data-editing]').innerHTML = `Editing post ${pr.posts.indexOf(ed) + 1} of “${esc(pr.name)}”. <button type="button" class="link" data-stop-edit>Stop editing</button>`; }
-  $('[data-save-post]').textContent = ed ? 'Update post' : 'Save to project';
+  $('[data-save-post]').textContent = ed ? 'Update' : 'Save';
   drawCanvas();
 }
 const fmCache = {};
@@ -264,20 +264,20 @@ function rulerHtml(axis, len, total) {
 }
 function drawCanvas() {
   const f = fmt(state.format), canvas = $('[data-canvas]'), R = state.rulers !== false ? 22 : 0;
-  const avail = Math.max(200, canvas.clientWidth - 48 - 44), maxH = Math.max(260, innerHeight * (innerWidth < 1100 ? .42 : .66));
-  const base = Math.min(avail, 560 * Math.min(1.7, f.w / f.h), maxH * (f.w / f.h));
+  const avail = Math.max(200, canvas.clientWidth - 24 - 44), maxH = Math.max(260, innerHeight * (innerWidth < 1100 ? .46 : .8) - 130);
+  const base = Math.min(avail, 720 * Math.min(1.7, f.w / f.h), maxH * (f.w / f.h)); const H1 = Math.round(base * f.h / f.w);
   const W = Math.round(base * zoom), H = Math.round(W * f.h / f.w);
   const g = state.guides || { v: [], h: [] };
-  const keep = canvas.querySelector('.cv-scroll'); const sl = keep?.scrollLeft || 0, stp = keep?.scrollTop || 0;
+  
   canvas.innerHTML = `<div class="cv-tools">
       <div class="cv-l"><button type="button" class="tb${R ? ' on' : ''}" data-cv="rulers" title="Show or hide rulers"><svg viewBox="0 0 24 24"><path d="M3 8h18v8H3zM7 8v3M11 8v4M15 8v3M19 8v4"/></svg><span>${R ? 'Hide rulers' : 'Rulers'}</span></button>${R ? `<button type="button" class="tb${state.mirror !== false ? ' on' : ''}" data-cv="mirror" title="Mirror new guides from the centre"><svg viewBox="0 0 24 24"><path d="M12 3v18M8 7l-4 5 4 5M16 7l4 5-4 5"/></svg><span>Mirror</span></button>${g.v.length + g.h.length ? '<button type="button" class="tb" data-cv="clear"><span>Clear guides</span></button>' : ''}` : ''}</div>
       <div class="cv-r"><button type="button" class="tb ic" data-cv="out" aria-label="Zoom out"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21M7.5 10.5h6"/></svg></button><button type="button" class="tb zl" data-cv="fit" title="Fit">${Math.round(zoom * 100)}%</button><button type="button" class="tb ic" data-cv="in" aria-label="Zoom in"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21M7.5 10.5h6M10.5 7.5v6"/></svg></button></div></div>
-    <div class="cv-scroll"><div class="cv-wrap" style="--R:22px">
+    <div class="cv-scroll" style="height:${H1 + 44 + 8}px"><div class="cv-wrap" style="--R:22px">
       ${R ? `<div class="ruler x" data-ruler="h" style="width:${W}px">${rulerHtml('x', W, f.w)}</div><div class="ruler y" data-ruler="v" style="height:${H}px">${rulerHtml('y', H, f.h)}</div><i class="ruler-c"></i>` : ''}
       <div class="cv-art" style="width:${W}px;height:${H}px">${ad(state.tpl, { format: state.format })}
         ${R ? `<div class="guides">${g.v.map((x, i) => `<i class="gl v" data-g="v,${i}" style="left:${x}%"></i>`).join('')}${g.h.map((y, i) => `<i class="gl h" data-g="h,${i}" style="top:${y}%"></i>`).join('')}<i class="gl c v" style="left:50%"></i><i class="gl c h" style="top:50%"></i></div>` : ''}
       </div></div></div>`;
-  const sc = canvas.querySelector('.cv-scroll'); sc.scrollLeft = sl; sc.scrollTop = stp;
+  placeWrap();
   if (picked != null) $(`[data-canvas] [data-n="${picked}"]`)?.classList.add('is-picked');
   $('[data-picked]').textContent = picked != null ? `Text ${+picked + 1} selected. Drag it, use the pad or the arrow keys.` : 'Click a text in the preview, or press Select under a field.';
   $('[data-v-formats]').innerHTML = formatItems().slice(0, 5).map((x) => `<button type="button" data-format="${x.value}">${ad(state.tpl, { format: x.value })}${esc(x.label)}</button>`).join('');
@@ -317,22 +317,43 @@ function dragGuide(axis, idx, e) {
   };
   addEventListener('pointermove', move); addEventListener('pointerup', up, { once: true });
 }
-function setZoom(z, cx, cy) {
-  const sc = $('[data-canvas] .cv-scroll'), art = $('[data-canvas] .cv-art');
-  const old = zoom; zoom = Math.max(.5, Math.min(4, +z.toFixed(2))); if (zoom === old) return;
-  let fx = .5, fy = .5, ox = 0, oy = 0;
-  if (sc && art && cx != null) { const a = art.getBoundingClientRect(), s0 = sc.getBoundingClientRect(); fx = (cx - a.left) / a.width; fy = (cy - a.top) / a.height; ox = cx - s0.left; oy = cy - s0.top; }
-  drawCanvas();
-  const sc2 = $('[data-canvas] .cv-scroll'), a2 = $('[data-canvas] .cv-art'); if (!sc2 || !a2) return;
-  const ax = a2.offsetLeft + a2.parentElement.offsetLeft, ay = a2.offsetTop + a2.parentElement.offsetTop;
-  if (cx != null) { sc2.scrollLeft = ax + fx * a2.offsetWidth - ox; sc2.scrollTop = ay + fy * a2.offsetHeight - oy; }
-  else { sc2.scrollLeft = (sc2.scrollWidth - sc2.clientWidth) / 2; sc2.scrollTop = (sc2.scrollHeight - sc2.clientHeight) / 2; }
+// the artboard floats in a fixed viewport; pan holds its top-left corner (null = centred)
+let pan = null;
+function placeWrap() {
+  const sc = $('[data-canvas] .cv-scroll'), w = sc?.querySelector('.cv-wrap'); if (!w) return;
+  const sw = sc.clientWidth, sh = sc.clientHeight, ww = w.offsetWidth, wh = w.offsetHeight;
+  const clamp = (v, size, box) => Math.max(Math.min(0, box - size) - 120, Math.min(Math.max(0, box - size) + 120, v));
+  if (!pan || zoom <= 1) pan = null;
+  const x = pan ? clamp(pan.x, ww, sw) : (sw - ww) / 2, y = pan ? clamp(pan.y, wh, sh) : (sh - wh) / 2;
+  if (pan) pan = { x, y };
+  w.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+  sc.classList.toggle('can-pan', zoom > 1);
 }
-$('[data-canvas]').addEventListener('wheel', (e) => { if (!e.target.closest('.cv-art')) return; e.preventDefault(); setZoom(zoom * (e.deltaY < 0 ? 1.12 : 1 / 1.12), e.clientX, e.clientY); }, { passive: false });
+function setZoom(z, cx, cy) {
+  const sc = $('[data-canvas] .cv-scroll'), art = $('[data-canvas] .cv-art'); if (!sc || !art) return;
+  const old = zoom; zoom = Math.max(.5, Math.min(5, +z.toFixed(3))); if (zoom === old) return;
+  const s0 = sc.getBoundingClientRect(), a = art.getBoundingClientRect();
+  if (cx == null) { cx = s0.left + s0.width / 2; cy = s0.top + s0.height / 2; }
+  const fx = (cx - a.left) / a.width, fy = (cy - a.top) / a.height;
+  drawCanvas();
+  const a2 = $('[data-canvas] .cv-art'); if (!a2 || zoom <= 1) return;
+  // keep the point under the pointer where it was
+  pan = { x: cx - s0.left - fx * a2.offsetWidth - a2.offsetLeft, y: cy - s0.top - fy * a2.offsetHeight - a2.offsetTop };
+  placeWrap();
+}
+$('[data-canvas]').addEventListener('wheel', (e) => { if (!e.target.closest('.cv-scroll')) return; e.preventDefault(); const d = Math.max(-60, Math.min(60, e.deltaMode ? e.deltaY * 16 : e.deltaY)); setZoom(zoom * Math.exp(-d * .0025), e.clientX, e.clientY); }, { passive: false });
+// drag the empty area around the artboard to pan when zoomed in
+$('[data-canvas]').addEventListener('pointerdown', (e) => {
+  const sc = e.target.closest('.cv-scroll'); if (!sc || zoom <= 1 || e.target.closest('.cv-art, [data-ruler], [data-g]')) return;
+  e.preventDefault(); const w = sc.querySelector('.cv-wrap'), m = /translate\(([-\d.]+)px, ([-\d.]+)px\)/.exec(w.style.transform) || [0, 0, 0];
+  const x0 = +m[1], y0 = +m[2], sx = e.clientX, sy = e.clientY; sc.classList.add('panning');
+  const move = (ev) => { pan = { x: x0 + ev.clientX - sx, y: y0 + ev.clientY - sy }; placeWrap(); };
+  addEventListener('pointermove', move); addEventListener('pointerup', () => { removeEventListener('pointermove', move); sc.classList.remove('panning'); }, { once: true });
+});
 $('[data-canvas]').addEventListener('click', (e) => {
   const b = e.target.closest('[data-cv]'); if (!b) return;
   const k = b.dataset.cv;
-  if (k === 'in') setZoom(zoom * 1.25); if (k === 'out') setZoom(zoom / 1.25); if (k === 'fit') { zoom = 1; drawCanvas(); }
+  if (k === 'in') setZoom(zoom * 1.25); if (k === 'out') setZoom(zoom / 1.25); if (k === 'fit') { zoom = 1; pan = null; drawCanvas(); }
   if (k === 'rulers') { state.rulers = state.rulers === false; save(); drawCanvas(); }
   if (k === 'mirror') { state.mirror = state.mirror === false; save(); drawCanvas(); }
   if (k === 'clear') ask('Remove all guides?', 'The rulers stay, only the guide lines go.').then((ok) => { if (ok) { state.guides = { v: [], h: [] }; save(); drawCanvas(); } });
@@ -796,3 +817,15 @@ if (session) start(session); else { $('#auth').hidden = false; authMode('in'); d
 /* guide checklist: round checks you can tick */
 document.addEventListener('click', (e) => { const li = e.target.closest('[data-checks] li'); if (!li) return; li.setAttribute('aria-checked', String(li.getAttribute('aria-checked') !== 'true')); click('tap'); });
 document.addEventListener('keydown', (e) => { const li = e.target.closest?.('[data-checks] li'); if (li && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); li.click(); } });
+
+/* export menu */
+const xbtn = $('[data-xbtn]'), xlist = $('[data-xlist]');
+const xopen = (v) => { xlist.hidden = !v; xbtn.setAttribute('aria-expanded', String(v)); if (v) { const f = fmt(state.format); $('[data-xs="png"]').textContent = `${f.w} × ${f.h}`; $('[data-xs="png2"]').textContent = `${f.w * 2} × ${f.h * 2}`; xlist.querySelector('button')?.focus({ preventScroll: true }); click('key'); } };
+xbtn.addEventListener('click', () => xopen(xlist.hidden));
+xlist.addEventListener('click', (e) => { if (e.target.closest('[data-export]')) xopen(false); });
+document.addEventListener('pointerdown', (e) => { if (!xlist.hidden && !e.target.closest('.xmenu')) xopen(false); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !xlist.hidden) { xopen(false); xbtn.focus(); } });
+// the save and export bar sits above the variants on wide screens and under the preview on narrow ones
+const edMq = matchMedia('(max-width: 1100px)');
+const placeBar = () => { const bar = $('.ed-bar'); (edMq.matches ? $('.stage') : $('.variants')).insertAdjacentElement(edMq.matches ? 'beforeend' : 'afterbegin', bar); };
+edMq.addEventListener('change', placeBar); placeBar();

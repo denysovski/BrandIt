@@ -6,7 +6,7 @@
 <title>BrandIt Studio</title>
 <meta name="description" content="Make social posts and ads from the BrandIt library: pick a template, add your photo and logo, change colours and fonts, export PNG or SVG.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%23111' stroke-width='2.4'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23e8401c'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="studio.css?v=16">
+<link rel="stylesheet" href="studio.css?v=17">
 <script>try{var t=localStorage.getItem("brandit.theme")||"system";t=t.replace(/"/g,"");document.documentElement.dataset.theme=t==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;}catch(e){}</script>
 </head>
 <body>
@@ -39,7 +39,7 @@
 
   <!-- Library -->
   <section class="screen" id="library" aria-labelledby="lib-h">
-    <div class="intro"><p class="label">Library</p><h1 id="lib-h" class="statement">Clean ads for every feed. Pick a look, add your photo and logo, export every format.</h1><a class="guide-link" href="#/guide">How to have better marketing <span aria-hidden="true">→</span></a></div>
+    <div class="intro"><p class="label">Library</p><h1 id="lib-h" class="statement">Clean ads for every feed. Pick a look, add your photo and logo, export every format.</h1><a class="guide-link" href="#/guide">How to have better marketing <svg class="arr" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
     <div class="bar">
       <div class="chips" role="group" aria-label="Style" data-cats></div>
       <div class="bar-right"><label class="btn btn--line file-btn lib-photo">Preview with my photo<input type="file" accept="image/*" data-lib-image hidden></label><div class="dd" data-dd="lib-format" data-label="Format"></div><div class="dd" data-dd="lib-pal" data-label="Colours"></div></div>
@@ -174,7 +174,7 @@
   <!-- Guide -->
   <section class="screen" id="guide" aria-labelledby="gd-h" hidden>
     <article class="article">
-      <a class="link back" href="#/library">← Back to the library</a>
+      <a class="btn btn--line back" href="#/library">Back to the library</a>
       <header class="g-hero">
         <p class="label">Guide · 5 minute read</p>
         <h1 id="gd-h">How to have better marketing</h1>
@@ -263,6 +263,6 @@
 </nav>
 <style id="bi-css"></style>
 <style id="bi-user-fonts"></style>
-<script type="module" src="studio.js?v=16"></script>
+<script type="module" src="studio.js?v=17"></script>
 </body>
 </html>

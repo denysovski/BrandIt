@@ -546,3 +546,23 @@ button.cdot { padding: 0; background: var(--surface); }
 @media (max-width: 720px) { .bloom { width: 110px; height: 110px; } }
 .article .ex-grid, .article .g-look, .article .g-flow, .article .checks { list-style: none; }
 .article > .back { display: block; }
+/* ---- v13: clean outline buttons, back button, arrow, settings rhythm ---- */
+.btn { box-sizing: border-box; }
+.btn--line, .file-btn.btn--line { box-shadow: none !important; border: 1px solid var(--ink); }
+.btn--line:hover, :root[data-theme="dark"] .btn--line:hover { box-shadow: none !important; border-color: var(--ink); }
+:root[data-theme="dark"] .btn--line:hover { border-color: #fff; }
+.article > .back { display: inline-flex; width: max-content; margin: 0 0 32px max(0px, calc((100% - 720px) / 2)); font-size: 14px; text-decoration: none; }
+.article > .back:hover { text-decoration: none; }
+.guide-link .arr { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: translate .25s var(--ease); }
+.guide-link:hover .arr { translate: 3px 0; }
+.sheet { gap: 0; }
+.sheet-head { margin-bottom: 6px; } .sheet > [data-account] { margin: 0 0 18px; }
+.opt { padding: 20px 0; min-height: 40px; align-items: center; }
+.opt > div:first-child { display: flex; flex-direction: column; justify-content: center; min-height: 40px; }
+.opt b { line-height: 20px; } .opt span { margin-top: 2px; line-height: 18px; }
+.opt .switch { align-self: center; }
+.opt .seg { height: 40px; align-items: center; box-sizing: border-box; }
+.opt .seg button { height: 34px; }
+.opt.col { gap: 16px; }
+.opt .row2 .btn { justify-content: center; text-align: center; height: 44px; font-size: 14px; padding: 0 16px; }
+.hint:empty { display: none; }

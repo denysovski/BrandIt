@@ -262,6 +262,7 @@ function drawEditor() {
   if (ed) { const pr = projectOf(state.editing.pid); $('[data-editing]').innerHTML = `Editing post ${pr.posts.indexOf(ed) + 1} of “${esc(pr.name)}”. <button type="button" class="link" data-stop-edit>Stop editing</button>`; }
   $('[data-save-post]').textContent = ed ? 'Update' : 'Save';
   drawCanvas();
+  drawLayers();
 }
 const fmCache = {};
 // Which text blocks (data-n) show which field: render once with marker text and look for the markers.
@@ -300,6 +301,7 @@ function drawCanvas() {
       </div></div></div>`;
   placeWrap();
   if (picked != null) $(`[data-canvas] [data-n="${picked}"]`)?.classList.add('is-picked');
+  if (layerSel?.startsWith('x:')) $(`[data-canvas] [data-x="${layerSel.slice(2)}"]`)?.classList.add('is-picked');
   $('[data-picked]').textContent = picked != null ? `Text ${+picked + 1} selected. Drag it, use the pad or the arrow keys.` : 'Click a text in the preview, or press Select under a field.';
   $('[data-v-formats]').innerHTML = formatItems().slice(0, 5).map((x) => `<button type="button" data-format="${x.value}">${ad(state.tpl, { format: x.value })}${esc(x.label)}</button>`).join('');
   const tplNow = getTemplate(state.tpl), gsec = $('[data-v-grads]');
@@ -443,8 +445,22 @@ $('[data-canvas]').addEventListener('pointerdown', (e) => {
   const textEl = hits.find((n) => n.dataset.n === String(picked)) || hits.sort((a, b) => { const A = inkRect(a), B = inkRect(b); return A.width * A.height - B.width * B.height; })[0] || null, st = styleOf(state.tpl);
   const sx = e.clientX, sy = e.clientY;
   e.preventDefault();
+  const xEl = e.target.closest('.bi-extra');
+  if (xEl && !(textEl && e.target === textEl)) {
+    const x = (st.extra || []).find((q) => q.id === xEl.dataset.x); if (!x) return;
+    layerSel = 'x:' + x.id; picked = null; $$('[data-canvas] .is-picked').forEach((q) => q.classList.remove('is-picked')); xEl.classList.add('is-picked'); drawLayers();
+    const x0 = x.x ?? 50, y0 = x.y ?? 50;
+    const move = (ev) => {
+      let nx = x0 + ((ev.clientX - sx) / rect.width) * 100, ny = y0 + ((ev.clientY - sy) / rect.height) * 100;
+      if (!ev.altKey) { if (Math.abs(nx - 50) < 1.2) nx = 50; if (Math.abs(ny - 50) < 1.2) ny = 50; }
+      x.x = +nx.toFixed(2); x.y = +ny.toFixed(2);
+      xEl.style.left = x.x + '%'; xEl.style.top = x.y + '%';
+    };
+    addEventListener('pointermove', move); addEventListener('pointerup', () => { removeEventListener('pointermove', move); save(); soon(); }, { once: true });
+    return;
+  }
   if (textEl) {
-    picked = textEl.dataset.n; $$('[data-canvas] .is-picked').forEach((x) => x.classList.remove('is-picked')); textEl.classList.add('is-picked'); $('[data-picked]').textContent = `Text ${+picked + 1} selected. Drag it, or use the pad.`;
+    picked = textEl.dataset.n; layerSel = 't' + picked; queueMicrotask(drawLayers); $$('[data-canvas] .is-picked').forEach((x) => x.classList.remove('is-picked')); textEl.classList.add('is-picked'); $('[data-picked]').textContent = `Text ${+picked + 1} selected. Drag it, or use the pad.`;
     const v0 = (st.nudge || {})[picked] || [0, 0], r0 = inkRect(textEl), snap = state.snap !== false;
     const canvas = $('[data-canvas]'); canvas.classList.add('guiding');
     const lim = (d, lo, hi) => (hi < lo ? d : Math.max(lo, Math.min(hi, d)));
@@ -903,7 +919,9 @@ document.addEventListener('pointerdown', (e) => { const m = $('[data-proj-menu]'
 /* hold a post and drag it to a new place; the others slide aside.
    The slots never move during a drag (same number of equal cells), so the target is simply the slot under the pointer.
    A copy follows the pointer while the original stays in the grid as the empty place it will drop into. */
+let dndDone = null, dndRedraw = 0;
 $('[data-proj-grid]').addEventListener('pointerdown', (e) => {
+  if (dndDone) dndDone(); clearTimeout(dndRedraw);
   const li = e.target.closest('[data-post]'); if (!li || e.button !== 0 || e.target.closest('button')) return;
   const grid = li.parentElement, pr = projectOf(state.project); if (!pr || pr.posts.length < 2) return;
   e.preventDefault();
@@ -951,13 +969,15 @@ $('[data-proj-grid]').addEventListener('pointerdown', (e) => {
     removeEventListener('pointermove', move); removeEventListener('pointercancel', up); cancelAnimationFrame(scrollTimer);
     if (!ghost) return;
     cancelAnimationFrame(raf);
-    const r = li.getBoundingClientRect(), g = ghost;
-    g.style.transition = 'transform .26s cubic-bezier(.2,.8,.2,1)'; g.style.transform = `translate(${r.left}px, ${r.top}px)`;
-    setTimeout(() => { g.remove(); li.classList.remove('is-placeholder'); grid.classList.remove('sorting'); document.body.classList.remove('is-sorting'); }, 260);
+    const r = li.getBoundingClientRect(), g = ghost; ghost = null;
+    g.style.transition = 'transform .28s cubic-bezier(.2,.8,.2,1)'; g.style.transform = `translate(${r.left}px, ${r.top}px)`;
+    // the copy settles into the outlined place, then the real card shows again; a new drag finishes this at once
+    let t = 0; const done = () => { clearTimeout(t); g.remove(); li.classList.remove('is-placeholder'); grid.classList.remove('sorting'); document.body.classList.remove('is-sorting'); li.animate([{ opacity: .6 }, { opacity: 1 }], { duration: 180 }); dndDone = null; };
+    dndDone = done; t = setTimeout(done, 280);
     const order = items().map((x) => x.dataset.post);
     const changed = order.some((id, i) => pr.posts[i]?.id !== id);
     pr.posts.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id)); save();
-    if (changed) { click('ok'); setTimeout(drawProjects, 300); }
+    if (changed) { click('ok'); if (pr.posts.some((p) => p.style?.pager?.kind && p.style.pager.kind !== 'none')) dndRedraw = setTimeout(() => { if (!dndDone && !document.querySelector('.post-ghost')) drawProjects(); }, 700); }
   };
   addEventListener('pointermove', move); addEventListener('pointerup', up, { once: true }); addEventListener('pointercancel', up, { once: true });
 });
@@ -976,3 +996,93 @@ $('[data-bcols]').addEventListener('click', (e) => {
   const end = (e) => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; };
   addEventListener('pointerup', end); addEventListener('pointercancel', end);
 }
+
+/* ---------------- layers ---------------- */
+let layerSel = null;
+const layerKeys = () => {
+  const tpl = getTemplate(state.tpl), st = styleOf(state.tpl);
+  const texts = $$('[data-canvas] .bi-ad [data-n]').map((n) => 't' + n.dataset.n);
+  const keys = [...(hasPhoto(tpl) ? ['photo'] : []), ...texts, ...(st.extra || []).map((x) => 'x:' + x.id)];
+  const ord = (st.layers?.order || []).filter((k) => keys.includes(k));
+  keys.forEach((k) => { if (!ord.includes(k)) ord.push(k); });
+  return ord; // back to front
+};
+const IC = {
+  eye: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>',
+  off: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18M10.6 5.1A10 10 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7a9.6 9.6 0 0 0 4.4-1"/></svg>',
+  up: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V5M6 11l6-6 6 6"/></svg>',
+  down: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6"/></svg>',
+  text: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6V4h14v2M12 4v16M9 20h6"/></svg>',
+  photo: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5L5 20"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>',
+};
+function layerName(k) {
+  if (k === 'photo') return 'Template photo';
+  if (k.startsWith('x:')) { const i = (styleOf(state.tpl).extra || []).findIndex((x) => 'x:' + x.id === k); return `Image ${i + 1}`; }
+  const el = $(`[data-canvas] .bi-ad [data-n="${k.slice(1)}"]`); const t = (el?.textContent || '').replace(/\s+/g, ' ').trim();
+  return t ? (t.length > 30 ? t.slice(0, 29) + '…' : t) : `Text ${+k.slice(1) + 1}`;
+}
+function drawLayers() {
+  const box = $('[data-layers]'); if (!box || !state?.tpl) return;
+  const st = styleOf(state.tpl), keys = layerKeys(), hide = st.layers?.hide || {};
+  if (layerSel && !keys.includes(layerSel)) layerSel = null;
+  box.innerHTML = keys.slice().reverse().map((k, i, a) => {
+    const x = k.startsWith('x:') && (st.extra || []).find((q) => 'x:' + q.id === k);
+    const ic = x ? `<img src="${esc(x.src)}" alt="">` : k === 'photo' ? IC.photo : IC.text;
+    return `<li class="layer${k === layerSel ? ' on' : ''}${hide[k] ? ' off' : ''}" data-layer="${k}"><span class="lic">${ic}</span><span class="ln">${esc(layerName(k))}</span>
+      <button type="button" class="lb" data-lvis="${k}" aria-label="${hide[k] ? 'Show' : 'Hide'} layer" title="${hide[k] ? 'Show' : 'Hide'}">${hide[k] ? IC.off : IC.eye}</button>
+      <button type="button" class="lb" data-lmove="${k},1" aria-label="Bring forward" title="Bring forward"${i === 0 ? ' disabled' : ''}>${IC.up}</button>
+      <button type="button" class="lb" data-lmove="${k},-1" aria-label="Send backward" title="Send backward"${i === a.length - 1 ? ' disabled' : ''}>${IC.down}</button></li>`;
+  }).join('');
+  drawLayerProps();
+}
+const rng = (attr, k, label, min, max, step, v) => `<label class="range"><span>${label}</span><input type="range" min="${min}" max="${max}" step="${step}" value="${v}" ${attr}="${k}"><em>${Math.round(((v - min) / (max - min)) * 100)}</em></label>`;
+function drawLayerProps() {
+  const box = $('[data-layer-props]'); if (!box) return;
+  const st = styleOf(state.tpl), k = layerSel, op = st.layers?.op || {};
+  if (!k) { box.innerHTML = '<p class="hint">Pick a layer to change it. The top of the list is the front of the post. Add your own picture with <b>Add image</b>.</p>'; return; }
+  const order = `<div class="row2"><button type="button" class="btn btn--line" data-lto="${k},front">Bring to front</button><button type="button" class="btn btn--line" data-lto="${k},back">Send to back</button></div>`;
+  if (k === 'photo') {
+    const f = st.photoFx || {};
+    box.innerHTML = `<p class="label">Template photo</p><div class="group">${rng('data-lfx', 'op', 'Opacity', 0, 1, .01, op.photo ?? f.op ?? 1)}${rng('data-lfx', 'br', 'Brightness', .2, 2, .01, f.br ?? 1)}${rng('data-lfx', 'ct', 'Contrast', .2, 2, .01, f.ct ?? 1)}${rng('data-lfx', 'sat', 'Saturation', 0, 2, .01, f.sat ?? 1)}${rng('data-lfx', 'bl', 'Blur', 0, 6, .1, f.bl ?? 0)}</div>${order}<button type="button" class="btn btn--line" data-lreset="photo">Reset adjustments</button>`;
+    return;
+  }
+  if (k.startsWith('t')) {
+    box.innerHTML = `<p class="label">${esc(layerName(k))}</p><div class="group">${rng('data-lop', k, 'Opacity', 0, 1, .01, op[k] ?? 1)}</div>${order}<p class="hint">Change the words, font and colour in the Text tab.</p>`;
+    return;
+  }
+  const x = (st.extra || []).find((q) => 'x:' + q.id === k); if (!x) { box.innerHTML = ''; return; }
+  box.innerHTML = `<p class="label">${esc(layerName(k))}</p><div class="group">${rng('data-xf', 'w', 'Size', 5, 150, 1, x.w ?? 40)}${rng('data-xf', 'r', 'Rotation', -180, 180, 1, x.r || 0)}${rng('data-xf', 'rad', 'Corners', 0, 50, 1, x.rad || 0)}${rng('data-xf', 'op', 'Opacity', 0, 1, .01, x.op ?? 1)}${rng('data-xf', 'br', 'Brightness', .2, 2, .01, x.br ?? 1)}${rng('data-xf', 'ct', 'Contrast', .2, 2, .01, x.ct ?? 1)}${rng('data-xf', 'sat', 'Saturation', 0, 2, .01, x.sat ?? 1)}${rng('data-xf', 'bl', 'Blur', 0, 6, .1, x.bl ?? 0)}</div>${order}
+    <div class="row2"><label class="btn btn--line file-btn">Replace<input type="file" accept="image/*" data-xrep="${x.id}" hidden></label><button type="button" class="btn btn--danger lb-del" data-xdel="${x.id}">${IC.trash}Delete</button></div><p class="hint">Drag the picture in the preview to place it. Hold Alt to move it without snapping.</p>`;
+}
+const setOrder = (fn) => { const st = styleOf(state.tpl), o = layerKeys(); fn(o); st.layers = { ...(st.layers || {}), order: o }; save(); drawLayers(); soon(); };
+$('[data-pane="layers"]').addEventListener('click', async (e) => {
+  const st = styleOf(state.tpl);
+  const vis = e.target.closest('[data-lvis]'); if (vis) { const k = vis.dataset.lvis; st.layers ||= {}; st.layers.hide ||= {}; if (st.layers.hide[k]) delete st.layers.hide[k]; else st.layers.hide[k] = true; save(); drawLayers(); soon(); return; }
+  const mv = e.target.closest('[data-lmove]'); if (mv) { const [k, d] = mv.dataset.lmove.split(','); setOrder((o) => { const i = o.indexOf(k), j = i + +d; if (j < 0 || j >= o.length) return; [o[i], o[j]] = [o[j], o[i]]; }); click('tap'); return; }
+  const to = e.target.closest('[data-lto]'); if (to) { const [k, w] = to.dataset.lto.split(','); setOrder((o) => { o.splice(o.indexOf(k), 1); if (w === 'front') o.push(k); else o.unshift(k); }); click('tap'); return; }
+  const del = e.target.closest('[data-xdel]'); if (del) { if (!(await ask('Delete this image?', 'It is removed from this post. This cannot be undone.'))) return; st.extra = (st.extra || []).filter((x) => x.id !== del.dataset.xdel); if (st.layers?.order) st.layers.order = st.layers.order.filter((k) => k !== 'x:' + del.dataset.xdel); layerSel = null; save(); drawLayers(); soon(); return; }
+  const rs = e.target.closest('[data-lreset]'); if (rs) { delete st.photoFx; if (st.layers?.op) delete st.layers.op.photo; save(); drawLayers(); soon(); return; }
+  const li = e.target.closest('[data-layer]'); if (li) { layerSel = li.dataset.layer; picked = layerSel.startsWith('t') ? layerSel.slice(1) : null; drawLayers(); drawCanvas(); }
+});
+$('[data-pane="layers"]').addEventListener('input', (e) => {
+  const t = e.target, st = styleOf(state.tpl), v = +t.value;
+  const em = t.parentElement.querySelector('em'); if (em) em.textContent = Math.round(((v - +t.min) / (+t.max - +t.min)) * 100);
+  if (t.dataset.lfx) { if (t.dataset.lfx === 'op') { st.layers ||= {}; st.layers.op ||= {}; st.layers.op.photo = v; } else (st.photoFx ||= {})[t.dataset.lfx] = v; save(); soon(); }
+  if (t.dataset.lop) { st.layers ||= {}; st.layers.op ||= {}; st.layers.op[t.dataset.lop] = v; save(); soon(); }
+  if (t.dataset.xf) { const x = (st.extra || []).find((q) => 'x:' + q.id === layerSel); if (x) { x[t.dataset.xf] = v; save(); soon(); } }
+});
+$('[data-pane="layers"]').addEventListener('change', async (e) => {
+  const t = e.target; if (!t.dataset.xrep || !t.files[0]) return;
+  const x = (styleOf(state.tpl).extra || []).find((q) => q.id === t.dataset.xrep); if (!x) return;
+  x.src = await shrink(await readFile(t.files[0]), 1600); save(); drawLayers(); soon(); toast('Image replaced.');
+});
+// add a picture on top of any template, from the Layers tab or the Photo tab
+document.addEventListener('change', async (e) => {
+  const t = e.target; if (!t.matches('[data-add-img]') || !t.files[0]) return;
+  const src = await shrink(await readFile(t.files[0]), 1600); t.value = '';
+  const st = styleOf(state.tpl), id = uid(); (st.extra ||= []).push({ id, src, x: 50, y: 50, w: 40 });
+  layerSel = 'x:' + id; picked = null; save(); click('ok');
+  $$('[data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === 'layers'))); $$('[data-pane]').forEach((pn) => { pn.hidden = pn.dataset.pane !== 'layers'; });
+  drawEditor(); toast('Image added. Drag it in the preview to place it.');
+});

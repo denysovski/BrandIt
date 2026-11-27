@@ -6,7 +6,7 @@
 <title>BrandIt Studio</title>
 <meta name="description" content="Make social posts and ads from the BrandIt library: pick a template, add your photo and logo, change colours and fonts, export PNG or SVG.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%23111' stroke-width='2.4'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23e8401c'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="studio.css?v=36">
+<link rel="stylesheet" href="studio.css?v=37">
 <script>try{var t=localStorage.getItem("brandit.theme")||"system";t=t.replace(/"/g,"");document.documentElement.dataset.theme=t==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;}catch(e){}</script>
 </head>
 <body>
@@ -144,7 +144,7 @@
           <div class="dd" data-dd="project"></div>
           <button type="button" class="btn btn--save" data-save-post>Save</button>
           <div class="xmenu"><button type="button" class="btn btn--line ic" data-xbtn aria-haspopup="menu" aria-expanded="false" aria-label="Export" title="Export"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 10l5 5 5-5M5 19h14"/></svg></button>
-            <div class="xlist" role="menu" data-xlist hidden><button type="button" role="menuitem" data-export="png">PNG<em data-xs="png"></em></button><button type="button" role="menuitem" data-export="png2">PNG 2×<em data-xs="png2"></em></button><button type="button" role="menuitem" data-export="svg">SVG<em>vector</em></button><hr><button type="button" role="menuitem" data-export="json">Copy settings</button></div></div>
+            <div class="xlist" role="menu" data-xlist hidden><button type="button" role="menuitem" data-export="png">PNG<em data-xs="png"></em></button><button type="button" role="menuitem" data-export="png2">PNG 2×<em data-xs="png2"></em></button><button type="button" role="menuitem" data-export="svg">SVG<em>vector</em></button><hr><button type="button" role="menuitem" data-publish>Publish to my profile</button><button type="button" role="menuitem" data-export="json">Copy settings</button></div></div>
           <p class="status" role="status" data-status></p>
         </div>
         <div class="rpane" data-rpane="variants">
@@ -178,6 +178,25 @@
         <ol class="grid posts" data-proj-grid></ol>
       </div>
     </div>
+  </section>
+
+  <!-- Profile -->
+  <section class="screen" id="profile" aria-labelledby="pf-name" hidden>
+    <div class="pf">
+      <div class="pf-cover" data-pf-cover><button type="button" class="btn pf-cover-btn" data-pf-cover-btn>Change cover</button></div>
+      <div class="pf-id">
+        <button type="button" class="pf-avatar" data-pf-avatar aria-label="Change profile photo"></button>
+        <h1 id="pf-name" class="pf-name" data-pf-name></h1>
+        <p class="pf-handle" data-pf-handle></p>
+        <p class="pf-bio" data-pf-bio></p>
+        <div class="pf-actions" data-pf-actions></div>
+        <dl class="pf-stats" data-pf-stats></dl>
+      </div>
+      <div class="pf-bar"><div class="chips" data-pf-tabs></div><div data-pf-tools></div></div>
+      <ol class="grid pf-grid" data-pf-grid></ol>
+      <p class="pf-empty" data-pf-empty hidden></p>
+    </div>
+    <input type="file" accept="image/*" data-pf-file hidden>
   </section>
 
   <!-- Guide -->
@@ -296,6 +315,7 @@
 
 <div class="loader" data-loader hidden aria-hidden="true"><div class="deck" data-deck></div><div class="bloom" role="presentation"><i style="--k:0"></i><i style="--k:1"></i><i style="--k:2"></i><i style="--k:3"></i><i style="--k:4"></i><i style="--k:5"></i></div><p><span>Loading your studio</span></p></div>
 <div class="confirm" data-confirm hidden role="alertdialog" aria-modal="true" aria-labelledby="cf-t"><div class="confirm-card"><p id="cf-t" class="h3" data-cf-title></p><p class="muted" data-cf-text></p><div class="row2"><button type="button" class="btn btn--danger" data-cf-yes>Yes, do it</button><button type="button" class="btn btn--line" data-cf-no>Cancel</button></div></div></div>
+<div class="confirm pf-pick" data-pf-pick hidden role="dialog" aria-modal="true" aria-labelledby="pp-t"><div class="confirm-card"><div class="pp-head"><p id="pp-t" class="h3">Publish a design</p><button type="button" class="x" data-pp-close aria-label="Close">×</button></div><p class="muted">Pick a post from your projects. It shows on your profile, where others can view it and use it.</p><ol class="pp-grid" data-pp-grid></ol></div></div>
 <div class="sheet-bg" data-sheet-bg hidden></div>
 <section class="sheet" data-settings hidden role="dialog" aria-modal="true" aria-labelledby="set-title">
   <div class="sheet-head"><h2 id="set-title" class="h2">Settings</h2><button type="button" class="x" data-close aria-label="Close settings">×</button></div>
@@ -316,6 +336,6 @@
 </nav>
 <style id="bi-css"></style>
 <style id="bi-user-fonts"></style>
-<script type="module" src="studio.js?v=36"></script>
+<script type="module" src="studio.js?v=37"></script>
 </body>
 </html>

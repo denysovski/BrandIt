@@ -1,6 +1,6 @@
 // BrandIt Studio: sign in (simulated), Library, Editor, Sets and Brands over the shared library.
 // Everything is stored in this browser's localStorage, per account. Nothing is sent anywhere.
-import { templates, categories, formats, palettes, fonts, pagerKinds, gradients, hasPhoto, render, getTemplate, css, toSVG, toPNG, brandDefaults, DEFAULT_MARK, srcKey } from '../lib/brandit.js?v=32';
+import { templates, categories, formats, palettes, fonts, pagerKinds, gradients, hasPhoto, render, getTemplate, css, toSVG, toPNG, brandDefaults, DEFAULT_MARK, srcKey } from '../lib/brandit.js?v=33';
 
 const FONTS = '../fonts/';
 document.getElementById('bi-css').textContent = css(FONTS);
@@ -93,8 +93,9 @@ function save() {
   const users = load(LS.users, {});
   if (!users[user]) return;
   users[user].data = state;
-  if (!store(LS.users, users)) status('Storage is full: remove a big logo or font so changes keep saving.');
+  const ok = store(LS.users, users); if (!ok) status('Storage is full: remove a big logo or font so changes keep saving.');
   histTrack();
+  return ok;
 }
 const brand = () => state.brands.find((b) => b.id === state.brand) || state.brands[0];
 const brandForRender = () => { const b = brand(); return { ...b, logo: b.useLogo ? b.logo || DEFAULT_MARK : '' }; };
@@ -158,7 +159,7 @@ function drawTop() {
 }
 
 /* ---------------- screens ---------------- */
-const screens = ['library', 'editor', 'sets', 'projects', 'brands', 'guide'];
+const screens = ['library', 'editor', 'sets', 'projects', 'brands', 'guide', 'profile'];
 let lastScreen = '';
 function show(keepScroll) {
   const [name, arg] = (location.hash.replace(/^#\/?/, '') || 'library').split('/');
@@ -169,7 +170,7 @@ function show(keepScroll) {
   screens.forEach((n) => { $('#' + n).hidden = n !== s; });
   $$('[data-screen]').forEach((a) => (a.dataset.screen === s ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
   lastScreen = s;
-  ({ library: drawLibrary, editor: drawEditor, sets: drawSets, projects: drawProjects, brands: drawBrands, guide: () => {} })[s]();
+  ({ library: drawLibrary, editor: drawEditor, sets: drawSets, projects: drawProjects, brands: drawBrands, guide: () => {}, profile: () => drawProfile(arg) })[s]();
   if (!keepScroll) scrollTo(0, 0);
 }
 addEventListener('hashchange', () => show());
@@ -439,7 +440,7 @@ $('#editor').addEventListener('click', (e) => {
   const fz = e.target.closest('[data-fz]'); if (fz) { const [k, d] = fz.dataset.fz.split(','); (fieldMap(state.tpl)[k] || []).forEach((n) => { const el = elOf(n); el.z = Math.max(.4, Math.min(3, +((el.z || 1) + d * .1).toFixed(2))); }); save(); drawEditor(); }
   const fcx = e.target.closest('[data-fcx]'); if (fcx) { (fieldMap(state.tpl)[fcx.dataset.fcx] || []).forEach((n) => delete elOf(n).c); save(); drawEditor(); }
   const pk = e.target.closest('[data-pk]'); if (pk) { const st = styleOf(state.tpl); st.pager = { i: 1, n: 5, pos: 'tr', ...(st.pager || {}), kind: pk.dataset.pk }; save(); drawEditor(); }
-  const pp = e.target.closest('[data-pp]'); if (pp) { styleOf(state.tpl).pager.pos = pp.dataset.pp; save(); drawEditor(); }
+  const pp = e.target.closest("[data-ppick]"); if (pp) { styleOf(state.tpl).pager.pos = pp.dataset.pp; save(); drawEditor(); }
   const pgb = e.target.closest('[data-pg]'); if (pgb) { const p = styleOf(state.tpl).pager; const [k, d] = pgb.dataset.pg.split(','); p[k] = Math.max(1, Math.min(20, (+p[k] || (k === 'n' ? 5 : 1)) + +d)); if (p.i > p.n) p.i = p.n; save(); drawEditor(); }
   if (e.target.closest('[data-save-post]')) savePost();
   const cb = e.target.closest('[data-colbtn]'); if (cb) { const k = cb.dataset.colbtn; openPicker(cb, cb.dataset.v, (v) => { styleOf(state.tpl)[k] = v; cb.dataset.v = v; cb.querySelector('i').style.setProperty('--c', v); cb.querySelector('em').textContent = v.toUpperCase(); save(); soon(); }); }
@@ -725,6 +726,7 @@ const PACKS = [
   { name: 'Run club stories', about: 'Blurred motion, routes, stats and big italic marks. For running clubs, races and sport brands.', pal: 'own', fd: 'wide', ft: 'tight', fm: 'tight', ids: ['s-run-mark', 's-route-stats', 's-vertical-run', 's-staggered', 's-manifesto', 's-motion-word', 's-ghost-words', 's-blur-centre', 's-callouts', 's-blue-fade'] },
   { name: 'Tech partner', about: 'Speed lines, big claims, lab sheets and glowing scores. For agencies, software studios and B2B products.', pal: 'own', fd: 'tight', ft: 'tight', fm: 'tight', ids: ['s-speed', 's-white-claim', 's-blur-name', 's-macro', 's-structural', 's-blob-pattern', 's-orange-glow', 's-roi', 's-scale', 's-ring-mark'] },
   { name: 'Soft minimal', about: 'Lowercase, pills and lots of air. For personal brands, newsletters and small shops.', pal: 'frost', fd: 'tight', ft: 'tight', fm: 'tight', ids: ['q-mixed', 'q-blue-claim', 'q-wave', 'q-lowercase', 'x-soft-story', 'z-pills-lower', 'mo-quiet-card', 'mo-verse', 'x-percent', 'x-asterisk'] },
+  { name: 'Shapes', about: 'One photo seen through a star, a flower, an arch or two thick bands. Bold, simple, easy to remember.', pal: 'own', fd: 'tight', ft: 'tight', fm: 'tight', ids: ['t-star', 't-flower', 't-flower-mark', 't-giant-flower', 't-stripes', 't-arch', 't-quarter', 't-half', 't-circle', 't-plus', 't-blob', 't-pills'] },
 ].map((p) => ({ ...p, ids: p.ids.filter((id) => getTemplate(id)) }));
 const packOf = () => PACKS.find((p) => p.name === state.set) || PACKS[0];
 const packLook = (pk) => ({ palette: state.setPal === 'brand' ? 'brand' : pk.pal, style: { fd: pk.fd, ft: pk.ft, fm: pk.fm } });
@@ -1220,3 +1222,143 @@ document.addEventListener('click', (e) => {
   const c = e.target.closest('[data-dgc]'); if (c) { st.dg.c = c.dataset.dgc; save(); drawEditor(); }
 });
 document.addEventListener('input', (e) => { if (!e.target.matches('[data-dgs]')) return; const st = styleOf(state.tpl); st.dg.s = +e.target.value; save(); soon(); });
+
+/* ---------------- Profile: a small simulated social network ----------------
+   Your profile lives in this browser. The other people are made up, so the feed has something in it:
+   you can follow them, like and save their designs, and open any of them in the editor as your own copy. */
+const PEOPLE = [
+  ['Mara Klein', 'mara.studio', 'Art director. Posters, type and too much coffee.', ['#ff5a1f', '#1a1a1a'], 2841],
+  ['Jonas Weber', 'jonas.makes', 'Brand identity for small companies with big plans.', ['#1f3fe6', '#9fb3ff'], 1290],
+  ['Lea Novak', 'lea.grid', 'Editorial layouts and slow mornings.', ['#efe7da', '#b5653f'], 3577],
+  ['Theo Lambert', 'theo.motion', 'Sport and motion. Fast lines, loud colours.', ['#c9f04b', '#111111'], 912],
+  ['Ines Duarte', 'ines.d', 'Soft gradients for skincare and wellness brands.', ['#ffd9e4', '#ff3d7f'], 4410],
+  ['Kai Moreno', 'kai.builds', 'Product launches for apps and tools.', ['#0b0b0b', '#3b82f6'], 760],
+  ['Nora Lind', 'nora.lind', 'Shapes, flowers and one strong photo.', ['#e8401c', '#ffd2c2'], 2105],
+  ['Sami Haddad', 'sami.type', 'Big words, small budgets.', ['#f4f4f2', '#111111'], 1688],
+];
+const hashStr = (t) => { let h = 2166136261; for (const c of t) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } h ^= h >>> 13; h = Math.imul(h, 2246822507) >>> 0; return (h ^ (h >>> 16)) >>> 0; };
+const community = (() => {
+  const pals = ['own', 'own', 'own', 'mono', 'ink', 'frost', 'cobalt', 'crimson', 'paper', 'acid'];
+  const fmts = ['portrait', 'square', 'portrait', 'story', 'square'];
+  return PEOPLE.map(([name, handle, bio, colors, followers], pi) => {
+    const posts = Array.from({ length: 6 + (pi % 3) }, (_, k) => {
+      const h = hashStr(handle + k), t = templates[h % templates.length];
+      return { id: handle + '-' + k, tpl: t.id, palette: pals[(h >>> 4) % pals.length], format: fmts[(h >>> 8) % fmts.length], fields: {}, style: {}, photo: 1 + ((h >>> 12) % 40), likes: 12 + ((h >>> 6) % 380), by: handle };
+    });
+    return { name, handle, bio, colors, followers, used: 18 + (hashStr(handle) % 90), projects: 3 + (hashStr(handle) % 14), posts };
+  });
+})();
+const pPhoto = (n) => `photos/photo-${String(n).padStart(2, '0')}.jpg`;
+const prof = () => (state.profile ||= { cover: null, avatar: null, bio: '', published: [], saved: [], liked: [], following: [] });
+const myHandle = () => (state.name || user || 'me').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/@.*/, '').replace(/[^a-z0-9]+/g, '.').replace(/^\.|\.$/g, '') || 'me';
+const initialsOf = (n) => n.split(/[\s.@]+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join('');
+const avatarHtml = (pp, size = '') => pp.avatar ? `<img src="${pp.avatar}" alt="" class="${size}">` : `<i class="pf-ini ${size}" style="background:linear-gradient(135deg,${pp.colors[0]},${pp.colors[1]})">${esc(initialsOf(pp.name))}</i>`;
+const findPost = (id) => { const mine = prof().published.find((p) => p.id === id); if (mine) return mine; for (const u of community) { const p = u.posts.find((x) => x.id === id); if (p) return p; } return null; };
+const ICON = {
+  heart: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-9.2-8.6C1.4 8.6 3 5 6.6 5c2 0 3.4 1.1 4.4 2.6C12 6.1 13.4 5 15.4 5 19 5 20.6 8.6 19.2 11.4 17 15.6 12 20 12 20Z"/></svg>',
+  save: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v16l-6-4-6 4Z"/></svg>',
+  share: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4M8 8l4-4 4 4M5 13v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg>',
+  trash: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>',
+};
+let pfTab = 'published';
+function postAd(p) {
+  const f = p.format === 'custom' && p.custom ? p.custom : formats[p.format] || formats.portrait;
+  const im = p.image || thumbOf(pPhoto(p.photo || 1));
+  const imgs = p.images?.length ? p.images : [2, 5, 9].map((k) => thumbOf(pPhoto(((p.photo || 1) + k) % 40 + 1)));
+  return `<div class="ad" style="--ar:${f.w}/${f.h}">${render(p.tpl, { palette: palObj(p.palette), style: p.style || {}, fields: p.fields || {}, brand: brandForRender(), image: im, images: imgs })}</div>`;
+}
+function postCard(p, i, mine) {
+  const pf = prof(), who = mine ? null : community.find((u) => u.handle === p.by);
+  const liked = pf.liked.includes(p.id), saved = pf.saved.includes(p.id);
+  const by = mine ? `<span class="pf-by">${esc(getTemplate(p.tpl)?.name || '')}</span>` : `<a class="pf-by" href="#/profile/${who.handle}">${avatarHtml(who, 'sm')}<span>${esc(who.name)}</span></a>`;
+  const tools = mine
+    ? `<button type="button" class="pf-ic" data-pf-share="${p.id}" aria-label="Copy link" title="Copy link">${ICON.share}</button><button type="button" class="pf-ic" data-pf-unpub="${p.id}" aria-label="Remove from profile" title="Remove from profile">${ICON.trash}</button>`
+    : `<button type="button" class="pf-ic pf-like" data-pf-like="${p.id}" aria-pressed="${liked}" aria-label="Like" title="Like">${ICON.heart}<em>${p.likes + (liked ? 1 : 0)}</em></button><button type="button" class="pf-ic" data-pf-save="${p.id}" aria-pressed="${saved}" aria-label="Save" title="Save">${ICON.save}</button>`;
+  return `<li class="post pf-post" style="--i:${i}">${postAd(p)}<div class="post-bar">${by}${tools}<button type="button" class="p-edit" data-pf-use="${p.id}">${mine ? 'Edit' : 'Use'}</button></div></li>`;
+}
+function drawProfile(handle) {
+  const pf = prof(), mineH = myHandle(), other = handle && handle !== mineH ? community.find((u) => u.handle === handle) : null;
+  const me = { name: state.name || user, handle: mineH, bio: pf.bio, colors: ['#e8401c', '#720004'], avatar: pf.avatar };
+  const who = other || me, own = !other;
+  const cover = $('[data-pf-cover]');
+  cover.style.backgroundImage = own && pf.cover ? `url("${pf.cover}")` : `linear-gradient(135deg, ${who.colors[0]}, ${who.colors[1]})`;
+  cover.classList.toggle('has-img', !!(own && pf.cover));
+  $('[data-pf-cover-btn]').hidden = !own;
+  const av = $('[data-pf-avatar]'); av.innerHTML = avatarHtml(who) + (own ? '<span>Change</span>' : ''); av.disabled = !own;
+  $('[data-pf-name]').textContent = who.name; $('[data-pf-handle]').textContent = '@' + who.handle;
+  const bio = $('[data-pf-bio]'); bio.textContent = who.bio || (own ? 'Add a line about you' : ''); bio.contentEditable = own ? 'plaintext-only' : 'false'; bio.classList.toggle('is-empty', own && !who.bio);
+  const following = pf.following.includes(who.handle);
+  const used = own ? new Set([...state.projects.flatMap((p) => p.posts.map((x) => x.tpl)), ...pf.published.map((x) => x.tpl)]).size : who.used;
+  const followers = own ? 24 + pf.published.length * 7 + pf.published.reduce((n, p) => n + (p.likes || 0), 0) : who.followers + (following ? 1 : 0);
+  $('[data-pf-stats]').innerHTML = [['Followers', followers], [own ? 'Following' : 'Templates used', own ? pf.following.length : used], [own ? 'Templates used' : 'Projects', own ? used : who.projects], ...(own ? [['Projects', state.projects.length]] : [])].map(([k, v]) => `<div><dd>${Number(v).toLocaleString('en')}</dd><dt>${k}</dt></div>`).join('');
+  $('[data-pf-actions]').innerHTML = own
+    ? `<button type="button" class="btn btn--line" data-pf-sharep>Share profile</button>`
+    : `<button type="button" class="btn ${following ? 'btn--line' : 'btn--save'}" data-pf-follow="${who.handle}">${following ? 'Following' : 'Follow'}</button><button type="button" class="btn btn--line" data-pf-sharep>Share profile</button>`;
+  const tabs = own ? [['published', 'Published', pf.published.length], ['explore', 'Explore', community.reduce((n, u) => n + u.posts.length, 0)], ['following', 'Following', community.filter((u) => pf.following.includes(u.handle)).reduce((n, u) => n + u.posts.length, 0)], ['saved', 'Saved', pf.saved.length]] : [['posts', 'Posts', who.posts.length]];
+  if (own && !tabs.some((t) => t[0] === pfTab)) pfTab = 'published';
+  const tab = own ? pfTab : 'posts';
+  $('[data-pf-tabs]').innerHTML = tabs.map(([k, l, n]) => `<button type="button" class="chip" data-pf-tab="${k}" aria-pressed="${k === tab}">${l}<span>${n}</span></button>`).join('');
+  $('[data-pf-tools]').innerHTML = own && tab === 'published' ? `<button type="button" class="btn" data-pf-publish>+ Publish a design</button>` : '';
+  let list = [], mine = false, empty = '';
+  if (!own) list = who.posts;
+  else if (tab === 'published') { list = [...pf.published].reverse(); mine = true; empty = 'Nothing published yet. Publish a post from one of your projects, or use “Publish to my profile” in the editor’s export menu.'; }
+  else if (tab === 'explore') { const n = Math.max(...community.map((u) => u.posts.length)); for (let k = 0; k < n; k++) community.forEach((u, j) => { const q = u.posts[(k + j) % u.posts.length]; if (k < u.posts.length) list.push(q); }); }
+  else if (tab === 'following') { list = community.filter((u) => pf.following.includes(u.handle)).flatMap((u) => u.posts); empty = 'Follow people from Explore and their designs show up here.'; }
+  else if (tab === 'saved') { list = pf.saved.map(findPost).filter(Boolean); empty = 'Designs you save with the bookmark show up here.'; }
+  $('[data-pf-grid]').innerHTML = list.map((p, i) => postCard(p, i % 12, mine)).join('');
+  const em = $('[data-pf-empty]'); em.hidden = list.length > 0; em.textContent = empty;
+}
+let pfFileFor = null;
+$('#profile').addEventListener('click', async (e) => {
+  const pf = prof();
+  if (e.target.closest('[data-pf-cover-btn]')) { pfFileFor = 'cover'; $('[data-pf-file]').click(); return; }
+  if (e.target.closest('[data-pf-avatar]') && !$('[data-pf-avatar]').disabled) { pfFileFor = 'avatar'; $('[data-pf-file]').click(); return; }
+  const tb = e.target.closest('[data-pf-tab]'); if (tb) { pfTab = tb.dataset.pfTab; click('tap'); drawProfile(); return; }
+  const fo = e.target.closest('[data-pf-follow]'); if (fo) { const h = fo.dataset.pfFollow, i = pf.following.indexOf(h); if (i < 0) pf.following.push(h); else pf.following.splice(i, 1); save(); click('ok'); drawProfile(h); return; }
+  const lk = e.target.closest('[data-pf-like]'); if (lk) { const id = lk.dataset.pfLike, i = pf.liked.indexOf(id); if (i < 0) pf.liked.push(id); else pf.liked.splice(i, 1); save(); click('tap'); const p = findPost(id); lk.setAttribute('aria-pressed', String(i < 0)); lk.querySelector('em').textContent = p.likes + (i < 0 ? 1 : 0); return; }
+  const sv = e.target.closest('[data-pf-save]'); if (sv) { const id = sv.dataset.pfSave, i = pf.saved.indexOf(id); if (i < 0) pf.saved.push(id); else pf.saved.splice(i, 1); save(); click('tap'); sv.setAttribute('aria-pressed', String(i < 0)); toast(i < 0 ? 'Saved. Find it under Saved on your profile.' : 'Removed from Saved.'); if (pfTab === 'saved' && !location.hash.split('/')[2]) drawProfile(); return; }
+  const sh = e.target.closest('[data-pf-share]'); if (sh) { copyLink(`#/profile/${myHandle()}`); return; }
+  if (e.target.closest('[data-pf-sharep]')) { const h = location.hash.split('/')[2] || myHandle(); copyLink(`#/profile/${h}`); return; }
+  const un = e.target.closest('[data-pf-unpub]'); if (un) { if (await ask('Remove from your profile?', 'The post stays in its project. Only the published copy goes away.')) { pf.published = pf.published.filter((p) => p.id !== un.dataset.pfUnpub); save(); drawProfile(); } return; }
+  if (e.target.closest('[data-pf-publish]')) { openPublish(); return; }
+  const us = e.target.closest('[data-pf-use]'); if (us) { const p = findPost(us.dataset.pfUse); if (p) useDesign(p); }
+});
+function copyLink(hash) {
+  const url = location.href.split('#')[0] + hash;
+  (navigator.clipboard?.writeText(url) || Promise.reject()).then(() => toast('Link copied. Anyone with BrandIt open in this browser can view it.'), () => toast(url));
+}
+function useDesign(p) {
+  state.tpl = p.tpl; state.format = formats[p.format] || p.format === 'custom' ? p.format : 'portrait'; if (p.custom) state.custom = { ...p.custom };
+  state.pal[p.tpl] = p.palette || 'own'; state.styles[p.tpl] = JSON.parse(JSON.stringify(p.style || {})); state.fields[p.tpl] = { ...(p.fields || {}) };
+  image = p.image || pPhoto(p.photo || 1); slotImgs[p.tpl] = p.images?.length ? [...p.images] : [2, 5, 9].map((k) => pPhoto(((p.photo || 1) + k) % 40 + 1));
+  state.editing = null; save(); location.hash = '/editor/' + p.tpl;
+  toast(p.by ? 'This is your own copy now. Change anything, then press Save.' : 'Editing your design.');
+}
+$('[data-pf-file]').onchange = async (e) => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  const url = await new Promise((r) => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(f); });
+  const pf = prof(); pf[pfFileFor] = await shrink(url, pfFileFor === 'cover' ? 1800 : 480);
+  if (!save()) { pf[pfFileFor] = null; toast('This picture is too large for the browser storage. Try a smaller one.'); }
+  drawProfile();
+};
+document.addEventListener('focusout', (e) => { if (!e.target.matches?.('[data-pf-bio][contenteditable="plaintext-only"]')) return; const t = e.target.textContent.trim(); if (t === 'Add a line about you') return; prof().bio = t.slice(0, 160); save(); drawProfile(); });
+document.addEventListener('focusin', (e) => { if (e.target.matches?.('[data-pf-bio].is-empty')) { e.target.textContent = ''; e.target.classList.remove('is-empty'); } });
+document.addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.matches?.('[data-pf-bio]')) { e.preventDefault(); e.target.blur(); } });
+function publishSnap(snap) {
+  const pf = prof(), p = { id: 'me-' + uid(), ...JSON.parse(JSON.stringify(snap)), likes: 0, at: Date.now() };
+  delete p.postId; pf.published.push(p);
+  if (!save()) { pf.published.pop(); toast('Your browser storage is full. Remove a few posts and try again.'); return false; }
+  return true;
+}
+function openPublish() {
+  const d = $('[data-pf-pick]'), posts = state.projects.flatMap((pr) => pr.posts.map((p) => ({ pr, p })));
+  $('[data-pp-grid]').innerHTML = posts.length ? posts.map(({ pr, p }) => `<li><button type="button" data-ppick="${pr.id}:${p.id}" title="${esc(pr.name)}">${postAd(p)}<span>${esc(pr.name)}</span></button></li>`).join('') : '<li class="pp-none">Your projects are empty. Save a design in the editor first.</li>';
+  d.hidden = false; requestAnimationFrame(() => d.classList.add('open'));
+  const end = () => { d.classList.remove('open'); setTimeout(() => { d.hidden = true; }, 250); d.onclick = null; };
+  d.onclick = (e) => {
+    if (e.target === d || e.target.closest('[data-pp-close]')) return end();
+    const b = e.target.closest("[data-ppick]"); if (!b) return; const [pid, id] = b.dataset.ppick.split(':'), p = projectOf(pid)?.posts.find((x) => x.id === id);
+    if (p && publishSnap(p)) { end(); click('ok'); pfTab = 'published'; drawProfile(); toast('Published. It is on your profile now.'); }
+  };
+}
+document.addEventListener('click', (e) => { if (!e.target.closest('[data-publish]')) return; xopen(false); if (publishSnap(snapshot())) { click('ok'); toast('Published to your profile.'); } });

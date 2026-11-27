@@ -4,7 +4,7 @@
 
 **Clean ads for every feed. Pick a look, add your photo and logo, export every format.**
 
-A browser studio for social media and web ads: 210 templates, 13 formats, 40 fonts, a full editor with rulers and guides, packs of matching posts and projects for planning a series. No framework, no build step, no server.
+A browser studio for social media and web ads: 221 templates, 13 formats, 40 fonts, a full editor with rulers and guides, packs of matching posts and projects for planning a series. No framework, no build step, no server.
 
 [**Open the studio**](https://denysovski.github.io/BrandIt/studio/) &nbsp;·&nbsp; [Library](https://denysovski.github.io/BrandIt/studio/#/library) &nbsp;·&nbsp; [Packs](https://denysovski.github.io/BrandIt/studio/#/sets) &nbsp;·&nbsp; [Marketing guide](https://denysovski.github.io/BrandIt/studio/#/guide)
 
@@ -22,12 +22,13 @@ A browser studio for social media and web ads: 210 templates, 13 formats, 40 fon
 
 | | |
 |---|---|
-| **Templates** | 210 designs in eleven styles: Minimal, Gradient, Professional, Data & stats, Bold photo, Brand identity, Carousel, Event, Editorial, Tech & app and Sport. Every one is a photo and text, so your own picture finishes it. |
+| **Templates** | 221 designs in twelve styles: Minimal, Gradient, Professional, Data & stats, Bold photo, Brand identity, Shapes, Carousel, Event, Editorial, Tech & app and Sport. Every one is a photo and text, so your own picture finishes it. |
 | **Formats** | 13 sizes for Instagram, stories, Pinterest, YouTube, X, Facebook, banners and print, plus any custom size. Layouts adapt with container queries. |
 | **Editor** | Text, photo, colours, type, size and series tabs. Rulers, mirrored magnetic guides, zoom to the pointer, drag to pan, and text you drag straight in the preview. |
 | **Type** | 40 self-hosted fonts in four groups (sans, display, serif, mono), or import your own. The library pairs two fonts at random on every refresh. |
 | **Colour** | 38 palettes, 12 photo gradients, a custom colour picker with opacity, and your own saved palettes. |
-| **Packs** | Fourteen packs of ten posts that share fonts, colours and components. Switch one to your brand and save it as a project. |
+| **Packs** | Fifteen packs of ten or more posts that share fonts, colours and components. Switch one to your brand and save it as a project. |
+| **Profile** | Your own page with a cover, a photo, a short line about you and your numbers. Publish posts from your projects, copy a link to them, and browse a small simulated community: follow people, like and save their designs, and open any of them in the editor as your own copy. Everything stays in this browser. |
 | **Projects** | Plan a series, drag the posts into order, edit them later and export them all at once. |
 | **Brands** | Name, logo, colours and fonts per brand. Switch the brand and the whole library follows. |
 | **Privacy** | Accounts, brands, photos and projects stay in your browser. Nothing is uploaded. |
@@ -44,7 +45,7 @@ The first screen after you sign in. Every template is shown with a real photo, a
 
 ![Editor](docs/screens/04-editor.jpg)
 
-Tabs on the left for text, photo, layers, colours, type, size and series. In *Layers* you add your own pictures to any template, drag them into place, set their size, rotation, corners, opacity, brightness, contrast, saturation and blur, and order every text and picture from back to front, or hide it, as in Photoshop. The artboard in the middle has rulers on two sides: drag guides out of them, and with *Mirror* on every guide gets a twin at the same distance from the opposite edge. Drag any text straight in the preview. It snaps to the centre, the edges and your guides, more strongly when you move slowly, and with **Alt** held it moves freely. The mouse wheel zooms into the point under the pointer, a pinch does the same on a phone, and dragging the empty area pans. On the right are every format and palette, ready-made photo gradients, and at the top the project picker, *Save* and an export menu with PNG, PNG at 2×, SVG and the settings as JSON.
+Tabs on the left for text, photo, layers, colours, size and series. Fonts sit at the top of *Text*, and every font menu shows the real font name and can import your own TTF, OTF or WOFF. In *Colours* you can add a shade and point it with an arrow in the preview: the direction sets where it darkens, the length how strong it is. Undo and redo are kept in the browser, so they still work after a reload. A text, picture or photo is picked with the first click and moved with the next, and when a template uses several different photos each one is framed on its own. In *Layers* you add your own pictures to any template, drag them into place, set their size, rotation, corners, opacity, brightness, contrast, saturation and blur, and order every text and picture from back to front, or hide it, as in Photoshop. The artboard in the middle has rulers on two sides: drag guides out of them, and with *Mirror* on every guide gets a twin at the same distance from the opposite edge. Drag any text straight in the preview. It snaps to the centre, the edges and your guides, more strongly when you move slowly, and with **Alt** held it moves freely. The mouse wheel zooms into the point under the pointer, a pinch does the same on a phone, and dragging the empty area pans. On the right are every format and palette, ready-made photo gradients, and at the top the project picker, *Save* and an export menu with PNG, PNG at 2×, SVG and the settings as JSON.
 
 ## Brands
 
@@ -69,6 +70,7 @@ Plan a series before you post it. Press *Save* in the editor, or save a whole pa
 - **Brand from a link.** Paste a website or upload a logo and get a first brand kit with its colours and fonts.
 - **Readability checks per post.** A warning when a headline is too small for a phone or too low in contrast over the photo.
 - **Sync between devices.** An optional account, so your brands and projects follow you from the laptop to the phone.
+- **A real community.** Today the profile and its people are simulated in the browser. Next, published posts go to a shared feed others can actually follow.
 
 ---
 

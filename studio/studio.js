@@ -1,6 +1,6 @@
 // BrandIt Studio: sign in (simulated), Library, Editor, Sets and Brands over the shared library.
 // Everything is stored in this browser's localStorage, per account. Nothing is sent anywhere.
-import { templates, categories, formats, palettes, fonts, pagerKinds, gradients, hasPhoto, render, getTemplate, css, toSVG, toPNG, brandDefaults, DEFAULT_MARK } from '../lib/brandit.js?v=21';
+import { templates, categories, formats, palettes, fonts, pagerKinds, gradients, hasPhoto, render, getTemplate, css, toSVG, toPNG, brandDefaults, DEFAULT_MARK } from '../lib/brandit.js?v=32';
 
 const FONTS = '../fonts/';
 document.getElementById('bi-css').textContent = css(FONTS);
@@ -71,13 +71,22 @@ function reshuffle() {
     if (pool.length) { shuf.photo[t.id] = next(); if (t.slots) shuf.slots[t.id] = t.slots.map(() => next()); }
     const photo = !!(t.art || t.photo || t.slots);
     shuf.pal[t.id] = Math.random() < .4 ? 'own' : pick(photo ? lightInk : any);
-    { const h = pick(HEAD_FONTS.filter((k) => fonts[k])), b = Math.random() < .45 ? h : pick(TEXT_FONTS.filter((k) => fonts[k] && k !== h)); shuf.font[t.id] = { fd: h, ft: b, fm: b }; }
   }
 }
 const photoFor = (id) => image || shuf.photo[id];
 const slotsFor = (id) => slotImgs[id] || shuf.slots[id] || [];
 const palFor = (id) => state.pal[id] ?? shuf.pal[id] ?? 'own';
-const styleFor = (id) => { const st = state.styles[id] || {}; return st.sf || st.fd || st.ft || st.fm ? st : { ...(shuf.font[id] || {}), ...st }; };
+// one calm look everywhere: Inter Tight on about seven in ten templates, never a serif, and never more than two families
+const SERIFS = ['serif', 'dmserif', 'young', 'gloock', 'bodoni', 'garamond', 'caslon', 'fraunces'];
+const KEEP_DISPLAY = ['condensed', 'pixel', 'dot', 'wide', 'michroma', 'unbounded', 'black'];
+const hashId = (s) => [...s].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7);
+const baseFonts = (id) => {
+  const lf = getTemplate(id)?.look?.fonts || {}, fix = (k) => (!k || SERIFS.includes(k) ? 'tight' : k);
+  const d = fix(lf.d), t = fix(lf.t);
+  const hv = hashId(id) % 10, own = KEEP_DISPLAY.includes(d) ? hv >= 5 : hv >= 7;
+  return { fd: own ? d : 'tight', ft: 'tight', fm: 'tight' };
+};
+const styleFor = (id) => { const st = state.styles[id] || {}; return st.fd || st.ft || st.fm ? st : { ...baseFonts(id), ...st }; };
 
 function save() {
   if (!user) return;
@@ -152,7 +161,8 @@ let lastScreen = '';
 function show(keepScroll) {
   const [name, arg] = (location.hash.replace(/^#\/?/, '') || 'library').split('/');
   const s = screens.includes(name) ? name : 'library';
-  if (s === 'editor' && arg && templates.some((t) => t.id === arg)) { if (state.tpl !== arg) picked = null; state.tpl = arg; }
+  if (s === 'editor' && arg && templates.some((t) => t.id === arg)) { if (state.tpl !== arg) { picked = null; layerSel = null; } state.tpl = arg; }
+  if (s === 'editor' && lastScreen !== 'editor') { zoom = 1; pan = null; }
   screens.forEach((n) => { $('#' + n).hidden = n !== s; });
   $$('[data-screen]').forEach((a) => (a.dataset.screen === s ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
   lastScreen = s;
@@ -198,7 +208,7 @@ $('[data-lib-grid]').addEventListener('click', (e) => {
   const id = a.getAttribute('href').split('/').pop();
   state.format = state.libFormat;
   if (state.libPal !== 'own') state.pal[id] = state.libPal; else if (state.pal[id] == null && shuf.pal[id]) state.pal[id] = shuf.pal[id];
-  const st = state.styles[id] ||= {}; if (!st.fd && !st.ft && !st.fm && shuf.font[id]) Object.assign(st, shuf.font[id]); st.sf = 1;
+  const st = state.styles[id] ||= {}; if (!st.fd && !st.ft && !st.fm) Object.assign(st, baseFonts(id)); st.sf = 2;
   save();
 });
 $('[data-cats]').addEventListener('click', (e) => { const b = e.target.closest('.chip'); if (!b) return; state.cat = b.dataset.c; save(); click('tap'); drawLibrary(true); });
@@ -210,7 +220,7 @@ const fontItems = (lbl) => [{ value: '', label: lbl }, ...['Sans', 'Display', 'S
 function drawEditor() {
   const tpl = getTemplate(state.tpl), st = styleOf(tpl.id);
   // the editor starts with the fonts the library showed; after that the choice is the user's
-  if (!st.sf) { if (!st.fd && !st.ft && !st.fm && shuf.font[tpl.id]) Object.assign(st, shuf.font[tpl.id]); st.sf = 1; save(); }
+  if (st.sf !== 2) { if (!st.fd && !st.ft && !st.fm) Object.assign(st, baseFonts(tpl.id)); st.sf = 2; save(); }
   $('[data-ed-name]').textContent = tpl.name;
   $('[data-ed-cat]').textContent = tpl.cat;
   dd('template', [...categories.flatMap((c) => [{ group: c }, ...templates.filter((t) => t.cat === c).map((t) => ({ value: t.id, label: t.name }))])], tpl.id, (v) => { location.hash = '/editor/' + v; });
@@ -218,7 +228,9 @@ function drawEditor() {
     + (state.format === 'custom' ? `<span class="size"><input type="number" min="200" max="4000" value="${state.custom.w}" data-size="w" aria-label="Width in pixels"> × <input type="number" min="200" max="4000" value="${state.custom.h}" data-size="h" aria-label="Height in pixels"> px</span>` : '');
   // colours
   const cur = palFor(tpl.id);
-  $('[data-ed-pals]').innerHTML = palList().map(([k, l]) => `<button type="button" class="sw" data-pal="${k}" aria-pressed="${k === cur}" title="${esc(l)}" aria-label="${esc(l)} colours" style="background:${palSwatch(k)}"></button>`).join('');
+  { const all = palList(), FEW = 11, ci = all.findIndex(([k]) => k === cur);
+    const sw = ([k, l], i) => `<button type="button" class="sw${i >= FEW && i !== ci ? ' more' : ''}" data-pal="${k}" aria-pressed="${k === cur}" title="${esc(l)}" aria-label="${esc(l)} colours" style="background:${palSwatch(k)}"></button>`;
+    const box = $('[data-ed-pals]'); box.innerHTML = all.map(sw).join('') + (all.length > FEW ? `<button type="button" class="sw sw-more" data-pals-more aria-expanded="${box.classList.contains('open')}" aria-label="More colours"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>` : ''); }
   const look = tpl.look || {};
   const pobj = palObj(cur);
   const base = cur === 'own' ? look : cur === 'brand' ? brand().colors : typeof pobj === 'object' ? pobj : palettes[cur] || look;
@@ -228,7 +240,7 @@ function drawEditor() {
   // photo sliders
   const slots = tpl.slots || [];
   $('[data-slots]').innerHTML = slots.length ? `<p class="g-title">This design has ${slots.length} photos</p>` + slots.map((l, i) => { const src = slotsFor(tpl.id)[i]; return `<label class="slot">${src ? `<img src="${src}" alt="">` : '<i>+</i>'}<span>${esc(l)}</span><b>${src ? 'Replace' : 'Upload'}</b><input type="file" accept="image/*" data-slot="${i}" hidden></label>`; }).join('') : '';
-  $('[data-one-photo] .file-btn').firstChild.textContent = slots.length ? 'Same photo everywhere' : 'Upload photo';
+  $('[data-one-photo] .file-btn').hidden = !!slots.length;
   $$('[data-st]').forEach((r) => { const k = r.dataset.st; r.value = st[k] ?? { ix: 50, iy: 50, iz: 1, ov: 0.6, ls: 1 }[k]; });
   $('[data-ed-grads]').hidden = !hasPhoto(tpl); $('[data-ed-grads-l]').hidden = !hasPhoto(tpl);
   $('[data-ed-grads]').innerHTML = [['', 'None'], ...Object.entries(gradients).map(([k, v]) => [k, v.label])].map(([k, l]) => `<button type="button" class="chip" data-grad="${k}" aria-pressed="${(st.grad || '') === k}">${esc(l)}</button>`).join('');
@@ -664,20 +676,20 @@ $('.actions').addEventListener('click', async (e) => {
 /* ---------------- Sets ---------------- */
 // Packs: ten posts that share one look (fonts, colours and the same kind of components)
 const PACKS = [
-  { name: 'Studio launch', about: 'Big photos, one wordmark, quiet type. For a studio or a brand that opens or shows new work.', pal: 'ink', fd: 'tight', ft: 'tight', fm: 'mono', ids: ['mo-crosshair', 'wordmark-photo', 'x-photo-headline', 'mo-three-words', 'year-mark', 'mo-giant-word', 'x-swiss', 'statement', 'new-work', 'launch'] },
-  { name: 'Performance agency', about: 'Numbers, charts and questions in one cool blue. For results, case studies and offers.', pal: 'cobalt', fd: 'manrope', ft: 'manrope', fm: 'dmmono', ids: ['q-question', 'q-donut', 'q-percent-star', 'q-dark-metric', 'q-chrome-stat', 'q-curve', 'x-big-stat', 'x-kpi', 'x-growth', 'x-bar-chart'] },
+  { name: 'Studio launch', about: 'Big photos, one wordmark, quiet type. For a studio or a brand that opens or shows new work.', pal: 'ink', fd: 'tight', ft: 'tight', fm: 'tight', ids: ['mo-crosshair', 'wordmark-photo', 'x-photo-headline', 'mo-three-words', 'year-mark', 'mo-giant-word', 'x-swiss', 'statement', 'new-work', 'launch'] },
+  { name: 'Performance agency', about: 'Numbers, charts and questions in one cool blue. For results, case studies and offers.', pal: 'cobalt', fd: 'tight', ft: 'tight', fm: 'tight', ids: ['q-question', 'q-donut', 'q-percent-star', 'q-dark-metric', 'q-chrome-stat', 'q-curve', 'x-big-stat', 'x-kpi', 'x-growth', 'x-bar-chart'] },
   { name: 'Red studio', about: 'Cinematic photos with red blocks and discs. For a bold creative studio or a launch with attitude.', pal: 'crimson', fd: 'grotesk', ft: 'grotesk', fm: 'mono', ids: ['q-cinema', 'q-red-words', 'q-red-block', 'q-red-disc', 'q-services', 'q-centre-mark', 'q-scribble', 'q-cut-word', 'x-red-wall', 'y-red-profile'] },
   { name: 'Soft gradients', about: 'Haze, glow and soft colour fields. For wellness, apps and calm brands.', pal: 'violet', fd: 'sora', ft: 'sora', fm: 'dmmono', ids: ['mo-haze', 'mo-blur-word', 'mo-aura', 'mo-orb', 'mo-glow-step', 'mo-ribbon', 'mo-pills', 'z-ribbon-headline', 'z-peaks', 'x-badge'] },
-  { name: 'Editorial serif', about: 'Serif headlines, dates and quiet layouts. For magazines, galleries, architects and events.', pal: 'paper', fd: 'garamond', ft: 'grotesk', fm: 'mono', ids: ['z-serif-centre', 'z-year', 'z-vertical-address', 'z-oval', 'z-date-card', 'x-zine', 'x-type-stack', 'y-numbered-quote', 'q-asterisk', 'q-trends'] },
+  { name: 'Editorial', about: 'Big quiet headlines, dates and calm layouts. For magazines, galleries, architects and events.', pal: 'paper', fd: 'tight', ft: 'tight', fm: 'tight', ids: ['z-serif-centre', 'z-year', 'z-vertical-address', 'z-oval', 'z-date-card', 'x-zine', 'x-type-stack', 'y-numbered-quote', 'q-asterisk', 'q-trends'] },
   { name: 'Run club', about: 'Condensed type, speed and routes. For sport clubs, races and training plans.', pal: 'acid', fd: 'oswald', ft: 'barlow', fm: 'mono', ids: ['mo-route', 'mo-vertical', 'mo-echo', 'mo-ghost-stack', 'mo-cover', 'y-speed', 'y-lineup', 'court-match', 'court-result', 'x-acid'] },
   { name: 'App release', about: 'Screens, specs and dark tech blue. For product launches and feature updates.', pal: 'midnight', fd: 'space', ft: 'space', fm: 'jet', ids: ['mo-data-frame', 'mo-spec-sheet', 'mo-bracket', 'mo-app-tile', 'mo-story', 'x-app-promo', 'x-claim', 'x-profile-card', 'x-wordmark-phone', 'z-cta-black'] },
-  { name: 'Strategy deck', about: 'Warm orange statements, bars and portraits. For consultants, coaches and B2B services.', pal: 'tangerine', fd: 'figtree', ft: 'figtree', fm: 'dmmono', ids: ['z-orange-statement', 'z-peach-stat', 'z-bars', 'z-split-underline', 'z-navy-photo', 'z-deep-white', 'z-portrait-card', 'x-method', 'book-call', 'team-strip'] },
-  { name: 'Brand launch', about: 'Stacked wordmarks, chrome blue, grid paper and a serif card. For a new studio or product showing its identity for the first time.', pal: 'own', fd: 'wide', ft: 'grotesk', fm: 'grotesk', ids: ['r-stack-word', 'r-chrome-field', 'r-grid-mark', 'r-serif-card', 'r-split-dark', 'r-mark-portrait', 'r-chrome-word', 'r-horizon', 'r-mist', 'r-terrain'] },
-  { name: 'Tips carousel', about: 'A cover, tips and a closing slide with one accent colour. For teaching what you know, one swipe at a time.', pal: 'signalblue', fd: 'grotesk', ft: 'grotesk', fm: 'grotesk', ids: ['r-tips-cover', 'r-pill-cloud', 'r-sun-face', 'r-tip', 'r-save-end', 'q-question', 'q-mixed', 'q-percent-star', 'x-method', 'book-call'] },
-  { name: 'Grey editorial', about: 'Paper grey, quiet type and black and white photos. For studios, magazines, galleries and personal brands.', pal: 'own', fd: 'grotesk', ft: 'grotesk', fm: 'grotesk', ids: ['s-inspired', 's-impact', 's-free-fonts', 's-date-card', 's-selection', 's-dont-waste', 's-details', 's-lounge', 's-vertical-city', 's-delay'] },
-  { name: 'Run club stories', about: 'Blurred motion, routes, stats and big italic marks. For running clubs, races and sport brands.', pal: 'own', fd: 'wide', ft: 'grotesk', fm: 'grotesk', ids: ['s-run-mark', 's-route-stats', 's-vertical-run', 's-staggered', 's-manifesto', 's-motion-word', 's-ghost-words', 's-blur-centre', 's-callouts', 's-blue-fade'] },
-  { name: 'Tech partner', about: 'Speed lines, big claims, lab sheets and glowing scores. For agencies, software studios and B2B products.', pal: 'own', fd: 'grotesk', ft: 'grotesk', fm: 'grotesk', ids: ['s-speed', 's-white-claim', 's-blur-name', 's-macro', 's-structural', 's-blob-pattern', 's-orange-glow', 's-roi', 's-scale', 's-ring-mark'] },
-  { name: 'Soft minimal', about: 'Lowercase, pills and lots of air. For personal brands, newsletters and small shops.', pal: 'frost', fd: 'onest', ft: 'onest', fm: 'dmmono', ids: ['q-mixed', 'q-blue-claim', 'q-wave', 'q-lowercase', 'x-soft-story', 'z-pills-lower', 'mo-quiet-card', 'mo-verse', 'x-percent', 'x-asterisk'] },
+  { name: 'Strategy deck', about: 'Warm orange statements, bars and portraits. For consultants, coaches and B2B services.', pal: 'tangerine', fd: 'tight', ft: 'tight', fm: 'tight', ids: ['z-orange-statement', 'z-peach-stat', 'z-bars', 'z-split-underline', 'z-navy-photo', 'z-deep-white', 'z-portrait-card', 'x-method', 'book-call', 'team-strip'] },
+  { name: 'Brand launch', about: 'Stacked wordmarks, chrome blue, grid paper and a serif card. For a new studio or product showing its identity for the first time.', pal: 'own', fd: 'wide', ft: 'tight', fm: 'tight', ids: ['r-stack-word', 'r-chrome-field', 'r-grid-mark', 'r-serif-card', 'r-split-dark', 'r-mark-portrait', 'r-chrome-word', 'r-horizon', 'r-mist', 'r-terrain'] },
+  { name: 'Tips carousel', about: 'A cover, tips and a closing slide with one accent colour. For teaching what you know, one swipe at a time.', pal: 'signalblue', fd: 'tight', ft: 'tight', fm: 'tight', ids: ['r-tips-cover', 'r-pill-cloud', 'r-sun-face', 'r-tip', 'r-save-end', 'q-question', 'q-mixed', 'q-percent-star', 'x-method', 'book-call'] },
+  { name: 'Grey editorial', about: 'Paper grey, quiet type and black and white photos. For studios, magazines, galleries and personal brands.', pal: 'own', fd: 'tight', ft: 'tight', fm: 'tight', ids: ['s-inspired', 's-impact', 's-free-fonts', 's-date-card', 's-selection', 's-dont-waste', 's-details', 's-lounge', 's-vertical-city', 's-delay'] },
+  { name: 'Run club stories', about: 'Blurred motion, routes, stats and big italic marks. For running clubs, races and sport brands.', pal: 'own', fd: 'wide', ft: 'tight', fm: 'tight', ids: ['s-run-mark', 's-route-stats', 's-vertical-run', 's-staggered', 's-manifesto', 's-motion-word', 's-ghost-words', 's-blur-centre', 's-callouts', 's-blue-fade'] },
+  { name: 'Tech partner', about: 'Speed lines, big claims, lab sheets and glowing scores. For agencies, software studios and B2B products.', pal: 'own', fd: 'tight', ft: 'tight', fm: 'tight', ids: ['s-speed', 's-white-claim', 's-blur-name', 's-macro', 's-structural', 's-blob-pattern', 's-orange-glow', 's-roi', 's-scale', 's-ring-mark'] },
+  { name: 'Soft minimal', about: 'Lowercase, pills and lots of air. For personal brands, newsletters and small shops.', pal: 'frost', fd: 'tight', ft: 'tight', fm: 'tight', ids: ['q-mixed', 'q-blue-claim', 'q-wave', 'q-lowercase', 'x-soft-story', 'z-pills-lower', 'mo-quiet-card', 'mo-verse', 'x-percent', 'x-asterisk'] },
 ].map((p) => ({ ...p, ids: p.ids.filter((id) => getTemplate(id)) }));
 const packOf = () => PACKS.find((p) => p.name === state.set) || PACKS[0];
 const packLook = (pk) => ({ palette: state.setPal === 'brand' ? 'brand' : pk.pal, style: { fd: pk.fd, ft: pk.ft, fm: pk.fm } });
@@ -881,6 +893,7 @@ async function start(email, quiet) {
   state.brands = (state.brands?.length ? state.brands : [newBrand()]).map((b) => ({ ...newBrand(), ...b, colors: { ...newBrand().colors, ...(b.colors || {}) }, fonts: { ...newBrand().fonts, ...(b.fonts || {}) } }));
   state.brand ||= state.brands[0].id;
   // brands without an uploaded logo start with the studio mark (once)
+  if (!state.fontsV2) { Object.values(state.styles || {}).forEach((st) => { if (st && st.sf === 1) { delete st.fd; delete st.ft; delete st.fm; delete st.sf; } }); state.fontsV2 = true; }
   if (!state.markV1) { state.brands.forEach((b) => { if (!b.logo) b.useLogo = true; }); state.markV1 = true; }
   if (!Array.isArray(state.projects) || !state.projects.length) state.projects = [{ id: uid(), name: 'My first series', posts: [] }];
   installFonts();
@@ -1088,3 +1101,14 @@ document.addEventListener('change', async (e) => {
   $$('[data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === 'layers'))); $$('[data-pane]').forEach((pn) => { pn.hidden = pn.dataset.pane !== 'layers'; });
   drawEditor(); toast('Image added. Drag it in the preview to place it.');
 });
+
+document.addEventListener('click', (e) => { const m = e.target.closest('[data-pals-more]'); if (!m) return; const box = m.parentElement; const open = !box.classList.contains('open'); box.classList.toggle('open', open); m.setAttribute('aria-expanded', String(open)); click('tap'); });
+
+/* library cards lean towards the pointer; only the card turns, the design inside stays as it is */
+document.addEventListener('pointermove', (e) => {
+  const card = e.target.closest?.('.grid a.card'); if (!card || document.documentElement.classList.contains('no-fx') || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const ad = card.querySelector('.ad'); if (!ad) return; const r = ad.getBoundingClientRect();
+  const x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
+  ad.style.setProperty('--tx', (-y * 10).toFixed(2) + 'deg'); ad.style.setProperty('--ty', (x * 12).toFixed(2) + 'deg'); card.classList.add('tilt');
+}, { passive: true });
+document.addEventListener('pointerout', (e) => { const card = e.target.closest?.('.grid a.card'); if (card && !card.contains(e.relatedTarget)) { card.classList.remove('tilt'); const ad = card.querySelector('.ad'); ad?.style.removeProperty('--tx'); ad?.style.removeProperty('--ty'); } });

@@ -6,7 +6,7 @@
 <title>BrandIt Studio</title>
 <meta name="description" content="Make social posts and ads from the BrandIt library: pick a template, add your photo and logo, change colours and fonts, export PNG or SVG.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%23111' stroke-width='2.4'/%3E%3Ccircle cx='16' cy='16' r='4' fill='%23e8401c'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="studio.css?v=30">
+<link rel="stylesheet" href="studio.css?v=32">
 <script>try{var t=localStorage.getItem("brandit.theme")||"system";t=t.replace(/"/g,"");document.documentElement.dataset.theme=t==="system"?(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"):t;}catch(e){}</script>
 </head>
 <body>
@@ -89,7 +89,6 @@
             <label class="btn btn--line file-btn">Import logo<input type="file" accept="image/*,.svg" data-ed-logo hidden></label>
             <label class="btn btn--line file-btn">Add another image<input type="file" accept="image/*" data-add-img hidden></label>
           </div>
-          <p class="hint">Drag the photo in the preview to move it. The logo is saved to the active brand.</p>
           <div class="group">
             <label class="range"><span>Left – right</span><input type="range" min="0" max="100" step="1" data-st="ix"></label>
             <label class="range"><span>Up – down</span><input type="range" min="0" max="100" step="1" data-st="iy"></label>
@@ -109,7 +108,7 @@
           <p class="g-title">Ready-made colours</p>
           <div class="swatches" data-ed-pals></div>
           <p class="g-title" data-ed-grads-l>Gradient over the photo</p><div class="chips" data-ed-grads></div>
-          <p class="g-title">Your own colours</p><p class="hint">Click a colour to change it. Lower the opacity to make a gradient softer or see-through.</p>
+          <p class="g-title">Your own colours</p>
           <div class="colours" data-ed-colours></div>
           <div class="row2"><button type="button" class="btn btn--line" data-save-pal>Save as my palette</button><button type="button" class="btn btn--line" data-reset="colours">Reset colours</button></div>
         </div>
@@ -127,7 +126,7 @@
         </div>
 
         <div class="pane" data-pane="series" role="tabpanel" hidden>
-          <p class="hint">Number the posts of a carousel or a planned series. Posts saved to a project are numbered by their order automatically.</p>
+          
           <div class="chips" data-pager-kinds></div>
           <div class="pager-ctl" data-pager-ctl>
             <label class="stepper"><span>This post</span><button type="button" data-pg="i,-1" aria-label="Previous">−</button><output data-pg-i>1</output><button type="button" data-pg="i,1" aria-label="Next">+</button></label>
@@ -303,7 +302,7 @@
   <div class="opt"><div><b>Sound effects</b><span>Clicks when you navigate and pick things</span></div><button type="button" class="switch" role="switch" data-toggle="sound"><i></i></button></div>
   <div class="opt"><div><b>Motion and click effects</b><span>3D intro, click ripples, card motion</span></div><button type="button" class="switch" role="switch" data-toggle="fx"><i></i></button></div>
   <div class="opt"><div><b>Appearance</b><span>Light, dark or follow the system</span></div><div class="seg" data-themes><button type="button" data-theme-v="light">Light</button><button type="button" data-theme-v="dark">Dark</button><button type="button" data-theme-v="system">System</button></div></div>
-  <div class="opt col"><div><b>Backup</b><span>Download everything in this account as one file: brands, logos, fonts, texts, colours, positions and the current photo. Restore it on any computer.</span></div>
+  <div class="opt col"><div><b>Backup</b><span>Download everything in this account as one file, just in case.</span></div>
     <div class="row2"><button type="button" class="btn" data-backup>Download backup</button><label class="btn btn--line file-btn">Restore from file<input type="file" accept=".json,application/json" data-restore hidden></label></div><p class="hint" data-backup-note></p></div>
   <div class="opt"><div><b>Account</b><span>Signed in on this browser only</span></div><button type="button" class="btn btn--line" data-signout>Sign out</button></div>
 </section>
@@ -316,6 +315,6 @@
 </nav>
 <style id="bi-css"></style>
 <style id="bi-user-fonts"></style>
-<script type="module" src="studio.js?v=30"></script>
+<script type="module" src="studio.js?v=32"></script>
 </body>
 </html>

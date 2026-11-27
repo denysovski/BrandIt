@@ -872,3 +872,20 @@ body.is-sorting, body.is-sorting * { cursor: grabbing !important; user-select: n
 .kit .bcols .cbtn:hover, .kit .bcols .cbtn:focus-visible { background: none !important; color: inherit !important; }
 @media (max-width: 720px) { .kit .bcols .colours { gap: 14px 18px; } .kit .bcols .cbtn { flex: 1 1 40%; } }
 .kit [data-brand-delete] { grid-column: 1 / -1; justify-self: start; margin-top: 6px; } .kit .hint[hidden] { display: none !important; }
+/* palettes: a short row, + opens the rest */
+[data-ed-pals] .sw.more { display: none; }
+[data-ed-pals].open .sw.more { display: block; animation: sw-in .3s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes sw-in { from { opacity: 0; transform: scale(.6); } }
+.sw-more { display: grid; place-items: center; background: var(--soft) !important; color: var(--ink); border: 0; cursor: pointer; }
+.sw-more svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; transition: transform .3s cubic-bezier(.2,.8,.2,1); }
+[data-ed-pals].open .sw-more svg { transform: rotate(45deg); }
+[data-ed-pals].open .sw-more { order: 999; }
+/* the side columns scroll on their own */
+@media (min-width: 1101px) {
+  .panel, .variants { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding-right: 6px; padding-bottom: 90px; }
+}
+.sw-more::after { display: none; }
+/* 3D lean on hover: a plain transform on the card frame (no preserve-3d), so blurs and glass inside render the same */
+.grid a.card .ad { transform: perspective(1000px) rotateX(0deg) rotateY(0deg) !important; transition: transform .5s cubic-bezier(.2,.8,.2,1), box-shadow .3s !important; will-change: transform; }
+.grid a.card.tilt .ad { transform: perspective(1000px) rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg)) translateY(-4px) !important; transition-duration: .15s, .3s !important; box-shadow: 0 30px 50px -30px rgba(0,0,0,.5), 0 0 0 1.5px var(--ink); }
+.no-fx .grid a.card .ad, .no-fx .grid a.card.tilt .ad { transform: none !important; }

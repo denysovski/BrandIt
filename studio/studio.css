@@ -813,3 +813,17 @@ body.is-sorting, body.is-sorting * { cursor: grabbing !important; user-select: n
 .proj-set .btn.ic[aria-expanded="true"], .xmenu .btn.ic[aria-expanded="true"] { background: var(--ink) !important; color: var(--on-ink) !important; border-color: var(--ink) !important; }
 .proj-set .btn.ic svg, .xmenu .btn.ic svg { stroke: currentColor; fill: none; }
 ::selection { background: rgba(217, 56, 30, .35); color: inherit; }
+/* library: photo buttons and view menus share one line under the filters */
+.bar .chips { flex-basis: 100%; }
+.showcase-bar.in-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 0; margin: 0; }
+.showcase-bar.in-bar .hint:empty { display: none; }
+.showcase-bar.in-bar .hint { margin: 0; }
+.bar .bar-right { margin-left: auto; }
+.bar .btn, .bar .file-btn { height: 40px; }
+@media (max-width: 720px) { .showcase-bar.in-bar { width: 100%; } .showcase-bar.in-bar .btn { flex: 1; justify-content: center; } .bar .bar-right { margin-left: 0; width: 100%; } }
+@media (max-width: 720px) {
+  .showcase-bar.in-bar .btn { white-space: nowrap; font-size: 13px; padding: 0 10px; }
+  .bar .bar-right { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .bar .bar-right > .lib-photo { grid-column: 1 / -1; justify-content: center; }
+  .bar .bar-right .dd, .bar .bar-right .dd-btn { width: 100% !important; min-width: 0; }
+}

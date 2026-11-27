@@ -334,7 +334,9 @@ function drawCanvas() {
   if (layerSel?.startsWith('x:')) $(`[data-canvas] [data-x="${layerSel.slice(2)}"]`)?.classList.add('is-picked');
   markPhoto();
   drawShadeHandle();
-  $('[data-picked]').textContent = picked != null ? `Text ${+picked + 1} selected. Drag it, use the pad or the arrow keys.` : 'Click a text in the preview, or press Select under a field.';
+  $('[data-picked]').textContent = picked != null ? `Text ${+picked + 1} selected. Drag it in the preview, use the pad or the arrow keys.` : 'Press Select under a field to move it.';
+  { const fm = fieldMap(state.tpl); $$('[data-select]').forEach((b) => { const on = picked != null && (fm[b.dataset.select] || []).map(String).includes(String(picked)); b.setAttribute('aria-pressed', String(on)); b.textContent = on ? 'Selected' : 'Select'; }); }
+  drawPhotoSel();
   $('[data-v-formats]').innerHTML = formatItems().slice(0, 5).map((x) => `<button type="button" data-format="${x.value}">${ad(state.tpl, { format: x.value })}${esc(x.label)}</button>`).join('');
   const tplNow = getTemplate(state.tpl), gsec = $('[data-v-grads]');
   gsec.hidden = !hasPhoto(tplNow); $('[data-v-grads-l]').hidden = !hasPhoto(tplNow);
@@ -436,7 +438,7 @@ $('#editor').addEventListener('click', (e) => {
   }
   if (m && picked != null) { if (m.dataset.move === 'center') centreX(); else { const [dx, dy] = m.dataset.move.split(',').map(Number); const k = state.snap !== false ? 2 : 1; nudgeBy(dx * k, dy * k); } }
   const gb = e.target.closest('[data-grad]'); if (gb) { const st = styleOf(state.tpl); if (gb.dataset.grad) st.grad = gb.dataset.grad; else delete st.grad; save(); drawEditor(); }
-  const sel = e.target.closest('[data-select]'); if (sel) { const ns = fieldMap(state.tpl)[sel.dataset.select] || []; if (ns.length) { picked = ns[0]; drawCanvas(); const c = $('[data-canvas]'); if (c.getBoundingClientRect().bottom < 0 || c.getBoundingClientRect().top > innerHeight) c.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
+  const sel = e.target.closest('[data-select]'); if (sel) { const ns = fieldMap(state.tpl)[sel.dataset.select] || []; if (ns.length) { const on = ns.map(String).includes(String(picked)); picked = on ? null : ns[0]; layerSel = on ? null : 't' + ns[0]; photoSel = null; click('tap'); drawCanvas(); drawLayers(); const c = $('[data-canvas]'); if (c.getBoundingClientRect().bottom < 0 || c.getBoundingClientRect().top > innerHeight) c.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
   const fz = e.target.closest('[data-fz]'); if (fz) { const [k, d] = fz.dataset.fz.split(','); (fieldMap(state.tpl)[k] || []).forEach((n) => { const el = elOf(n); el.z = Math.max(.4, Math.min(3, +((el.z || 1) + d * .1).toFixed(2))); }); save(); drawEditor(); }
   const fcx = e.target.closest('[data-fcx]'); if (fcx) { (fieldMap(state.tpl)[fcx.dataset.fcx] || []).forEach((n) => delete elOf(n).c); save(); drawEditor(); }
   const pk = e.target.closest('[data-pk]'); if (pk) { const st = styleOf(state.tpl); st.pager = { i: 1, n: 5, pos: 'tr', ...(st.pager || {}), kind: pk.dataset.pk }; save(); drawEditor(); }
@@ -474,14 +476,15 @@ $('[data-canvas]').addEventListener('pointerdown', (e) => {
   const rect = adEl.getBoundingClientRect(), u = Math.min(rect.width, rect.height) / 100;
   // pick the text whose own letters are under the pointer (a wide text box must not hide a smaller one)
   const hits = $$('[data-n]', adEl).filter((n) => { const r = inkRect(n); return e.clientX >= r.left - 4 && e.clientX <= r.right + 4 && e.clientY >= r.top - 4 && e.clientY <= r.bottom + 4; });
-  const textEl = hits.find((n) => n.dataset.n === String(picked)) || hits.sort((a, b) => { const A = inkRect(a), B = inkRect(b); return A.width * A.height - B.width * B.height; })[0] || null, st = styleOf(state.tpl);
-  const sx = e.clientX, sy = e.clientY;
+  // nothing is picked by clicking the preview: choose a text, picture or photo in the panel on the left, then drag it here
+  const st = styleOf(state.tpl), sx = e.clientX, sy = e.clientY, under = document.elementsFromPoint(sx, sy);
+  const textEl = picked != null ? hits.find((n) => n.dataset.n === String(picked)) || null : null;
+  const xEl = layerSel?.startsWith('x:') ? under.find((n) => n.matches?.('.bi-extra') && n.dataset.x === layerSel.slice(2)) || null : null;
+  const photoHit = layerSel === 'photo' ? under.find((n) => n.matches?.('.bi-media') && adEl.contains(n) && (!photoSel?.startsWith('photo:') || srcKey(n.getAttribute('src')) === photoSel.slice(6))) || null : null;
+  if (!textEl && !xEl && !photoHit) return;
   e.preventDefault();
-  const xEl = e.target.closest('.bi-extra');
-  if (xEl && !(textEl && e.target === textEl)) {
+  if (xEl) {
     const x = (st.extra || []).find((q) => q.id === xEl.dataset.x); if (!x) return;
-    if (layerSel !== 'x:' + x.id) { layerSel = 'x:' + x.id; picked = null; $$('[data-canvas] .is-picked').forEach((q) => q.classList.remove('is-picked')); xEl.classList.add('is-picked'); $('[data-canvas] .cv-art')?.classList.remove('photo-picked'); drawLayers(); click('tap'); return; }
-    layerSel = 'x:' + x.id; picked = null; $$('[data-canvas] .is-picked').forEach((q) => q.classList.remove('is-picked')); xEl.classList.add('is-picked'); drawLayers();
     const x0 = x.x ?? 50, y0 = x.y ?? 50;
     const move = (ev) => {
       let nx = x0 + ((ev.clientX - sx) / rect.width) * 100, ny = y0 + ((ev.clientY - sy) / rect.height) * 100;
@@ -492,9 +495,7 @@ $('[data-canvas]').addEventListener('pointerdown', (e) => {
     addEventListener('pointermove', move); addEventListener('pointerup', () => { removeEventListener('pointermove', move); save(); soon(); }, { once: true });
     return;
   }
-  if (textEl && picked !== textEl.dataset.n) { picked = textEl.dataset.n; layerSel = 't' + picked; $$('[data-canvas] .is-picked').forEach((x) => x.classList.remove('is-picked')); textEl.classList.add('is-picked'); $('[data-canvas] .cv-art')?.classList.remove('photo-picked'); queueMicrotask(drawLayers); click('tap'); return; }
   if (textEl) {
-    picked = textEl.dataset.n; layerSel = 't' + picked; queueMicrotask(drawLayers); $$('[data-canvas] .is-picked').forEach((x) => x.classList.remove('is-picked')); textEl.classList.add('is-picked'); $('[data-picked]').textContent = `Text ${+picked + 1} selected. Drag it, or use the pad.`;
     const v0 = (st.nudge || {})[picked] || [0, 0], r0 = inkRect(textEl), snap = state.snap !== false;
     const canvas = $('[data-canvas]'); canvas.classList.add('guiding');
     const lim = (d, lo, hi) => (hi < lo ? d : Math.max(lo, Math.min(hi, d)));
@@ -524,12 +525,9 @@ $('[data-canvas]').addEventListener('pointerdown', (e) => {
     const up = () => { removeEventListener('pointermove', move); canvas.classList.remove('guiding', 'on-x', 'on-y'); save(); drawCanvas(); };
     addEventListener('pointermove', move); addEventListener('pointerup', up, { once: true });
   } else {
-    const media = document.elementsFromPoint(sx, sy).find((n) => n.matches?.('.bi-media') && adEl.contains(n));
+    const media = photoHit;
     const srcs = [...new Set($$('.bi-media', adEl).map((n) => n.getAttribute('src')))];
-    if (!media) { picked = null; layerSel = null; $$('[data-canvas] .is-picked').forEach((q) => q.classList.remove('is-picked')); $('[data-canvas] .cv-art')?.classList.remove('photo-picked'); drawLayers(); return; }
     const key = srcs.length > 1 ? srcKey(media.getAttribute('src')) : null;
-    const selKey = key ? 'photo:' + key : 'photo';
-    if (photoSel !== selKey) { photoSel = selKey; picked = null; layerSel = 'photo'; $$('[data-canvas] .is-picked').forEach((q) => q.classList.remove('is-picked')); markPhoto(); drawLayers(); click('tap'); return; }
     if (key) {
       st.mpos ||= {}; const p0 = st.mpos[key] || [st.ix ?? 50, st.iy ?? 50, st.iz ?? 1]; const r = media.getBoundingClientRect();
       const same = $$('.bi-media', adEl).filter((n) => n.getAttribute('src') === media.getAttribute('src'));
@@ -1197,7 +1195,7 @@ function drawShadeHandle() {
   const art = $('[data-canvas] .cv-art'); if (!art) return; art.querySelector('.dg-handle')?.remove();
   const st = styleOf(state.tpl), d = st.dg; if (!d) return;
   const W = art.clientWidth, H = art.clientHeight, cx = W / 2, cy = H / 2, R = Math.min(W, H) * .42;
-  const a = ((d.a ?? 135) * Math.PI) / 180, L = 24 + (d.s ?? .6) * R, px = cx + Math.sin(a) * L, py = cy - Math.cos(a) * L;
+  const a = ((d.a ?? 135) * Math.PI) / 180, L = 24 + (1 - (d.s ?? .6)) * R, px = cx + Math.sin(a) * L, py = cy - Math.cos(a) * L;
   art.insertAdjacentHTML('beforeend', `<svg class="dg-handle" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><line x1="${cx}" y1="${cy}" x2="${px}" y2="${py}"/><circle class="dg-c" cx="${cx}" cy="${cy}" r="4"/><g class="dg-knob" transform="translate(${px} ${py}) rotate(${d.a ?? 135})"><circle r="15"/><path d="M0 6V-6M-5 -1 0 -6 5 -1"/></g></svg>`);
 }
 $('[data-canvas]').addEventListener('pointerdown', (e) => {
@@ -1208,7 +1206,7 @@ $('[data-canvas]').addEventListener('pointerdown', (e) => {
   const move = (ev) => {
     const dx = ev.clientX - cx, dy = ev.clientY - cy; let a = (Math.atan2(dx, -dy) * 180) / Math.PI; if (a < 0) a += 360;
     if (!ev.altKey) { const sn = Math.round(a / 45) * 45; if (Math.abs(sn - a) < 4) a = sn % 360; }
-    const s = Math.max(.05, Math.min(1, (Math.hypot(dx, dy) - 24) / R));
+    const s = Math.max(.05, Math.min(1, 1 - (Math.hypot(dx, dy) - 24) / R));
     st.dg = { ...st.dg, a: Math.round(a), s: +s.toFixed(2) };
     if (ov) { ov.style.background = `linear-gradient(${st.dg.a}deg, transparent ${Math.round((1 - s) * 75)}%, ${st.dg.c || '#000000'} 100%)`; ov.style.opacity = (0.35 + s * 0.65).toFixed(2); }
     drawShadeHandle();
@@ -1362,3 +1360,20 @@ function openPublish() {
   };
 }
 document.addEventListener('click', (e) => { if (!e.target.closest('[data-publish]')) return; xopen(false); if (publishSnap(snapshot())) { click('ok'); toast('Published to your profile.'); } });
+
+/* photo selection lives in the Photo tab: one button per different picture in the template */
+function drawPhotoSel() {
+  const box = $('[data-psel]'); if (!box) return; const adEl = $('[data-canvas] .bi-ad');
+  const srcs = adEl ? [...new Set($$('.bi-media', adEl).map((n) => n.getAttribute('src')))] : [];
+  if (!srcs.length) { box.innerHTML = ''; return; }
+  const items = srcs.length > 1 ? srcs.map((u, i) => ['photo:' + srcKey(u), `Photo ${i + 1}`, u]) : [['photo', 'Select photo', srcs[0]]];
+  box.innerHTML = items.map(([k, l, u]) => { const on = layerSel === 'photo' && (photoSel === k || (srcs.length === 1 && photoSel)); return `<button type="button" class="chip psel" data-psel-k="${esc(k)}" aria-pressed="${on}"><img src="${esc(u)}" alt="">${on ? (srcs.length > 1 ? l + ' selected' : 'Photo selected') : l}</button>`; }).join('');
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-psel-k]'); if (!b) return; const k = b.dataset.pselK, on = b.getAttribute('aria-pressed') === 'true';
+  picked = null; layerSel = on ? null : 'photo'; photoSel = on ? null : k; click('tap'); drawCanvas(); drawLayers();
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' || $('#editor').hidden || /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName) || document.activeElement?.isContentEditable) return;
+  if (picked == null && !layerSel) return; picked = null; layerSel = null; photoSel = null; drawCanvas(); drawLayers();
+});

@@ -889,3 +889,27 @@ body.is-sorting, body.is-sorting * { cursor: grabbing !important; user-select: n
 .grid a.card .ad { transform: perspective(1000px) rotateX(0deg) rotateY(0deg) !important; transition: transform .5s cubic-bezier(.2,.8,.2,1), box-shadow .3s !important; will-change: transform; }
 .grid a.card.tilt .ad { transform: perspective(1000px) rotateX(var(--tx, 0deg)) rotateY(var(--ty, 0deg)) translateY(-4px) !important; transition-duration: .15s, .3s !important; box-shadow: 0 30px 50px -30px rgba(0,0,0,.5), 0 0 0 1.5px var(--ink); }
 .no-fx .grid a.card .ad, .no-fx .grid a.card.tilt .ad { transform: none !important; }
+/* chosen picture on the canvas */
+.cv-art.photo-picked::after { content: ""; position: absolute; inset: 0; outline: 1.5px dashed #3b82f6; outline-offset: -3px; pointer-events: none; z-index: 60; }
+.bi-ad .bi-media.media-picked { outline: 1.5px dashed #3b82f6; outline-offset: -3px; }
+/* right column: layers or variants */
+.rswitch { display: flex; gap: 2px; padding: 4px; border-radius: 12px; background: var(--soft); margin: 4px 0 6px; }
+.rswitch button { flex: 1; height: 34px; border: 0; border-radius: 9px; background: none; color: var(--muted); font-size: 13px; font-weight: 500; cursor: pointer; transition: background .2s, color .2s; }
+.rswitch button[aria-selected="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 4px rgba(0,0,0,.15); }
+.rpane { display: grid; gap: 12px; } .rpane[hidden] { display: none !important; }
+.rpane .layers-ui, .pane .layers-ui { display: grid; gap: 14px; }
+.rpane .layer-props .range { grid-template-columns: 70px 1fr 28px; font-size: 12px; }
+.rpane .layer-props .row2 { grid-template-columns: 1fr 1fr; } .rpane .layer-props .btn { font-size: 12.5px; padding: 0 8px; }
+
+.cv-sep { width: 1px; height: 22px; background: var(--line); margin: 0 4px; } .tb:disabled { opacity: .3; pointer-events: none; } .rpane .layers-head .label, .rpane[data-rpane="variants"] > .label:first-child { margin-top: 0 !important; }
+.fontrow { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fontrow .dd-btn { width: 100%; }
+.dd-list li[role=option] span { overflow: hidden; text-overflow: ellipsis; }
+/* shade arrow */
+.shade { display: grid; gap: 12px; } .shade .btn svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; margin-right: 6px; }
+.shade .chip .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; box-shadow: inset 0 0 0 1px rgba(127,127,127,.5); vertical-align: -1px; }
+.dg-handle { position: absolute; inset: 0; z-index: 70; pointer-events: none; overflow: visible; }
+.dg-handle line { stroke: #fff; stroke-width: 2; stroke-dasharray: 5 4; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
+.dg-handle .dg-c { fill: #fff; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); }
+.dg-knob { pointer-events: auto; cursor: grab; } .dg-knob circle { fill: #3b82f6; stroke: #fff; stroke-width: 2; filter: drop-shadow(0 2px 4px rgba(0,0,0,.5)); } .dg-knob path { fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.dg-knob:active { cursor: grabbing; }

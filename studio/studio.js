@@ -1,6 +1,6 @@
 // BrandIt Studio: sign in (simulated), Library, Editor, Sets and Brands over the shared library.
 // Everything is stored in this browser's localStorage, per account. Nothing is sent anywhere.
-import { templates, categories, formats, palettes, fonts, pagerKinds, gradients, hasPhoto, render, getTemplate, css, toSVG, toPNG, brandDefaults, DEFAULT_MARK } from '../lib/brandit.js?v=32';
+import { templates, categories, formats, palettes, fonts, pagerKinds, gradients, hasPhoto, render, getTemplate, css, toSVG, toPNG, brandDefaults, DEFAULT_MARK, srcKey } from '../lib/brandit.js?v=32';
 
 const FONTS = '../fonts/';
 document.getElementById('bi-css').textContent = css(FONTS);
@@ -94,6 +94,7 @@ function save() {
   if (!users[user]) return;
   users[user].data = state;
   if (!store(LS.users, users)) status('Storage is full: remove a big logo or font so changes keep saving.');
+  histTrack();
 }
 const brand = () => state.brands.find((b) => b.id === state.brand) || state.brands[0];
 const brandForRender = () => { const b = brand(); return { ...b, logo: b.useLogo ? b.logo || DEFAULT_MARK : '' }; };
@@ -146,8 +147,9 @@ function drawTop() {
     if (v === '+') { const b = newBrand({ name: `Brand ${state.brands.length + 1}`, short: 'BR' }); state.brands.push(b); state.brand = b.id; save(); location.hash = '/brands'; drawTop(); show(); return; }
     state.brand = v; save(); click('ok'); drawTop(); show(true);
   });
-  dd('user', [{ value: 'projects', label: 'My projects' }, { value: 'settings', label: 'Settings' }, { value: 'backup', label: 'Download backup' }, { value: 'out', label: 'Sign out' }], null, (v) => {
+  dd('user', [{ value: 'profile', label: 'My profile' }, { value: 'projects', label: 'My projects' }, { value: 'settings', label: 'Settings' }, { value: 'backup', label: 'Download backup' }, { value: 'out', label: 'Sign out' }], null, (v) => {
     if (v === 'projects') location.hash = '/projects';
+    if (v === 'profile') location.hash = '/profile';
     if (v === 'settings') openSettings();
     if (v === 'backup') backup();
     if (v === 'out') signOut();
@@ -163,6 +165,7 @@ function show(keepScroll) {
   const s = screens.includes(name) ? name : 'library';
   if (s === 'editor' && arg && templates.some((t) => t.id === arg)) { if (state.tpl !== arg) { picked = null; layerSel = null; } state.tpl = arg; }
   if (s === 'editor' && lastScreen !== 'editor') { zoom = 1; pan = null; }
+  if (s === 'editor') histMark();
   screens.forEach((n) => { $('#' + n).hidden = n !== s; });
   $$('[data-screen]').forEach((a) => (a.dataset.screen === s ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
   lastScreen = s;
@@ -216,7 +219,9 @@ $('[data-cats]').addEventListener('click', (e) => { const b = e.target.closest('
 /* ---------------- Editor ---------------- */
 const FONT_KIND = { Serif: ['serif', 'dmserif', 'young', 'gloock', 'bodoni', 'garamond', 'caslon', 'fraunces'], Mono: ['mono', 'jet', 'spacemono', 'dmmono', 'rubikmono'], Display: ['wide', 'black', 'condensed', 'unbounded', 'michroma', 'syne', 'bebas', 'oswald', 'barlow', 'shoulders', 'chakra', 'orbitron', 'monoton', 'pixel', 'dot'] };
 const fontKind = (k) => Object.keys(FONT_KIND).find((g) => FONT_KIND[g].includes(k)) || 'Sans';
-const fontItems = (lbl) => [{ value: '', label: lbl }, ...['Sans', 'Display', 'Serif', 'Mono'].flatMap((g) => [{ group: g }, ...Object.entries(fonts).filter(([k]) => fontKind(k) === g).map(([k, v]) => ({ value: k, label: v.label, font: `'${v.family}'` }))]), ...(state.userFonts.length ? [{ group: 'Imported' }, ...state.userFonts.map((f) => ({ value: f.name, label: f.name, font: `'${f.name}'` }))] : [])];
+const fontItems = (lbl) => [...(lbl ? [{ value: '', label: lbl }] : []), ...['Sans', 'Display', 'Serif', 'Mono'].flatMap((g) => [{ group: g }, ...Object.entries(fonts).filter(([k]) => fontKind(k) === g).map(([k, v]) => ({ value: k, label: v.label, font: `'${v.family}'` }))]), ...(state.userFonts.length ? [{ group: 'Imported' }, ...state.userFonts.map((f) => ({ value: f.name, label: f.name, font: `'${f.name}'` }))] : []), { group: ' ' }, { value: '__import', label: '+ Import font (TTF, OTF, WOFF)' }];
+let fontImportTo = null;
+const withImport = (fn) => (v) => { if (v === '__import') { fontImportTo = fn; $('[data-font-file]').click(); return; } fn(v); };
 function drawEditor() {
   const tpl = getTemplate(state.tpl), st = styleOf(tpl.id);
   // the editor starts with the fonts the library showed; after that the choice is the user's
@@ -235,8 +240,13 @@ function drawEditor() {
   const pobj = palObj(cur);
   const base = cur === 'own' ? look : cur === 'brand' ? brand().colors : typeof pobj === 'object' ? pobj : palettes[cur] || look;
   $('[data-ed-colours]').innerHTML = [['bg', 'Background'], ['ink', 'Text'], ['accent', 'Accent'], ['accent2', 'Shapes'], ['g1', 'Gradient 1'], ['g2', 'Gradient 2'], ['logo', 'Logo']].map(([k, l]) => { const v = st[k] || base[k] || look[k] || (k === 'accent2' ? base.accent || look.accent : '') || (k === 'logo' ? base.ink || look.ink : '') || '#000000'; return `<button type="button" class="cbtn" data-colbtn="${k}" data-v="${esc(v)}"><i style="--c:${esc(v)}"></i><span>${l}</span><em>${esc(String(v).toUpperCase())}</em></button>`; }).join('');
+  // shade with an arrow
+  { const d = st.dg; $('[data-shade]').innerHTML = d
+    ? `<div class="chips">${[['#000000', 'Black'], ['#ffffff', 'White'], ['accent', 'Accent'], ['bg', 'Background']].map(([v, l]) => { const c = v === 'accent' ? (st.accent || base.accent) : v === 'bg' ? (st.bg || base.bg) : v; return `<button type="button" class="chip" data-dgc="${esc(c)}" aria-pressed="${(d.c || '#000000') === c}"><i class="dot" style="background:${esc(c)}"></i>${l}</button>`; }).join('')}</div><label class="range"><span>Strength</span><input type="range" min=".05" max="1" step=".01" value="${d.s ?? .6}" data-dgs></label><p class="hint">Drag the arrow in the preview to point the shade.</p><button type="button" class="btn btn--line" data-dg-off>Remove shade</button>`
+    : `<button type="button" class="btn btn--line" data-dg-on><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M10 5h9v9"/></svg>Add shade</button>`; }
   // type
-  for (const k of ['fd', 'ft', 'fm']) dd(k, fontItems('Template default'), st[k] || '', (v) => { if (v) st[k] = v; else delete st[k]; save(); drawEditor(); });
+  dd('fd', fontItems(''), st.fd || 'tight', withImport((v) => { st.fd = v; save(); drawEditor(); }));
+  dd('ft', fontItems(''), st.ft || 'tight', withImport((v) => { st.ft = v; st.fm = v; save(); drawEditor(); }));
   // photo sliders
   const slots = tpl.slots || [];
   $('[data-slots]').innerHTML = slots.length ? `<p class="g-title">This design has ${slots.length} photos</p>` + slots.map((l, i) => { const src = slotsFor(tpl.id)[i]; return `<label class="slot">${src ? `<img src="${src}" alt="">` : '<i>+</i>'}<span>${esc(l)}</span><b>${src ? 'Replace' : 'Upload'}</b><input type="file" accept="image/*" data-slot="${i}" hidden></label>`; }).join('') : '';
@@ -249,14 +259,14 @@ function drawEditor() {
   const map = fieldMap(tpl.id);
   $('[data-onefont]').checked = !!st.oneFont;
   $('[data-onefont-wrap]').classList.toggle('is-open', !!st.oneFont);
-  if (st.oneFont) dd('onefont', fontItems('Template default'), st.fd || '', (v) => { ['fd', 'ft', 'fm'].forEach((k) => (v ? (st[k] = v) : delete st[k])); Object.values(st.el || {}).forEach((e) => delete e.f); save(); drawEditor(); });
+  if (st.oneFont) dd('onefont', fontItems(''), st.fd || 'tight', withImport((v) => { ['fd', 'ft', 'fm'].forEach((k) => (v ? (st[k] = v) : delete st[k])); Object.values(st.el || {}).forEach((e) => delete e.f); save(); drawEditor(); }));
   $('[data-fields]').innerHTML = Object.entries(values).map(([k, v]) => {
     const long = String(tpl.fields[k]).includes('\n') || String(tpl.fields[k]).length > 40;
     const ns = map[k] || [], e = (st.el || {})[ns[0]] || {};
     const tools = ns.length ? `<div class="ftools">${st.oneFont ? '' : `<div class="dd mini" data-dd="ff-${k}"></div>`}<span class="sizer"><button type="button" data-fz="${k},-1" aria-label="Smaller text">A−</button><output>${Math.round((e.z || 1) * 100)}%</output><button type="button" data-fz="${k},1" aria-label="Bigger text">A+</button></span><button type="button" class="sel" data-select="${k}">Select</button><button type="button" class="cdot" title="Text colour" aria-label="Text colour" data-fcp="${k}" data-v="${esc(e.c || '#ffffff')}"><i style="background:${e.c || 'conic-gradient(#e8401c,#1f3fe0,#c6f432,#e8401c)'}"></i></button>${e.c ? `<button type="button" class="link" data-fcx="${k}">Reset colour</button>` : ''}</div>` : '';
     return `<div class="field"><label for="f-${k}">${esc(k)}</label>${long ? `<textarea id="f-${k}" data-k="${k}" rows="${Math.min(8, String(v).split('\n').length + 1)}">${esc(v)}</textarea>` : `<input id="f-${k}" data-k="${k}" value="${esc(v)}">`}${tools}</div>`;
   }).join('');
-  if (!st.oneFont) for (const [k, ns] of Object.entries(map)) if (ns.length) dd(`ff-${k}`, fontItems('Font'), ((st.el || {})[ns[0]] || {}).f || '', (v) => { ns.forEach((n) => { const e = elOf(n); v ? (e.f = v) : delete e.f; }); save(); drawEditor(); });
+  if (!st.oneFont) for (const [k, ns] of Object.entries(map)) if (ns.length) dd(`ff-${k}`, fontItems('Font'), ((st.el || {})[ns[0]] || {}).f || '', withImport((v) => { ns.forEach((n) => { const e = elOf(n); v ? (e.f = v) : delete e.f; }); save(); drawEditor(); }));
   $('[data-snap]').checked = state.snap !== false;
   // series
   const pg = st.pager || {};
@@ -275,6 +285,13 @@ function drawEditor() {
   $('[data-save-post]').textContent = ed ? 'Update' : 'Save';
   drawCanvas();
   drawLayers();
+  // each text's font menu names the font it really uses
+  if (!st.oneFont) for (const [k, ns] of Object.entries(map)) {
+    const host = $(`[data-dd="ff-${k}"]`); if (!host || ((st.el || {})[ns[0]] || {}).f) continue;
+    const el = $(`[data-canvas] [data-n="${ns[0]}"]`); if (!el) continue;
+    const fam = getComputedStyle(el).fontFamily.split(',')[0].replace(/["']/g, '').trim(), fk = Object.values(fonts).find((v) => v.family === fam), sp = $('.dd-btn span', host);
+    if (sp) { sp.textContent = fk ? fk.label : fam; sp.style.fontFamily = `'${fam}'`; }
+  }
 }
 const fmCache = {};
 // Which text blocks (data-n) show which field: render once with marker text and look for the markers.
@@ -305,7 +322,7 @@ function drawCanvas() {
   
   canvas.innerHTML = `<div class="cv-tools">
       <div class="cv-l"><button type="button" class="tb${R ? ' on' : ''}" data-cv="rulers" title="Show or hide rulers"><svg viewBox="0 0 24 24"><path d="M3 8h18v8H3zM7 8v3M11 8v4M15 8v3M19 8v4"/></svg><span>${R ? 'Hide rulers' : 'Rulers'}</span></button>${R ? `<button type="button" class="tb${state.mirror !== false ? ' on' : ''}" data-cv="mirror" title="Mirror new guides from the centre"><svg viewBox="0 0 24 24"><path d="M12 3v18M8 7l-4 5 4 5M16 7l4 5-4 5"/></svg><span>Mirror</span></button>${g.v.length + g.h.length ? '<button type="button" class="tb" data-cv="clear"><span>Clear guides</span></button>' : ''}` : ''}</div>
-      <div class="cv-r"><button type="button" class="tb ic" data-cv="out" aria-label="Zoom out"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21M7.5 10.5h6"/></svg></button><button type="button" class="tb zl" data-cv="fit" title="Fit">${Math.round(zoom * 100)}%</button><button type="button" class="tb ic" data-cv="in" aria-label="Zoom in"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21M7.5 10.5h6M10.5 7.5v6"/></svg></button></div></div>
+      <div class="cv-r"><button type="button" class="tb ic" data-undo aria-label="Undo" title="Undo (Ctrl+Z)"${hist.undo.length ? '' : ' disabled'}><svg viewBox="0 0 24 24"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg></button><button type="button" class="tb ic" data-redo aria-label="Redo" title="Redo (Ctrl+Shift+Z)"${hist.redo.length ? '' : ' disabled'}><svg viewBox="0 0 24 24"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg></button><i class="cv-sep"></i><button type="button" class="tb ic" data-cv="out" aria-label="Zoom out"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21M7.5 10.5h6"/></svg></button><button type="button" class="tb zl" data-cv="fit" title="Fit">${Math.round(zoom * 100)}%</button><button type="button" class="tb ic" data-cv="in" aria-label="Zoom in"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M15.5 15.5 21 21M7.5 10.5h6M10.5 7.5v6"/></svg></button></div></div>
     <div class="cv-scroll" style="height:${H1 + 44 + 8}px"><div class="cv-wrap" style="--R:22px">
       ${R ? `<div class="ruler x" data-ruler="h" style="width:${W}px">${rulerHtml('x', W, f.w)}</div><div class="ruler y" data-ruler="v" style="height:${H}px">${rulerHtml('y', H, f.h)}</div><i class="ruler-c"></i>` : ''}
       <div class="cv-art" style="width:${W}px;height:${H}px">${ad(state.tpl, { format: state.format, full: true })}
@@ -314,6 +331,8 @@ function drawCanvas() {
   placeWrap();
   if (picked != null) $(`[data-canvas] [data-n="${picked}"]`)?.classList.add('is-picked');
   if (layerSel?.startsWith('x:')) $(`[data-canvas] [data-x="${layerSel.slice(2)}"]`)?.classList.add('is-picked');
+  markPhoto();
+  drawShadeHandle();
   $('[data-picked]').textContent = picked != null ? `Text ${+picked + 1} selected. Drag it, use the pad or the arrow keys.` : 'Click a text in the preview, or press Select under a field.';
   $('[data-v-formats]').innerHTML = formatItems().slice(0, 5).map((x) => `<button type="button" data-format="${x.value}">${ad(state.tpl, { format: x.value })}${esc(x.label)}</button>`).join('');
   const tplNow = getTemplate(state.tpl), gsec = $('[data-v-grads]');
@@ -460,6 +479,7 @@ $('[data-canvas]').addEventListener('pointerdown', (e) => {
   const xEl = e.target.closest('.bi-extra');
   if (xEl && !(textEl && e.target === textEl)) {
     const x = (st.extra || []).find((q) => q.id === xEl.dataset.x); if (!x) return;
+    if (layerSel !== 'x:' + x.id) { layerSel = 'x:' + x.id; picked = null; $$('[data-canvas] .is-picked').forEach((q) => q.classList.remove('is-picked')); xEl.classList.add('is-picked'); $('[data-canvas] .cv-art')?.classList.remove('photo-picked'); drawLayers(); click('tap'); return; }
     layerSel = 'x:' + x.id; picked = null; $$('[data-canvas] .is-picked').forEach((q) => q.classList.remove('is-picked')); xEl.classList.add('is-picked'); drawLayers();
     const x0 = x.x ?? 50, y0 = x.y ?? 50;
     const move = (ev) => {
@@ -471,6 +491,7 @@ $('[data-canvas]').addEventListener('pointerdown', (e) => {
     addEventListener('pointermove', move); addEventListener('pointerup', () => { removeEventListener('pointermove', move); save(); soon(); }, { once: true });
     return;
   }
+  if (textEl && picked !== textEl.dataset.n) { picked = textEl.dataset.n; layerSel = 't' + picked; $$('[data-canvas] .is-picked').forEach((x) => x.classList.remove('is-picked')); textEl.classList.add('is-picked'); $('[data-canvas] .cv-art')?.classList.remove('photo-picked'); queueMicrotask(drawLayers); click('tap'); return; }
   if (textEl) {
     picked = textEl.dataset.n; layerSel = 't' + picked; queueMicrotask(drawLayers); $$('[data-canvas] .is-picked').forEach((x) => x.classList.remove('is-picked')); textEl.classList.add('is-picked'); $('[data-picked]').textContent = `Text ${+picked + 1} selected. Drag it, or use the pad.`;
     const v0 = (st.nudge || {})[picked] || [0, 0], r0 = inkRect(textEl), snap = state.snap !== false;
@@ -502,6 +523,20 @@ $('[data-canvas]').addEventListener('pointerdown', (e) => {
     const up = () => { removeEventListener('pointermove', move); canvas.classList.remove('guiding', 'on-x', 'on-y'); save(); drawCanvas(); };
     addEventListener('pointermove', move); addEventListener('pointerup', up, { once: true });
   } else {
+    const media = document.elementsFromPoint(sx, sy).find((n) => n.matches?.('.bi-media') && adEl.contains(n));
+    const srcs = [...new Set($$('.bi-media', adEl).map((n) => n.getAttribute('src')))];
+    if (!media) { picked = null; layerSel = null; $$('[data-canvas] .is-picked').forEach((q) => q.classList.remove('is-picked')); $('[data-canvas] .cv-art')?.classList.remove('photo-picked'); drawLayers(); return; }
+    const key = srcs.length > 1 ? srcKey(media.getAttribute('src')) : null;
+    const selKey = key ? 'photo:' + key : 'photo';
+    if (photoSel !== selKey) { photoSel = selKey; picked = null; layerSel = 'photo'; $$('[data-canvas] .is-picked').forEach((q) => q.classList.remove('is-picked')); markPhoto(); drawLayers(); click('tap'); return; }
+    if (key) {
+      st.mpos ||= {}; const p0 = st.mpos[key] || [st.ix ?? 50, st.iy ?? 50, st.iz ?? 1]; const r = media.getBoundingClientRect();
+      const same = $$('.bi-media', adEl).filter((n) => n.getAttribute('src') === media.getAttribute('src'));
+      const move = (ev) => { const nx = Math.max(0, Math.min(100, p0[0] - ((ev.clientX - sx) / r.width) * 100 / p0[2])), ny = Math.max(0, Math.min(100, p0[1] - ((ev.clientY - sy) / r.height) * 100 / p0[2])); st.mpos[key] = [+nx.toFixed(2), +ny.toFixed(2), p0[2]]; same.forEach((n) => { n.style.objectPosition = `${nx}% ${ny}%`; n.style.transformOrigin = `${nx}% ${ny}%`; }); };
+      const up = () => { removeEventListener('pointermove', move); save(); drawEditor(); };
+      addEventListener('pointermove', move); addEventListener('pointerup', up, { once: true });
+      return;
+    }
     const x0 = st.ix ?? 50, y0 = st.iy ?? 50, z = st.iz ?? 1;
     const move = (ev) => { st.ix = Math.max(0, Math.min(100, x0 - ((ev.clientX - sx) / rect.width) * 100 / z)); st.iy = Math.max(0, Math.min(100, y0 - ((ev.clientY - sy) / rect.height) * 100 / z)); adEl.style.setProperty('--ix', st.ix + '%'); adEl.style.setProperty('--iy', st.iy + '%'); };
     const up = () => { removeEventListener('pointermove', move); save(); drawEditor(); };
@@ -522,9 +557,9 @@ $('[data-font-file]').onchange = async (e) => {
   try {
     const face = new FontFace(name, await readFile(f, 'buffer')); await face.load(); document.fonts.add(face);
     state.userFonts = state.userFonts.filter((x) => x.name !== name).concat({ name, data: await readFile(f) });
-    styleOf(state.tpl).fd = name; installFonts(); save(); click('ok'); drawEditor();
-    $('[data-font-note]').textContent = `${name} imported and set as the headline font. It is listed under Imported in every font menu.`;
-  } catch { $('[data-font-note]').textContent = 'This file could not be read as a font. Try a TTF, OTF or WOFF file.'; }
+    installFonts(); (fontImportTo || ((v) => { styleOf(state.tpl).fd = v; }))(name); fontImportTo = null; e.target.value = '';
+    toast(`${name} imported. It is listed under Imported in every font menu.`);
+  } catch { fontImportTo = null; e.target.value = ''; toast('This file could not be read as a font. Try a TTF, OTF or WOFF file.'); }
 };
 
 // Photos are scaled to at most 1600 px and saved as JPEG, so projects fit in the browser's storage.
@@ -897,6 +932,7 @@ async function start(email, quiet) {
   if (!state.markV1) { state.brands.forEach((b) => { if (!b.logo) b.useLogo = true; }); state.markV1 = true; }
   if (!Array.isArray(state.projects) || !state.projects.length) state.projects = [{ id: uid(), name: 'My first series', posts: [] }];
   installFonts();
+  histLoad();
   state.userFonts.forEach((f) => { fetch(f.data).then((r) => r.arrayBuffer()).then((buf) => document.fonts.add(new FontFace(f.name, buf))).catch(() => {}); });
   document.documentElement.classList.toggle('no-fx', state.fx === false);
   pool = await poolLoad(); ownPool = pool.length > 0; if (!ownPool) pool = await builtinPool(); reshuffle();
@@ -1013,7 +1049,8 @@ $('[data-bcols]').addEventListener('click', (e) => {
 }
 
 /* ---------------- layers ---------------- */
-let layerSel = null;
+let layerSel = null, photoSel = null;
+function markPhoto() { const art = $('[data-canvas] .cv-art'); if (!art) return; art.classList.toggle('photo-picked', layerSel === 'photo' && photoSel === 'photo'); $$('[data-canvas] .bi-media.media-picked').forEach((n) => n.classList.remove('media-picked')); if (layerSel === 'photo' && photoSel?.startsWith('photo:')) $$('[data-canvas] .bi-media').filter((n) => srcKey(n.getAttribute('src')) === photoSel.slice(6)).forEach((n) => n.classList.add('media-picked')); }
 const layerKeys = () => {
   const tpl = getTemplate(state.tpl), st = styleOf(state.tpl);
   const texts = $$('[data-canvas] .bi-ad [data-n]').map((n) => 't' + n.dataset.n);
@@ -1078,7 +1115,7 @@ $('[data-pane="layers"]').addEventListener('click', async (e) => {
   const to = e.target.closest('[data-lto]'); if (to) { const [k, w] = to.dataset.lto.split(','); setOrder((o) => { o.splice(o.indexOf(k), 1); if (w === 'front') o.push(k); else o.unshift(k); }); click('tap'); return; }
   const del = e.target.closest('[data-xdel]'); if (del) { if (!(await ask('Delete this image?', 'It is removed from this post. This cannot be undone.'))) return; st.extra = (st.extra || []).filter((x) => x.id !== del.dataset.xdel); if (st.layers?.order) st.layers.order = st.layers.order.filter((k) => k !== 'x:' + del.dataset.xdel); layerSel = null; save(); drawLayers(); soon(); return; }
   const rs = e.target.closest('[data-lreset]'); if (rs) { delete st.photoFx; if (st.layers?.op) delete st.layers.op.photo; save(); drawLayers(); soon(); return; }
-  const li = e.target.closest('[data-layer]'); if (li) { layerSel = li.dataset.layer; picked = layerSel.startsWith('t') ? layerSel.slice(1) : null; drawLayers(); drawCanvas(); }
+  const li = e.target.closest('[data-layer]'); if (li) { layerSel = li.dataset.layer; picked = layerSel.startsWith('t') ? layerSel.slice(1) : null; photoSel = layerSel === 'photo' ? 'photo' : null; drawLayers(); drawCanvas(); }
 });
 $('[data-pane="layers"]').addEventListener('input', (e) => {
   const t = e.target, st = styleOf(state.tpl), v = +t.value;
@@ -1098,7 +1135,7 @@ document.addEventListener('change', async (e) => {
   const src = await shrink(await readFile(t.files[0]), 1600); t.value = '';
   const st = styleOf(state.tpl), id = uid(); (st.extra ||= []).push({ id, src, x: 50, y: 50, w: 40 });
   layerSel = 'x:' + id; picked = null; save(); click('ok');
-  $$('[data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === 'layers'))); $$('[data-pane]').forEach((pn) => { pn.hidden = pn.dataset.pane !== 'layers'; });
+  { $$('[data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === 'layers'))); $$('[data-pane]').forEach((pn) => { pn.hidden = pn.dataset.pane !== 'layers'; }); }
   drawEditor(); toast('Image added. Drag it in the preview to place it.');
 });
 
@@ -1112,3 +1149,74 @@ document.addEventListener('pointermove', (e) => {
   ad.style.setProperty('--tx', (-y * 10).toFixed(2) + 'deg'); ad.style.setProperty('--ty', (x * 12).toFixed(2) + 'deg'); card.classList.add('tilt');
 }, { passive: true });
 document.addEventListener('pointerout', (e) => { const card = e.target.closest?.('.grid a.card'); if (card && !card.contains(e.relatedTarget)) { card.classList.remove('tilt'); const ad = card.querySelector('.ad'); ad?.style.removeProperty('--tx'); ad?.style.removeProperty('--ty'); } });
+
+/* layers live in the right column on wide screens (switch with the variants), in the left tabs on narrow ones */
+function placeLayers() {}
+matchMedia('(max-width: 1100px)').addEventListener('change', placeLayers); placeLayers();
+function setRTab() { return; $$('[data-rtab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.rtab === k))); $$('[data-rpane]').forEach((p) => { p.hidden = p.dataset.rpane !== k; }); }
+document.addEventListener('click', (e) => { const b = e.target.closest('[data-rtab]'); if (!b) return; state.rtab = b.dataset.rtab; save(); setRTab(state.rtab); click('tap'); });
+
+/* ---------------- undo and redo, kept for good in this browser (IndexedDB) ---------------- */
+var hist = { undo: [], redo: [] };
+var lastSnap = null, histTimer = 0, restoring = false, histDb = null;
+function hdb() { return (histDb ||= new Promise((res, rej) => { const r = indexedDB.open('brandit-history', 1); r.onupgradeneeded = () => r.result.createObjectStore('h'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); })); }
+async function hput() { try { const db = await hdb(); db.transaction('h', 'readwrite').objectStore('h').put({ undo: hist.undo, redo: hist.redo }, user); } catch { /* private mode */ } }
+async function histLoad() { try { const db = await hdb(); const v = await new Promise((res) => { const q = db.transaction('h').objectStore('h').get(user); q.onsuccess = () => res(q.result); q.onerror = () => res(null); }); hist = v && Array.isArray(v.undo) ? { undo: v.undo, redo: v.redo || [] } : { undo: [], redo: [] }; } catch { hist = { undo: [], redo: [] }; } histButtons(); }
+function snapOf(id) { return JSON.stringify({ tpl: id, style: state.styles[id] || {}, fields: state.fields[id] || {}, pal: state.pal[id] ?? null, format: state.format, custom: state.custom }); }
+function histMark() { if (state?.tpl) lastSnap = snapOf(state.tpl); }
+function histFlush() {
+  clearTimeout(histTimer); histTimer = 0;
+  if (restoring || !state?.tpl || $('#editor').hidden) return;
+  const cur = snapOf(state.tpl);
+  if (lastSnap && cur !== lastSnap) { hist.undo.push(lastSnap); if (hist.undo.length > 150) hist.undo.shift(); hist.redo = []; hput(); histButtons(); }
+  lastSnap = cur;
+}
+function histTrack() { if (restoring) return; clearTimeout(histTimer); histTimer = setTimeout(histFlush, 350); }
+function histButtons() { const u = $('[data-undo]'), r = $('[data-redo]'); if (u) u.disabled = !hist.undo.length; if (r) r.disabled = !hist.redo.length; }
+function histApply(raw) {
+  const p = JSON.parse(raw); restoring = true;
+  state.styles[p.tpl] = p.style; state.fields[p.tpl] = p.fields; if (p.pal == null) delete state.pal[p.tpl]; else state.pal[p.tpl] = p.pal;
+  if (p.format) state.format = p.format; if (p.custom) state.custom = p.custom;
+  save(); restoring = false; lastSnap = snapOf(p.tpl); hput();
+  if (state.tpl !== p.tpl) location.hash = '#/editor/' + p.tpl; else drawEditor();
+  histButtons();
+}
+function undo() { histFlush(); const prev = hist.undo.pop(); if (!prev) return; hist.redo.push(snapOf(JSON.parse(prev).tpl)); histApply(prev); click('tap'); }
+function redo() { histFlush(); const nxt = hist.redo.pop(); if (!nxt) return; hist.undo.push(snapOf(JSON.parse(nxt).tpl)); histApply(nxt); click('tap'); }
+document.addEventListener('click', (e) => { if (e.target.closest('[data-undo]')) undo(); if (e.target.closest('[data-redo]')) redo(); });
+addEventListener('keydown', (e) => {
+  if (!(e.ctrlKey || e.metaKey) || $('#editor').hidden || /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName) || document.activeElement?.isContentEditable) return;
+  const k = e.key.toLowerCase();
+  if (k === 'z' && !e.shiftKey) { e.preventDefault(); undo(); } else if ((k === 'z' && e.shiftKey) || k === 'y') { e.preventDefault(); redo(); }
+});
+
+/* ---------------- shade arrow ---------------- */
+function drawShadeHandle() {
+  const art = $('[data-canvas] .cv-art'); if (!art) return; art.querySelector('.dg-handle')?.remove();
+  const st = styleOf(state.tpl), d = st.dg; if (!d) return;
+  const W = art.clientWidth, H = art.clientHeight, cx = W / 2, cy = H / 2, R = Math.min(W, H) * .42;
+  const a = ((d.a ?? 135) * Math.PI) / 180, L = 24 + (d.s ?? .6) * R, px = cx + Math.sin(a) * L, py = cy - Math.cos(a) * L;
+  art.insertAdjacentHTML('beforeend', `<svg class="dg-handle" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}"><line x1="${cx}" y1="${cy}" x2="${px}" y2="${py}"/><circle class="dg-c" cx="${cx}" cy="${cy}" r="4"/><g class="dg-knob" transform="translate(${px} ${py}) rotate(${d.a ?? 135})"><circle r="15"/><path d="M0 6V-6M-5 -1 0 -6 5 -1"/></g></svg>`);
+}
+$('[data-canvas]').addEventListener('pointerdown', (e) => {
+  const knob = e.target.closest('.dg-knob'); if (!knob) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  const art = $('[data-canvas] .cv-art'), r = art.getBoundingClientRect(), st = styleOf(state.tpl), ov = art.querySelector('.bi-dg');
+  const R = Math.min(r.width, r.height) * .42, cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  const move = (ev) => {
+    const dx = ev.clientX - cx, dy = ev.clientY - cy; let a = (Math.atan2(dx, -dy) * 180) / Math.PI; if (a < 0) a += 360;
+    if (!ev.altKey) { const sn = Math.round(a / 45) * 45; if (Math.abs(sn - a) < 4) a = sn % 360; }
+    const s = Math.max(.05, Math.min(1, (Math.hypot(dx, dy) - 24) / R));
+    st.dg = { ...st.dg, a: Math.round(a), s: +s.toFixed(2) };
+    if (ov) { ov.style.background = `linear-gradient(${st.dg.a}deg, transparent ${Math.round((1 - s) * 75)}%, ${st.dg.c || '#000000'} 100%)`; ov.style.opacity = (0.35 + s * 0.65).toFixed(2); }
+    drawShadeHandle();
+  };
+  addEventListener('pointermove', move); addEventListener('pointerup', () => { removeEventListener('pointermove', move); save(); drawEditor(); }, { once: true });
+}, true);
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('[data-shade]')) return; const st = styleOf(state.tpl);
+  if (e.target.closest('[data-dg-on]')) { st.dg = { a: 135, s: .6, c: '#000000' }; save(); click('tap'); drawEditor(); }
+  if (e.target.closest('[data-dg-off]')) { delete st.dg; save(); click('tap'); drawEditor(); }
+  const c = e.target.closest('[data-dgc]'); if (c) { st.dg.c = c.dataset.dgc; save(); drawEditor(); }
+});
+document.addEventListener('input', (e) => { if (!e.target.matches('[data-dgs]')) return; const st = styleOf(state.tpl); st.dg.s = +e.target.value; save(); soon(); });

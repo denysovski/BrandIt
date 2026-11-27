@@ -1,6 +1,6 @@
 // BrandIt Studio: sign in (simulated), Library, Editor, Sets and Brands over the shared library.
 // Everything is stored in this browser's localStorage, per account. Nothing is sent anywhere.
-import { templates, categories, formats, palettes, fonts, pagerKinds, gradients, hasPhoto, render, getTemplate, css, toSVG, toPNG, brandDefaults } from '../lib/brandit.js?v=21';
+import { templates, categories, formats, palettes, fonts, pagerKinds, gradients, hasPhoto, render, getTemplate, css, toSVG, toPNG, brandDefaults, DEFAULT_MARK } from '../lib/brandit.js?v=21';
 
 const FONTS = '../fonts/';
 document.getElementById('bi-css').textContent = css(FONTS);
@@ -40,7 +40,7 @@ const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; 
 const store = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } };
 async function hash(s) { const b = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('brandit:' + s)); return [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, '0')).join(''); }
 
-const newBrand = (o = {}) => ({ id: uid(), ...brandDefaults, logo: '', useLogo: false, colors: { bg: '#0b0b0b', ink: '#ffffff', accent: '#e8401c', g1: '#e8401c', g2: '#0b0b0b' }, fonts: { d: '', t: '', m: '' }, ...o });
+const newBrand = (o = {}) => ({ id: uid(), ...brandDefaults, logo: '', useLogo: true, colors: { bg: '#0b0b0b', ink: '#ffffff', accent: '#e8401c', g1: '#e8401c', g2: '#0b0b0b' }, fonts: { d: '', t: '', m: '' }, ...o });
 const freshState = (name) => ({ name, tpl: 'mo-crosshair', format: 'portrait', custom: { w: 1080, h: 1350 }, libFormat: 'portrait', libPal: 'own', cat: 'All', set: 'Launch week', setFormat: 'portrait', fields: {}, styles: {}, pal: {}, brands: [newBrand({ name: 'north.', short: 'NO' })], brand: null, userFonts: [], muted: false, fx: true, snap: true, rulers: true, mirror: true, guides: { v: [], h: [] }, myPalettes: [], projects: [{ id: uid(), name: 'My first series', posts: [] }], project: null, editing: null });
 let user = null, state = null, image = null, picked = null;
 const slotImgs = {};
@@ -87,7 +87,7 @@ function save() {
   if (!store(LS.users, users)) status('Storage is full: remove a big logo or font so changes keep saving.');
 }
 const brand = () => state.brands.find((b) => b.id === state.brand) || state.brands[0];
-const brandForRender = () => { const b = brand(); return { ...b, logo: b.useLogo ? b.logo : '' }; };
+const brandForRender = () => { const b = brand(); return { ...b, logo: b.useLogo ? b.logo || DEFAULT_MARK : '' }; };
 
 /* ---------------- custom fonts ---------------- */
 function installFonts() {
@@ -222,7 +222,7 @@ function drawEditor() {
   const look = tpl.look || {};
   const pobj = palObj(cur);
   const base = cur === 'own' ? look : cur === 'brand' ? brand().colors : typeof pobj === 'object' ? pobj : palettes[cur] || look;
-  $('[data-ed-colours]').innerHTML = [['bg', 'Background'], ['ink', 'Text'], ['accent', 'Accent'], ['accent2', 'Shapes'], ['g1', 'Gradient 1'], ['g2', 'Gradient 2']].map(([k, l]) => { const v = st[k] || base[k] || look[k] || (k === 'accent2' ? base.accent || look.accent : '') || '#000000'; return `<button type="button" class="cbtn" data-colbtn="${k}" data-v="${esc(v)}"><i style="--c:${esc(v)}"></i><span>${l}</span><em>${esc(String(v).toUpperCase())}</em></button>`; }).join('');
+  $('[data-ed-colours]').innerHTML = [['bg', 'Background'], ['ink', 'Text'], ['accent', 'Accent'], ['accent2', 'Shapes'], ['g1', 'Gradient 1'], ['g2', 'Gradient 2'], ['logo', 'Logo']].map(([k, l]) => { const v = st[k] || base[k] || look[k] || (k === 'accent2' ? base.accent || look.accent : '') || (k === 'logo' ? base.ink || look.ink : '') || '#000000'; return `<button type="button" class="cbtn" data-colbtn="${k}" data-v="${esc(v)}"><i style="--c:${esc(v)}"></i><span>${l}</span><em>${esc(String(v).toUpperCase())}</em></button>`; }).join('');
   // type
   for (const k of ['fd', 'ft', 'fm']) dd(k, fontItems('Template default'), st[k] || '', (v) => { if (v) st[k] = v; else delete st[k]; save(); drawEditor(); });
   // photo sliders
@@ -395,7 +395,7 @@ $('#editor').addEventListener('click', (e) => {
     if (msg) { ask(msg[0], msg[1]).then((ok) => { if (ok) doReset(k); }); return; }
   }
   if (false) {
-    if (k === 'colours') ['bg', 'ink', 'accent', 'accent2', 'g1', 'g2'].forEach((x) => delete st[x]);
+    if (k === 'colours') ['bg', 'ink', 'accent', 'accent2', 'g1', 'g2', 'logo'].forEach((x) => delete st[x]);
     if (k === 'photo') ['ix', 'iy', 'iz', 'ov', 'ls'].forEach((x) => delete st[x]);
     if (k === 'text') delete state.fields[state.tpl];
     if (k === 'nudge') { delete st.nudge; picked = null; }
@@ -557,7 +557,7 @@ $('[data-proj-name]').addEventListener('input', (e) => { const pr = projectOf(st
 
 function doReset(k) {
   const st = styleOf(state.tpl);
-  if (k === 'colours') ['bg', 'ink', 'accent', 'accent2', 'g1', 'g2'].forEach((x) => delete st[x]);
+  if (k === 'colours') ['bg', 'ink', 'accent', 'accent2', 'g1', 'g2', 'logo'].forEach((x) => delete st[x]);
   if (k === 'photo') { ['ix', 'iy', 'iz', 'ov', 'ls'].forEach((x) => delete st[x]); }
   if (k === 'text') { delete state.fields[state.tpl]; delete st.el; }
   if (k === 'nudge') { delete st.nudge; picked = null; }
@@ -706,11 +706,11 @@ $('[data-set-save]').onclick = () => {
 /* ---------------- Brands ---------------- */
 function drawBrands() {
   const b = brand();
-  $('[data-brand-list]').innerHTML = state.brands.map((x) => `<li><button type="button" class="brand-card" data-bid="${x.id}" aria-pressed="${x.id === b.id}"><i style="background:linear-gradient(135deg,${x.colors.bg} 50%,${x.colors.accent} 50%)">${x.useLogo && x.logo ? `<img src="${esc(x.logo)}" alt="">` : esc(x.short)}</i><span>${esc(x.name)}</span></button></li>`).join('') + '<li><button type="button" class="brand-card add" data-bid="+"><i>+</i><span>New brand</span></button></li>';
+  $('[data-brand-list]').innerHTML = state.brands.map((x) => `<li><button type="button" class="brand-card" data-bid="${x.id}" aria-pressed="${x.id === b.id}"><i style="background:linear-gradient(135deg,${x.colors.bg} 50%,${x.colors.accent} 50%)">${x.useLogo ? (x.logo ? `<img src="${esc(x.logo)}" alt="">` : `<span class="bmark">${DEFAULT_MARK}</span>`) : esc(x.short)}</i><span>${esc(x.name)}</span></button></li>`).join('') + '<li><button type="button" class="brand-card add" data-bid="+"><i>+</i><span>New brand</span></button></li>';
   const form = $('[data-kit]');
   for (const k of ['name', 'short', 'handle', 'url', 'place']) form.elements[k].value = b[k] || '';
   $('[data-bcols]').innerHTML = [['bg', 'Background'], ['ink', 'Text'], ['accent', 'Accent'], ['g1', 'Gradient 1'], ['g2', 'Gradient 2']].map(([k, l]) => { const v = b.colors[k] || '#000000'; return `<button type="button" class="cbtn" data-bcol="${k}" data-v="${esc(v)}"><i style="--c:${esc(v)}"></i><span>${l}</span><em>${esc(String(v).toUpperCase())}</em></button>`; }).join('');
-  $('[data-logo-remove]').hidden = !b.logo; $('[data-logo-prev]').innerHTML = b.logo ? `<img src="${esc(b.logo)}" alt="Logo">` : `<b>${esc(b.short)}</b>`;
+  $('[data-logo-remove]').hidden = !b.logo; $('[data-logo-prev]').innerHTML = b.logo ? `<img src="${esc(b.logo)}" alt="Logo">` : `<span class="bmark" title="Studio mark, used until you import your own logo">${DEFAULT_MARK}</span>`;
   $('[data-use-logo]') && ($('[data-use-logo]').checked = !!b.useLogo);
   for (const [k, kk] of [['bfd', 'd'], ['bft', 't']]) dd(k, fontItems('Each template’s own'), b.fonts[kk] || '', (v) => { b.fonts[kk] = v; save(); drawBrands(); });
   drawKitPreview();
@@ -880,6 +880,8 @@ async function start(email, quiet) {
   state = { ...freshState(users[email].name), ...users[email].data };
   state.brands = (state.brands?.length ? state.brands : [newBrand()]).map((b) => ({ ...newBrand(), ...b, colors: { ...newBrand().colors, ...(b.colors || {}) }, fonts: { ...newBrand().fonts, ...(b.fonts || {}) } }));
   state.brand ||= state.brands[0].id;
+  // brands without an uploaded logo start with the studio mark (once)
+  if (!state.markV1) { state.brands.forEach((b) => { if (!b.logo) b.useLogo = true; }); state.markV1 = true; }
   if (!Array.isArray(state.projects) || !state.projects.length) state.projects = [{ id: uid(), name: 'My first series', posts: [] }];
   installFonts();
   state.userFonts.forEach((f) => { fetch(f.data).then((r) => r.arrayBuffer()).then((buf) => document.fonts.add(new FontFace(f.name, buf))).catch(() => {}); });

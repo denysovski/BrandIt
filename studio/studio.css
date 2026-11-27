@@ -854,3 +854,21 @@ body.is-sorting, body.is-sorting * { cursor: grabbing !important; user-select: n
 /* seven editor tabs on one row */
 .tabs { display: flex; gap: 2px; }
 .tabs button { flex: 1 1 auto; min-width: 0; padding: 0 5px; font-size: 12px; white-space: nowrap; overflow: visible; }
+/* library: more room between the filters and the photo buttons */
+#library .bar .chips { margin-bottom: 18px; }
+/* hovering a card never changes the design inside it */
+.card .ad, .card:hover .ad, .card:focus-visible .ad, .no-fx .card:hover .ad { transform: none !important; transform-style: flat; transition: box-shadow .25s; }
+.card:hover .ad, .card:focus-visible .ad { box-shadow: 0 0 0 1.5px var(--ink); }
+/* the studio mark in brand previews */
+.bmark { display: block; width: 62%; color: currentColor; } .bmark svg { display: block; width: 100%; height: auto; }
+.logo-prev .bmark { width: 56%; color: var(--ink); }
+.brand-card i .bmark { width: 60%; color: #fff; }
+/* brand colours: a swatch, a name and the code, no cards */
+.kit .bcols .colours { display: flex; flex-wrap: wrap; gap: 14px 26px; grid-template-columns: none; }
+.kit .bcols .cbtn { display: grid; grid-template-columns: 34px auto; grid-template-rows: auto auto; column-gap: 10px; align-items: center; padding: 0; height: auto; min-height: 0; border: 0 !important; background: none !important; box-shadow: none !important; text-align: left; cursor: pointer; }
+.kit .bcols .cbtn i { grid-row: span 2; width: 34px; height: 34px; border-radius: 50%; box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 18%, transparent); transition: transform .2s; }
+.kit .bcols .cbtn:hover i { transform: scale(1.08); }
+.kit .bcols .cbtn span { font-size: 13px; font-weight: 500; line-height: 1.2; } .kit .bcols .cbtn em { font-size: 11.5px; line-height: 1.2; }
+.kit .bcols .cbtn:hover, .kit .bcols .cbtn:focus-visible { background: none !important; color: inherit !important; }
+@media (max-width: 720px) { .kit .bcols .colours { gap: 14px 18px; } .kit .bcols .cbtn { flex: 1 1 40%; } }
+.kit [data-brand-delete] { grid-column: 1 / -1; justify-self: start; margin-top: 6px; } .kit .hint[hidden] { display: none !important; }

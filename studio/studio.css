@@ -1020,3 +1020,10 @@ body *::-webkit-scrollbar-corner { background: transparent; }
 .pm-grid .ad { border-radius: 10px; overflow: hidden; outline: 2px solid transparent; outline-offset: 2px; transition: outline-color .2s; }
 .pm-grid button:not(:disabled):hover .ad { outline-color: #d9381e; }
 .pm-empty { aspect-ratio: 4/5; background: var(--soft); }
+/* loader: the card under the pointer slides up out of the row, the others soften and blur */
+.deck-in { transform: translate3d(0, 0, 0); transition: transform .55s cubic-bezier(.22,1,.36,1), filter .45s ease, opacity .45s ease, box-shadow .55s cubic-bezier(.22,1,.36,1); backface-visibility: hidden; }
+.deck-card:hover .deck-in { transform: translate3d(0, -24%, 0) scale(1.03); transition-duration: .6s, .45s, .45s, .6s; box-shadow: 0 50px 70px -34px rgba(0,0,0,.75), 0 0 0 1px rgba(255,255,255,.06); }
+.deck:hover .deck-in { will-change: transform, filter; }
+.deck:has(.deck-card:hover) .deck-card:not(:hover) .deck-in { filter: blur(5px) brightness(.72) saturate(.85); transform: translate3d(0, 3%, 0) scale(.97); }
+@media (hover: none) { .deck-card:hover .deck-in, .deck:has(.deck-card:hover) .deck-card:not(:hover) .deck-in { transform: none; filter: none; } }
+@media (prefers-reduced-motion: reduce) { .deck-in { transition: none; } }

@@ -961,13 +961,7 @@ const edMq = matchMedia('(max-width: 1100px)');
 const placeBar = () => { const bar = $('.ed-bar'); (edMq.matches ? $('.stage') : $('.variants')).insertAdjacentElement(edMq.matches ? 'beforeend' : 'afterbegin', bar); };
 edMq.addEventListener('change', placeBar); placeBar();
 
-/* loader cards lean towards the pointer */
-$('[data-deck]').addEventListener('pointermove', (e) => {
-  const c = e.target.closest('.deck-card'); if (!c) return;
-  const r = c.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5;
-  c.style.setProperty('--ry', (x * 22).toFixed(1) + 'deg'); c.style.setProperty('--rx', (-y * 22).toFixed(1) + 'deg');
-});
-$('[data-deck]').addEventListener('pointerout', (e) => { const c = e.target.closest('.deck-card'); if (c && !c.contains(e.relatedTarget)) { c.style.removeProperty('--rx'); c.style.removeProperty('--ry'); } });
+/* loader cards: CSS alone slides the hovered card out like a cigarette from a pack */
 
 document.addEventListener('pointerdown', (e) => { const m = $('[data-proj-menu]'); if (m && !m.hidden && !e.target.closest('.proj-set')) { m.hidden = true; $('[data-proj-set]').setAttribute('aria-expanded', 'false'); } });
 /* hold a post and drag it to a new place; the others slide aside.

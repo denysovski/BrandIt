@@ -1,6 +1,6 @@
 // BrandIt Studio: sign in (simulated), Library, Editor, Sets and Brands over the shared library.
 // Everything is stored in this browser's localStorage, per account. Nothing is sent anywhere.
-import { templates, categories, formats, palettes, fonts, pagerKinds, gradients, hasPhoto, render, getTemplate, css, toSVG, toPNG, brandDefaults, DEFAULT_MARK, srcKey } from '../lib/brandit.js?v=33';
+import { templates, categories, formats, palettes, fonts, pagerKinds, gradients, hasPhoto, render, getTemplate, css, toSVG, toPNG, brandDefaults, DEFAULT_MARK, srcKey } from '../lib/brandit.js?v=34';
 
 const FONTS = '../fonts/';
 document.getElementById('bi-css').textContent = css(FONTS);
@@ -725,6 +725,7 @@ const PACKS = [
   { name: 'Tech partner', about: 'Speed lines, big claims, lab sheets and glowing scores. For agencies, software studios and B2B products.', pal: 'own', fd: 'tight', ft: 'tight', fm: 'tight', ids: ['s-speed', 's-white-claim', 's-blur-name', 's-macro', 's-structural', 's-blob-pattern', 's-orange-glow', 's-roi', 's-scale', 's-ring-mark'] },
   { name: 'Soft minimal', about: 'Lowercase, pills and lots of air. For personal brands, newsletters and small shops.', pal: 'frost', fd: 'tight', ft: 'tight', fm: 'tight', ids: ['q-mixed', 'q-blue-claim', 'q-wave', 'q-lowercase', 'x-soft-story', 'z-pills-lower', 'mo-quiet-card', 'mo-verse', 'x-percent', 'x-asterisk'] },
   { name: 'Shapes', about: 'One photo seen through a star, a flower, an arch or two thick bands. Bold, simple, easy to remember.', pal: 'own', fd: 'tight', ft: 'tight', fm: 'tight', ids: ['t-star', 't-flower', 't-flower-mark', 't-giant-flower', 't-stripes', 't-arch', 't-quarter', 't-half', 't-circle', 't-plus', 't-blob', 't-pills'] },
+  { name: 'Swiss sheets', about: 'Thin rules, big grotesk words, one photo and a lot of white. Grain, grid paper, scan lines and a few symbols of our own.', pal: 'own', fd: 'tight', ft: 'tight', fm: 'tight', ids: ['u-pass', 'u-index', 'u-burst', 'u-cards', 'u-letter', 'u-workshop', 'u-giant-cols', 'u-house', 'u-grain-word', 'u-glitch', 'u-nodes', 'u-symbols', 'u-stamp', 'u-dot-word'] },
 ].map((p) => ({ ...p, ids: p.ids.filter((id) => getTemplate(id)) }));
 const packOf = () => PACKS.find((p) => p.name === state.set) || PACKS[0];
 const packLook = (pk) => ({ palette: state.setPal === 'brand' ? 'brand' : pk.pal, style: { fd: pk.fd, ft: pk.ft, fm: pk.fm } });

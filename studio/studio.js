@@ -1,6 +1,6 @@
 // BrandIt Studio: sign in (simulated), Library, Editor, Sets and Brands over the shared library.
 // Everything is stored in this browser's localStorage, per account. Nothing is sent anywhere.
-import { templates, categories, formats, palettes, fonts, pagerKinds, gradients, hasPhoto, render, getTemplate, css, toSVG, toPNG, brandDefaults, DEFAULT_MARK, srcKey } from '../lib/brandit.js?v=34';
+import { templates, categories, formats, palettes, fonts, pagerKinds, gradients, hasPhoto, render, getTemplate, css, toSVG, toPNG, brandDefaults, DEFAULT_MARK, srcKey } from '../lib/brandit.js?v=35';
 
 const FONTS = '../fonts/';
 document.getElementById('bi-css').textContent = css(FONTS);
@@ -243,14 +243,14 @@ function drawEditor() {
   $('[data-ed-colours]').innerHTML = [['bg', 'Background'], ['ink', 'Text'], ['accent', 'Accent'], ['accent2', 'Shapes'], ['g1', 'Gradient 1'], ['g2', 'Gradient 2'], ['logo', 'Logo']].map(([k, l]) => { const v = st[k] || base[k] || look[k] || (k === 'accent2' ? base.accent || look.accent : '') || (k === 'logo' ? base.ink || look.ink : '') || '#000000'; return `<button type="button" class="cbtn" data-colbtn="${k}" data-v="${esc(v)}"><i style="--c:${esc(v)}"></i><span>${l}</span><em>${esc(String(v).toUpperCase())}</em></button>`; }).join('');
   // shade with an arrow
   { const d = st.dg; $('[data-shade]').innerHTML = d
-    ? `<div class="chips">${[['#000000', 'Black'], ['#ffffff', 'White'], ['accent', 'Accent'], ['bg', 'Background']].map(([v, l]) => { const c = v === 'accent' ? (st.accent || base.accent) : v === 'bg' ? (st.bg || base.bg) : v; return `<button type="button" class="chip" data-dgc="${esc(c)}" aria-pressed="${(d.c || '#000000') === c}"><i class="dot" style="background:${esc(c)}"></i>${l}</button>`; }).join('')}</div><label class="range"><span>Strength</span><input type="range" min=".05" max="1" step=".01" value="${d.s ?? .6}" data-dgs></label><p class="hint">Drag the arrow in the preview to point the shade.</p><button type="button" class="btn btn--line" data-dg-off>Remove shade</button>`
+    ? `<div class="chips">${[['#000000', 'Black'], ['#ffffff', 'White'], ['accent', 'Accent'], ['bg', 'Background']].map(([v, l]) => { const c = v === 'accent' ? (st.accent || base.accent) : v === 'bg' ? (st.bg || base.bg) : v; return `<button type="button" class="chip" data-dgc="${esc(c)}" aria-pressed="${(d.c || '#000000') === c}"><i class="dot" style="background:${esc(c)}"></i>${l}</button>`; }).join('')}</div><label class="range"><span>Strength</span><input type="range" min=".05" max="1" step=".01" value="${d.s ?? .6}" data-dgs></label><button type="button" class="btn btn--line" data-dg-off>Remove shade</button>`
     : `<button type="button" class="btn btn--line" data-dg-on><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M10 5h9v9"/></svg>Add shade</button>`; }
   // type
   dd('fd', fontItems(''), st.fd || 'tight', withImport((v) => { st.fd = v; save(); drawEditor(); }));
   dd('ft', fontItems(''), st.ft || 'tight', withImport((v) => { st.ft = v; st.fm = v; save(); drawEditor(); }));
   // photo sliders
   const slots = tpl.slots || [];
-  $('[data-slots]').innerHTML = slots.length ? `<p class="g-title">This design has ${slots.length} photos</p>` + slots.map((l, i) => { const src = slotsFor(tpl.id)[i]; return `<label class="slot">${src ? `<img src="${src}" alt="">` : '<i>+</i>'}<span>${esc(l)}</span><b>${src ? 'Replace' : 'Upload'}</b><input type="file" accept="image/*" data-slot="${i}" hidden></label>`; }).join('') : '';
+  $('[data-slots]').innerHTML = slots.length ? `<p class="g-title">Photos</p>` + slots.map((l, i) => { const src = slotsFor(tpl.id)[i]; return `<label class="slot">${src ? `<img src="${src}" alt="">` : '<i>+</i>'}<span>${esc(l)}</span><b>${src ? 'Replace' : 'Upload'}</b><input type="file" accept="image/*" data-slot="${i}" hidden></label>`; }).join('') : '';
   $('[data-one-photo] .file-btn').hidden = !!slots.length;
   $$('[data-st]').forEach((r) => { const k = r.dataset.st; r.value = st[k] ?? { ix: 50, iy: 50, iz: 1, ov: 0.6, ls: 1 }[k]; });
   $('[data-ed-grads]').hidden = !hasPhoto(tpl); $('[data-ed-grads-l]').hidden = !hasPhoto(tpl);
@@ -286,6 +286,7 @@ function drawEditor() {
   $('[data-save-post]').textContent = ed ? 'Update' : 'Save';
   drawCanvas();
   drawLayers();
+  drawPhotoFx();
   // each text's font menu names the font it really uses
   if (!st.oneFont) for (const [k, ns] of Object.entries(map)) {
     const host = $(`[data-dd="ff-${k}"]`); if (!host || ((st.el || {})[ns[0]] || {}).f) continue;
@@ -430,7 +431,7 @@ $('#editor').addEventListener('click', (e) => {
   }
   if (false) {
     if (k === 'colours') ['bg', 'ink', 'accent', 'accent2', 'g1', 'g2', 'logo'].forEach((x) => delete st[x]);
-    if (k === 'photo') ['ix', 'iy', 'iz', 'ov', 'ls'].forEach((x) => delete st[x]);
+    if (k === 'photo') { ['ix', 'iy', 'iz', 'ov', 'ls'].forEach((x) => delete st[x]); delete st.photoFx; if (st.layers?.op) delete st.layers.op.photo; }
     if (k === 'text') delete state.fields[state.tpl];
     if (k === 'nudge') { delete st.nudge; picked = null; }
     if (k === 'text') delete st.el;
@@ -604,7 +605,7 @@ $('[data-proj-name]').addEventListener('input', (e) => { const pr = projectOf(st
 function doReset(k) {
   const st = styleOf(state.tpl);
   if (k === 'colours') ['bg', 'ink', 'accent', 'accent2', 'g1', 'g2', 'logo'].forEach((x) => delete st[x]);
-  if (k === 'photo') { ['ix', 'iy', 'iz', 'ov', 'ls'].forEach((x) => delete st[x]); }
+  if (k === 'photo') { ['ix', 'iy', 'iz', 'ov', 'ls'].forEach((x) => delete st[x]); delete st.photoFx; if (st.layers?.op) delete st.layers.op.photo; }
   if (k === 'text') { delete state.fields[state.tpl]; delete st.el; }
   if (k === 'nudge') { delete st.nudge; picked = null; }
   save(); drawEditor(); status('Done.');
@@ -1072,7 +1073,7 @@ const IC = {
 function layerName(k) {
   if (k === 'photo') return 'Template photo';
   if (k.startsWith('x:')) { const i = (styleOf(state.tpl).extra || []).findIndex((x) => 'x:' + x.id === k); return `Image ${i + 1}`; }
-  const el = $(`[data-canvas] .bi-ad [data-n="${k.slice(1)}"]`); const t = (el?.textContent || '').replace(/\s+/g, ' ').trim();
+  const el = $(`[data-canvas] .bi-ad [data-n="${k.slice(1)}"]`); const t = (el ? el.innerHTML.replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, '') : '').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
   return t ? (t.length > 30 ? t.slice(0, 29) + '…' : t) : `Text ${+k.slice(1) + 1}`;
 }
 function drawLayers() {
@@ -1093,20 +1094,16 @@ const rng = (attr, k, label, min, max, step, v) => `<label class="range"><span>$
 function drawLayerProps() {
   const box = $('[data-layer-props]'); if (!box) return;
   const st = styleOf(state.tpl), k = layerSel, op = st.layers?.op || {};
-  if (!k) { box.innerHTML = '<p class="hint">Pick a layer to change it. The top of the list is the front of the post. Add your own picture with <b>Add image</b>.</p>'; return; }
+  if (!k) { box.innerHTML = ''; return; }
   const order = `<div class="row2"><button type="button" class="btn btn--line" data-lto="${k},front">Bring to front</button><button type="button" class="btn btn--line" data-lto="${k},back">Send to back</button></div>`;
-  if (k === 'photo') {
-    const f = st.photoFx || {};
-    box.innerHTML = `<p class="label">Template photo</p><div class="group">${rng('data-lfx', 'op', 'Opacity', 0, 1, .01, op.photo ?? f.op ?? 1)}${rng('data-lfx', 'br', 'Brightness', .2, 2, .01, f.br ?? 1)}${rng('data-lfx', 'ct', 'Contrast', .2, 2, .01, f.ct ?? 1)}${rng('data-lfx', 'sat', 'Saturation', 0, 2, .01, f.sat ?? 1)}${rng('data-lfx', 'bl', 'Blur', 0, 6, .1, f.bl ?? 0)}</div>${order}<button type="button" class="btn btn--line" data-lreset="photo">Reset adjustments</button>`;
-    return;
-  }
+  if (k === 'photo') { box.innerHTML = `<p class="label">Template photo</p>${order}`; return; }
   if (k.startsWith('t')) {
-    box.innerHTML = `<p class="label">${esc(layerName(k))}</p><div class="group">${rng('data-lop', k, 'Opacity', 0, 1, .01, op[k] ?? 1)}</div>${order}<p class="hint">Change the words, font and colour in the Text tab.</p>`;
+    box.innerHTML = `<p class="label">${esc(layerName(k))}</p><div class="group">${rng('data-lop', k, 'Opacity', 0, 1, .01, op[k] ?? 1)}</div>${order}`;
     return;
   }
   const x = (st.extra || []).find((q) => 'x:' + q.id === k); if (!x) { box.innerHTML = ''; return; }
   box.innerHTML = `<p class="label">${esc(layerName(k))}</p><div class="group">${rng('data-xf', 'w', 'Size', 5, 150, 1, x.w ?? 40)}${rng('data-xf', 'r', 'Rotation', -180, 180, 1, x.r || 0)}${rng('data-xf', 'rad', 'Corners', 0, 50, 1, x.rad || 0)}${rng('data-xf', 'op', 'Opacity', 0, 1, .01, x.op ?? 1)}${rng('data-xf', 'br', 'Brightness', .2, 2, .01, x.br ?? 1)}${rng('data-xf', 'ct', 'Contrast', .2, 2, .01, x.ct ?? 1)}${rng('data-xf', 'sat', 'Saturation', 0, 2, .01, x.sat ?? 1)}${rng('data-xf', 'bl', 'Blur', 0, 6, .1, x.bl ?? 0)}</div>${order}
-    <div class="row2"><label class="btn btn--line file-btn">Replace<input type="file" accept="image/*" data-xrep="${x.id}" hidden></label><button type="button" class="btn btn--danger lb-del" data-xdel="${x.id}">${IC.trash}Delete</button></div><p class="hint">Drag the picture in the preview to place it. Hold Alt to move it without snapping.</p>`;
+    <div class="row2"><label class="btn btn--line file-btn">Replace<input type="file" accept="image/*" data-xrep="${x.id}" hidden></label><button type="button" class="btn btn--danger lb-del" data-xdel="${x.id}">${IC.trash}Delete</button></div>`;
 }
 const setOrder = (fn) => { const st = styleOf(state.tpl), o = layerKeys(); fn(o); st.layers = { ...(st.layers || {}), order: o }; save(); drawLayers(); soon(); };
 $('[data-pane="layers"]').addEventListener('click', async (e) => {
@@ -1237,14 +1234,15 @@ const PEOPLE = [
 ];
 const hashStr = (t) => { let h = 2166136261; for (const c of t) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; } h ^= h >>> 13; h = Math.imul(h, 2246822507) >>> 0; return (h ^ (h >>> 16)) >>> 0; };
 const community = (() => {
-  const pals = ['own', 'own', 'own', 'mono', 'ink', 'frost', 'cobalt', 'crimson', 'paper', 'acid'];
-  const fmts = ['portrait', 'square', 'portrait', 'story', 'square'];
+  const pals = ['own'];
+  const fmts = ['portrait', 'square', 'portrait', 'story', 'portrait', 'square', 'landscape'];
+  const pool = templates.filter((t) => !/^(x-|ad-)/.test(t.id) && !Object.values(t.fields || {}).some((v) => /\[|\]/.test(String(v)))), used = new Set();
   return PEOPLE.map(([name, handle, bio, colors, followers], pi) => {
     const posts = Array.from({ length: 6 + (pi % 3) }, (_, k) => {
-      const h = hashStr(handle + k), t = templates[h % templates.length];
+      const h = hashStr(handle + k); let n = h % pool.length; while (used.has(pool[n].id)) n = (n + 1) % pool.length; const t = pool[n]; used.add(t.id);
       return { id: handle + '-' + k, tpl: t.id, palette: pals[(h >>> 4) % pals.length], format: fmts[(h >>> 8) % fmts.length], fields: {}, style: {}, photo: 1 + ((h >>> 12) % 40), likes: 12 + ((h >>> 6) % 380), by: handle };
     });
-    return { name, handle, bio, colors, followers, used: 18 + (hashStr(handle) % 90), projects: 3 + (hashStr(handle) % 14), posts };
+    return { name, handle, bio, colors, followers, brand: handle.split('.')[0] + '.', used: 18 + (hashStr(handle) % 90), projects: 3 + (hashStr(handle) % 14), posts };
   });
 })();
 const pPhoto = (n) => `photos/photo-${String(n).padStart(2, '0')}.jpg`;
@@ -1260,11 +1258,12 @@ const ICON = {
   trash: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>',
 };
 let pfTab = 'published';
+const postPhoto = (p) => p.image || shuf.photo[p.tpl] || pPhoto(p.photo || 1);
+const postSlots = (p) => (p.images?.length ? p.images : shuf.slots[p.tpl] || [2, 5, 9].map((k) => pPhoto(((p.photo || 1) + k) % 39 + 1)));
 function postAd(p) {
-  const f = p.format === 'custom' && p.custom ? p.custom : formats[p.format] || formats.portrait;
-  const im = p.image || thumbOf(pPhoto(p.photo || 1));
-  const imgs = p.images?.length ? p.images : [2, 5, 9].map((k) => thumbOf(pPhoto(((p.photo || 1) + k) % 40 + 1)));
-  return `<div class="ad" style="--ar:${f.w}/${f.h}">${render(p.tpl, { palette: palObj(p.palette), style: p.style || {}, fields: p.fields || {}, brand: brandForRender(), image: im, images: imgs })}</div>`;
+  const f = p.format === 'custom' && p.custom ? p.custom : formats[p.format] || formats.portrait, who = p.by && community.find((u) => u.handle === p.by);
+  const style = p.style && Object.keys(p.style).length ? p.style : baseFonts(p.tpl), brand = who ? { ...brandForRender(), name: who.brand, logo: '' } : brandForRender();
+  return `<div class="ad" style="--ar:${f.w}/${f.h}">${render(p.tpl, { palette: palObj(p.palette || 'own'), style, fields: p.fields || {}, brand, image: thumbOf(postPhoto(p)), images: postSlots(p).map(thumbOf) })}</div>`;
 }
 function postCard(p, i, mine) {
   const pf = prof(), who = mine ? null : community.find((u) => u.handle === p.by);
@@ -1273,7 +1272,7 @@ function postCard(p, i, mine) {
   const tools = mine
     ? `<button type="button" class="pf-ic" data-pf-share="${p.id}" aria-label="Copy link" title="Copy link">${ICON.share}</button><button type="button" class="pf-ic" data-pf-unpub="${p.id}" aria-label="Remove from profile" title="Remove from profile">${ICON.trash}</button>`
     : `<button type="button" class="pf-ic pf-like" data-pf-like="${p.id}" aria-pressed="${liked}" aria-label="Like" title="Like">${ICON.heart}<em>${p.likes + (liked ? 1 : 0)}</em></button><button type="button" class="pf-ic" data-pf-save="${p.id}" aria-pressed="${saved}" aria-label="Save" title="Save">${ICON.save}</button>`;
-  return `<li class="post pf-post" style="--i:${i}">${postAd(p)}<div class="post-bar">${by}${tools}<button type="button" class="p-edit" data-pf-use="${p.id}">${mine ? 'Edit' : 'Use'}</button></div></li>`;
+  return `<li class="pf-post" style="--i:${i}">${postAd(p)}<div class="post-bar">${by}${tools}<button type="button" class="p-edit" data-pf-use="${p.id}">${mine ? 'Edit' : 'Use'}</button></div></li>`;
 }
 function drawProfile(handle) {
   const pf = prof(), mineH = myHandle(), other = handle && handle !== mineH ? community.find((u) => u.handle === handle) : null;
@@ -1283,13 +1282,14 @@ function drawProfile(handle) {
   cover.style.backgroundImage = own && pf.cover ? `url("${pf.cover}")` : `linear-gradient(135deg, ${who.colors[0]}, ${who.colors[1]})`;
   cover.classList.toggle('has-img', !!(own && pf.cover));
   $('[data-pf-cover-btn]').hidden = !own;
-  const av = $('[data-pf-avatar]'); av.innerHTML = avatarHtml(who) + (own ? '<span>Change</span>' : ''); av.disabled = !own;
+  const av = $('[data-pf-avatar]'); av.innerHTML = avatarHtml(who) + (own ? '<span class="pf-av-btn">Change image</span>' : ''); av.disabled = !own;
   $('[data-pf-name]').textContent = who.name; $('[data-pf-handle]').textContent = '@' + who.handle;
   const bio = $('[data-pf-bio]'); bio.textContent = who.bio || (own ? 'Add a line about you' : ''); bio.contentEditable = own ? 'plaintext-only' : 'false'; bio.classList.toggle('is-empty', own && !who.bio);
   const following = pf.following.includes(who.handle);
   const used = own ? new Set([...state.projects.flatMap((p) => p.posts.map((x) => x.tpl)), ...pf.published.map((x) => x.tpl)]).size : who.used;
   const followers = own ? 24 + pf.published.length * 7 + pf.published.reduce((n, p) => n + (p.likes || 0), 0) : who.followers + (following ? 1 : 0);
-  $('[data-pf-stats]').innerHTML = [['Followers', followers], [own ? 'Following' : 'Templates used', own ? pf.following.length : used], [own ? 'Templates used' : 'Projects', own ? used : who.projects], ...(own ? [['Projects', state.projects.length]] : [])].map(([k, v]) => `<div><dd>${Number(v).toLocaleString('en')}</dd><dt>${k}</dt></div>`).join('');
+  $('[data-pf-stats]').innerHTML = [['Followers', followers], [own ? 'Following' : 'Templates used', own ? pf.following.length : used], [own ? 'Templates used' : 'Projects', own ? used : who.projects], ...(own ? [['Projects', state.projects.length]] : [])].map(([k, v]) => `<button type="button" class="pf-stat" data-pf-list="${k}"><dd>${Number(v).toLocaleString('en')}</dd><dt>${k}</dt></button>`).join('');
+  pfWho = who; pfOwn = own;
   $('[data-pf-actions]').innerHTML = own
     ? `<button type="button" class="btn btn--line" data-pf-sharep>Share profile</button>`
     : `<button type="button" class="btn ${following ? 'btn--line' : 'btn--save'}" data-pf-follow="${who.handle}">${following ? 'Following' : 'Follow'}</button><button type="button" class="btn btn--line" data-pf-sharep>Share profile</button>`;
@@ -1304,9 +1304,14 @@ function drawProfile(handle) {
   else if (tab === 'explore') { const n = Math.max(...community.map((u) => u.posts.length)); for (let k = 0; k < n; k++) community.forEach((u, j) => { const q = u.posts[(k + j) % u.posts.length]; if (k < u.posts.length) list.push(q); }); }
   else if (tab === 'following') { list = community.filter((u) => pf.following.includes(u.handle)).flatMap((u) => u.posts); empty = 'Follow people from Explore and their designs show up here.'; }
   else if (tab === 'saved') { list = pf.saved.map(findPost).filter(Boolean); empty = 'Designs you save with the bookmark show up here.'; }
-  $('[data-pf-grid]').innerHTML = list.map((p, i) => postCard(p, i % 12, mine)).join('');
-  const em = $('[data-pf-empty]'); em.hidden = list.length > 0; em.textContent = empty;
+  const grid = $('[data-pf-grid]'), key = (who.handle) + ':' + tab, html = list.map((p, i) => postCard(p, Math.min(i, 16), mine)).join('');
+  const em = $('[data-pf-empty]');
+  const put = () => { grid.innerHTML = html; grid.classList.remove('pf-out'); grid.classList.add('pf-anim'); clearTimeout(grid._t); grid._t = setTimeout(() => grid.classList.remove('pf-anim'), 1400); em.hidden = list.length > 0; em.textContent = empty; };
+  if (grid.dataset.key === key) { if (grid.innerHTML !== html) { grid.innerHTML = html; } em.hidden = list.length > 0; em.textContent = empty; return; }
+  const had = grid.dataset.key && grid.children.length; grid.dataset.key = key;
+  if (had) { grid.classList.add('pf-out'); clearTimeout(grid._o); grid._o = setTimeout(put, 160); } else put();
 }
+let pfWho = null, pfOwn = true;
 let pfFileFor = null;
 $('#profile').addEventListener('click', async (e) => {
   const pf = prof();
@@ -1314,12 +1319,13 @@ $('#profile').addEventListener('click', async (e) => {
   if (e.target.closest('[data-pf-avatar]') && !$('[data-pf-avatar]').disabled) { pfFileFor = 'avatar'; $('[data-pf-file]').click(); return; }
   const tb = e.target.closest('[data-pf-tab]'); if (tb) { pfTab = tb.dataset.pfTab; click('tap'); drawProfile(); return; }
   const fo = e.target.closest('[data-pf-follow]'); if (fo) { const h = fo.dataset.pfFollow, i = pf.following.indexOf(h); if (i < 0) pf.following.push(h); else pf.following.splice(i, 1); save(); click('ok'); drawProfile(h); return; }
-  const lk = e.target.closest('[data-pf-like]'); if (lk) { const id = lk.dataset.pfLike, i = pf.liked.indexOf(id); if (i < 0) pf.liked.push(id); else pf.liked.splice(i, 1); save(); click('tap'); const p = findPost(id); lk.setAttribute('aria-pressed', String(i < 0)); lk.querySelector('em').textContent = p.likes + (i < 0 ? 1 : 0); return; }
-  const sv = e.target.closest('[data-pf-save]'); if (sv) { const id = sv.dataset.pfSave, i = pf.saved.indexOf(id); if (i < 0) pf.saved.push(id); else pf.saved.splice(i, 1); save(); click('tap'); sv.setAttribute('aria-pressed', String(i < 0)); toast(i < 0 ? 'Saved. Find it under Saved on your profile.' : 'Removed from Saved.'); if (pfTab === 'saved' && !location.hash.split('/')[2]) drawProfile(); return; }
+  const lk = e.target.closest('[data-pf-like]'); if (lk) { const id = lk.dataset.pfLike, i = pf.liked.indexOf(id); if (i < 0) pf.liked.push(id); else pf.liked.splice(i, 1); save(); const p = findPost(id); lk.setAttribute('aria-pressed', String(i < 0)); lk.querySelector('em').textContent = p.likes + (i < 0 ? 1 : 0); if (i < 0) { likeBurst(lk); likeSound(); } return; }
+  const sv = e.target.closest('[data-pf-save]'); if (sv) { const id = sv.dataset.pfSave, i = pf.saved.indexOf(id); if (i < 0) pf.saved.push(id); else pf.saved.splice(i, 1); save(); sv.setAttribute('aria-pressed', String(i < 0)); if (pfTab === 'saved' && !location.hash.split('/')[2]) drawProfile(); return; }
   const sh = e.target.closest('[data-pf-share]'); if (sh) { copyLink(`#/profile/${myHandle()}`); return; }
   if (e.target.closest('[data-pf-sharep]')) { const h = location.hash.split('/')[2] || myHandle(); copyLink(`#/profile/${h}`); return; }
   const un = e.target.closest('[data-pf-unpub]'); if (un) { if (await ask('Remove from your profile?', 'The post stays in its project. Only the published copy goes away.')) { pf.published = pf.published.filter((p) => p.id !== un.dataset.pfUnpub); save(); drawProfile(); } return; }
   if (e.target.closest('[data-pf-publish]')) { openPublish(); return; }
+  const ls = e.target.closest('[data-pf-list]'); if (ls) { openPfList(ls.dataset.pfList); return; }
   const us = e.target.closest('[data-pf-use]'); if (us) { const p = findPost(us.dataset.pfUse); if (p) useDesign(p); }
 });
 function copyLink(hash) {
@@ -1378,3 +1384,87 @@ document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape' || $('#editor').hidden || /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName) || document.activeElement?.isContentEditable) return;
   if (picked == null && !layerSel) return; picked = null; layerSel = null; photoSel = null; drawCanvas(); drawLayers();
 });
+
+/* ---------------- photo look: black and white, brightness, contrast, saturation, blur ---------------- */
+const greyByDefault = (id) => /img\([^)]*'(grey|soft)'/.test(String(getTemplate(id)?.html || ''));
+function drawPhotoFx() {
+  const box = $('[data-photo-fx]'); if (!box || !state?.tpl) return; const tpl = getTemplate(state.tpl);
+  if (!hasPhoto(tpl)) { box.hidden = true; return; } box.hidden = false;
+  const st = styleOf(state.tpl), f = st.photoFx || {}, sat = f.sat ?? (greyByDefault(state.tpl) ? 0 : 1), op = st.layers?.op?.photo ?? f.op ?? 1;
+  box.innerHTML = `<label class="check small"><input type="checkbox" data-bw${sat === 0 ? ' checked' : ''}> Black and white</label>${rng('data-pfx', 'sat', 'Saturation', 0, 2, .01, sat)}${rng('data-pfx', 'br', 'Brightness', .2, 2, .01, f.br ?? 1)}${rng('data-pfx', 'ct', 'Contrast', .2, 2, .01, f.ct ?? 1)}${rng('data-pfx', 'bl', 'Blur', 0, 6, .1, f.bl ?? 0)}${rng('data-pfx', 'op', 'Opacity', 0, 1, .01, op)}`;
+}
+$('[data-pane="photo"]').addEventListener('input', (e) => {
+  const t = e.target; if (!t.dataset.pfx) return; const st = styleOf(state.tpl), v = +t.value;
+  const em = t.parentElement.querySelector('em'); if (em) em.textContent = Math.round(((v - +t.min) / (+t.max - +t.min)) * 100);
+  if (t.dataset.pfx === 'op') { st.layers ||= {}; st.layers.op ||= {}; st.layers.op.photo = v; } else (st.photoFx ||= {})[t.dataset.pfx] = v;
+  if (t.dataset.pfx === 'sat') { const bw = $('[data-bw]'); if (bw) bw.checked = v === 0; }
+  save(); soon();
+});
+$('[data-pane="photo"]').addEventListener('change', (e) => {
+  if (!e.target.matches('[data-bw]')) return; const st = styleOf(state.tpl); (st.photoFx ||= {}).sat = e.target.checked ? 0 : 1;
+  save(); click('tap'); drawPhotoFx(); soon();
+});
+
+/* a like: the heart fills orange, small stars fly out, and one of three short sounds plays */
+function likeBurst(btn) {
+  const svg = btn.querySelector('svg'); svg.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.38)' }, { transform: 'scale(.92)' }, { transform: 'scale(1)' }], { duration: 420, easing: 'cubic-bezier(.2,.9,.3,1.3)' });
+  const r = svg.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  for (let k = 0; k < 8; k++) {
+    const a = (k / 8) * Math.PI * 2 + Math.random() * .4, d = 20 + Math.random() * 12, st = document.createElement('i');
+    st.className = 'like-star'; st.style.left = cx + 'px'; st.style.top = cy + 'px'; if (k % 3 === 1) st.style.background = '#ffd166';
+    document.body.appendChild(st);
+    st.animate([{ transform: 'translate(-50%,-50%) scale(.2) rotate(0deg)', opacity: 1 }, { transform: `translate(calc(-50% + ${Math.cos(a) * d}px), calc(-50% + ${Math.sin(a) * d}px)) scale(1) rotate(90deg)`, opacity: 1, offset: .6 }, { transform: `translate(calc(-50% + ${Math.cos(a) * (d + 8)}px), calc(-50% + ${Math.sin(a) * (d + 8)}px)) scale(.3) rotate(140deg)`, opacity: 0 }], { duration: 520 + Math.random() * 120, easing: 'cubic-bezier(.15,.8,.3,1)' }).onfinish = () => st.remove();
+  }
+}
+function likeSound() {
+  if (state?.muted) return;
+  try {
+    actx ||= new (window.AudioContext || window.webkitAudioContext)();
+    const t = actx.currentTime, out = actx.createGain(); out.gain.value = .16; out.connect(actx.destination);
+    const note = (f0, f1, at, len, type = 'sine', vol = 1) => { const o = actx.createOscillator(), g = actx.createGain(); o.type = type; o.frequency.setValueAtTime(f0, t + at); o.frequency.exponentialRampToValueAtTime(f1, t + at + len * .7); g.gain.setValueAtTime(0.0001, t + at); g.gain.exponentialRampToValueAtTime(vol, t + at + .008); g.gain.exponentialRampToValueAtTime(0.0001, t + at + len); o.connect(g).connect(out); o.start(t + at); o.stop(t + at + len + .02); };
+    const v = Math.floor(Math.random() * 3);
+    if (v === 0) { note(740, 760, 0, .09); note(1110, 1140, .07, .14); }                     // two quick rising notes
+    else if (v === 1) { note(520, 1480, 0, .12, 'sine', .9); note(2200, 2000, .05, .06, 'triangle', .3); } // a bubbly pop
+    else { note(988, 980, 0, .07, 'triangle'); note(1319, 1310, .05, .08, 'triangle'); note(1760, 1750, .1, .16, 'sine', .7); } // a tiny chime
+  } catch { /* audio blocked */ }
+}
+/* lists behind the numbers: followers, following, templates used and projects, in a window on the page */
+const FIRST = ['Ana', 'Ben', 'Clara', 'David', 'Eva', 'Filip', 'Greta', 'Hugo', 'Iris', 'Jakub', 'Klara', 'Leo', 'Mila', 'Nico', 'Olga', 'Pavel', 'Rosa', 'Simon', 'Tereza', 'Viktor', 'Yara', 'Zoe', 'Adam', 'Bea', 'Ema', 'Ivo', 'Lina', 'Marek', 'Nela', 'Ota'];
+const LAST = ['Novak', 'Berg', 'Moreau', 'Kral', 'Silva', 'Horak', 'Lund', 'Costa', 'Weiss', 'Dvorak', 'Rossi', 'Hale', 'Varga', 'Kim', 'Fischer', 'Blanco', 'Sato', 'Holm'];
+const COLS = [['#ff5a1f', '#1a1a1a'], ['#1f3fe6', '#9fb3ff'], ['#2f7a4f', '#c9f04b'], ['#ff3d7f', '#ffd9e4'], ['#111111', '#8a8a8a'], ['#b5653f', '#efe7da'], ['#6b3cff', '#ffb3f0']];
+const demoPeople = (seed, n) => Array.from({ length: n }, (_, i) => { const h = hashStr(seed + ':' + i), f = FIRST[h % FIRST.length], l = LAST[(h >>> 7) % LAST.length]; return { name: `${f} ${l}`, handle: `${f}.${l}`.toLowerCase() + ((h >>> 3) % 7 === 0 ? (h % 90) : ''), colors: COLS[(h >>> 11) % COLS.length] }; });
+function personRow(u) {
+  const pf = prof(), on = pf.following.includes(u.handle), real = community.some((c) => c.handle === u.handle) || u.handle === myHandle();
+  const name = real && u.handle !== myHandle() ? `<a href="#/profile/${u.handle}" data-pm-go>${esc(u.name)}</a>` : esc(u.name);
+  return `<li class="pm-row">${avatarHtml(u, 'md')}<span class="pm-n"><b>${name}</b><em>@${esc(u.handle)}</em></span>${u.handle === myHandle() ? '' : `<button type="button" class="btn ${on ? 'btn--line' : ''} pm-follow" data-pm-follow="${esc(u.handle)}">${on ? 'Following' : 'Follow'}</button>`}</li>`;
+}
+function openPfList(kind) {
+  const who = pfWho, own = pfOwn, pf = prof(), modal = $('[data-pf-modal]'), body = $('[data-pm-body]');
+  let title = kind, html = '';
+  if (kind === 'Followers') {
+    const n = Math.min(40, own ? 24 + pf.published.length * 7 : who.followers), people = [...community.filter((c) => c.handle !== who.handle).slice(0, own ? 3 : 2), ...demoPeople(who.handle, n)];
+    html = `<ul class="pm-list">${people.map(personRow).join('')}</ul>${(own ? 24 : who.followers) > n ? `<p class="pm-more">and ${((own ? 24 + pf.published.length * 7 : who.followers) - people.length).toLocaleString('en')} more</p>` : ''}`;
+  } else if (kind === 'Following') {
+    const people = pf.following.map((h) => community.find((c) => c.handle === h) || { name: h.split(/[.\d]/).filter(Boolean).map((w) => w[0].toUpperCase() + w.slice(1)).join(' '), handle: h, colors: COLS[hashStr(h) % COLS.length] });
+    html = people.length ? `<ul class="pm-list">${people.map(personRow).join('')}</ul>` : '<p class="pm-more">Nobody yet. Follow people from Explore or from your followers.</p>';
+  } else if (kind === 'Templates used') {
+    const ids = own ? [...new Set([...state.projects.flatMap((p) => p.posts.map((x) => x.tpl)), ...pf.published.map((x) => x.tpl)])] : [...new Set([...who.posts.map((p) => p.tpl), ...templates.filter((t, i) => hashStr(who.handle + t.id) % 9 === 0).map((t) => t.id)])].slice(0, 24);
+    html = ids.length ? `<ol class="pm-grid">${ids.map((id) => `<li><button type="button" data-pm-tpl="${id}">${postAd({ tpl: id, by: own ? null : who.handle })}<span>${esc(getTemplate(id)?.name || id)}</span></button></li>`).join('')}</ol>` : '<p class="pm-more">Save a design to a project and it shows up here.</p>';
+  } else if (kind === 'Projects') {
+    const list = own ? state.projects.map((p) => ({ id: p.id, name: p.name, n: p.posts.length, first: p.posts[0] })) : Array.from({ length: who.projects }, (_, i) => { const t = who.posts[i % who.posts.length]; return { name: ['Spring drop', 'Launch week', 'Studio diary', 'Client work', 'Type tests', 'Run club', 'Summer series', 'Open day', 'Workshop', 'Catalogue', 'Behind the scenes', 'New season', 'Talks', 'Archive'][(hashStr(who.handle) + i) % 14], n: 3 + (hashStr(who.handle + i) % 9), first: t }; });
+    html = list.length ? `<ol class="pm-grid">${list.map((p) => `<li><button type="button" ${own ? `data-pm-proj="${p.id}"` : 'disabled'}>${p.first ? postAd(p.first) : '<div class="ad pm-empty"></div>'}<span>${esc(p.name)} · ${p.n} ${p.n === 1 ? 'post' : 'posts'}</span></button></li>`).join('')}</ol>` : '<p class="pm-more">No projects yet.</p>';
+  }
+  $('[data-pm-title]').textContent = title; body.innerHTML = html; body.scrollTop = 0;
+  modal.hidden = false; requestAnimationFrame(() => modal.classList.add('open'));
+}
+function closePfList() { const m = $('[data-pf-modal]'); m.classList.remove('open'); setTimeout(() => { if (!m.classList.contains('open')) m.hidden = true; }, 240); }
+$('[data-pf-modal]').addEventListener('click', (e) => {
+  const m = $('[data-pf-modal]');
+  if (e.target === m || e.target.closest('[data-pm-close]')) return closePfList();
+  if (e.target.closest('[data-pm-go]')) { closePfList(); return; }
+  const fo = e.target.closest('[data-pm-follow]'); if (fo) { const pf = prof(), h = fo.dataset.pmFollow, i = pf.following.indexOf(h); if (i < 0) pf.following.push(h); else pf.following.splice(i, 1); save(); fo.textContent = i < 0 ? 'Following' : 'Follow'; fo.classList.toggle('btn--line', i < 0); drawProfileStats(); return; }
+  const tp = e.target.closest('[data-pm-tpl]'); if (tp) { closePfList(); location.hash = '/editor/' + tp.dataset.pmTpl; return; }
+  const pr = e.target.closest('[data-pm-proj]'); if (pr) { closePfList(); state.project = pr.dataset.pmProj; save(); location.hash = '/projects'; }
+});
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('[data-pf-modal]').hidden) closePfList(); });
+function drawProfileStats() { const h = location.hash.split('/')[2]; const key = $('[data-pf-grid]').dataset.key; drawProfile(h); $('[data-pf-grid]').dataset.key = key; }

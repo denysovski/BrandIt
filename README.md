@@ -4,7 +4,7 @@
 
 **Clean ads for every feed. Pick a look, add your photo and logo, export every format.**
 
-A browser studio for social media and web ads: 253 templates, 13 formats, 40 fonts, a full editor with rulers and guides, packs of matching posts and projects for planning a series. No framework, no build step, no server.
+A browser studio for social media and web ads: 308 templates, 13 formats, 40 fonts, a full editor with rulers and guides, packs of matching posts and projects for planning a series. No framework, no build step, no server.
 
 [**Open the studio**](https://denysovski.github.io/BrandIt/studio/) &nbsp;·&nbsp; [Library](https://denysovski.github.io/BrandIt/studio/#/library) &nbsp;·&nbsp; [Packs](https://denysovski.github.io/BrandIt/studio/#/sets) &nbsp;·&nbsp; [Marketing guide](https://denysovski.github.io/BrandIt/studio/#/guide)
 
@@ -22,12 +22,12 @@ A browser studio for social media and web ads: 253 templates, 13 formats, 40 fon
 
 | | |
 |---|---|
-| **Templates** | 253 designs in thirteen styles: Minimal, Gradient, Professional, Data & stats, Bold photo, Brand identity, Shapes, Swiss, Carousel, Event, Editorial, Tech & app and Sport. Every one is a photo and text, so your own picture finishes it. |
+| **Templates** | 308 designs in twelve styles: Minimal, Gradient, Professional, Data & stats, Bold photo, Brand identity, Shapes, Swiss, Carousel, Event, Editorial and Sport. Every one is a photo and text, so your own picture finishes it. |
 | **Formats** | 13 sizes for Instagram, stories, Pinterest, YouTube, X, Facebook, banners and print, plus any custom size. Layouts adapt with container queries. |
 | **Editor** | Text, photo, colours, type, size and series tabs. Rulers, mirrored magnetic guides, zoom to the pointer, drag to pan, and text you drag straight in the preview. |
 | **Type** | 40 self-hosted fonts in four groups (sans, display, serif, mono), or import your own. The library pairs two fonts at random on every refresh. |
 | **Colour** | 38 palettes, 12 photo gradients, a custom colour picker with opacity, and your own saved palettes. |
-| **Packs** | Sixteen packs of ten or more posts that share fonts, colours and components. Switch one to your brand and save it as a project. |
+| **Packs** | Seventeen packs of ten or more posts that share fonts, colours and components. Switch one to your brand and save it as a project. |
 | **Profile** | Your own page with a cover, a photo, a short line about you and your numbers. Publish posts from your projects, copy a link to them, and browse a small simulated community: follow people, like and save their designs, and open any of them in the editor as your own copy. Everything stays in this browser. |
 | **Projects** | Plan a series, drag the posts into order, edit them later and export them all at once. |
 | **Brands** | Name, logo, colours and fonts per brand. Switch the brand and the whole library follows. |
